@@ -313,13 +313,64 @@
             'use strict';
 
             /**
-             * Gestionnaire audio Web Audio + synthèse vocale pour la salutation vietnamienne.
+             * Gestionnaire audio Web Audio + musique de fond + synthèse vocale.
              */
             class SoundManager {
                 constructor() {
                     this.ctx = null;
                     this.muted = false;
                     this.hasSpokenWelcome = false;
+                    this.bgMusic = null;
+                    this.bgMusicShouldPlay = false;
+                    this.initBackgroundMusic();
+                }
+
+                initBackgroundMusic() {
+                    try {
+                        // Fichier musical prioritaire : assets/audio/fond-musical.mp3
+                        const candidates = [
+                            'assets/audio/fond-musical.mp3',
+                            'assets/audio/musique-jeu.mp3',
+                            'assets/audio/fond-musical.ogg',
+                            'assets/audio/fond-musical.wav'
+                        ];
+                        const audio = new Audio();
+                        audio.loop = true;
+                        audio.volume = 0.28;
+                        audio.preload = 'auto';
+
+                        let idx = 0;
+                        const tryNextSource = () => {
+                            if (idx >= candidates.length) {
+                                this.bgMusic = null;
+                                return;
+                            }
+                            audio.src = candidates[idx++];
+                            audio.load();
+                        };
+
+                        audio.addEventListener('error', tryNextSource);
+                        this.bgMusic = audio;
+                        tryNextSource();
+                    } catch (err) {
+                        this.bgMusic = null;
+                    }
+                }
+
+                setBackgroundMusicActive(active) {
+                    this.bgMusicShouldPlay = Boolean(active);
+                    if (!this.bgMusic) return;
+
+                    try {
+                        if (this.bgMusicShouldPlay && !this.muted) {
+                            const playPromise = this.bgMusic.play();
+                            if (playPromise && typeof playPromise.catch === 'function') {
+                                playPromise.catch(() => {});
+                            }
+                        } else {
+                            this.bgMusic.pause();
+                        }
+                    } catch (err) {}
                 }
 
                 ensureContext() {
@@ -338,9 +389,24 @@
 
                 setMuted(mute) {
                     this.muted = Boolean(mute);
-                    if (this.muted && 'speechSynthesis' in window) {
+                    if (this.bgMusic) {
+                        this.bgMusic.muted = this.muted;
+                    }
+                    if (this.muted) {
+                        if (this.bgMusic) {
+                            try { this.bgMusic.pause(); } catch (err) {}
+                        }
+                        if ('speechSynthesis' in window) {
+                            try {
+                                window.speechSynthesis.cancel();
+                            } catch (err) {}
+                        }
+                    } else if (this.bgMusicShouldPlay && this.bgMusic) {
                         try {
-                            window.speechSynthesis.cancel();
+                            const playPromise = this.bgMusic.play();
+                            if (playPromise && typeof playPromise.catch === 'function') {
+                                playPromise.catch(() => {});
+                            }
                         } catch (err) {}
                     }
                 }
@@ -1070,6 +1136,7 @@
                     this.ui.hudTop.classList.remove('hidden');
                     this.ui.touchControls.classList.remove('hidden');
 
+                    this.sound.setBackgroundMusicActive(true);
                     this.lastTimestamp = performance.now();
                     this.updateHud();
                     this.showToast('Xin chào ! C’est parti !');
@@ -1077,6 +1144,7 @@
 
                 goToMenu() {
                     this.state = 'MENU';
+                    this.sound.setBackgroundMusicActive(false);
                     this.ui.hudTop.classList.add('hidden');
                     this.ui.touchControls.classList.add('hidden');
                     this.ui.pauseOverlay.classList.add('hidden');
@@ -1089,12 +1157,14 @@
                 pauseGame() {
                     if (this.state !== 'PLAYING') return;
                     this.state = 'PAUSED';
+                    this.sound.setBackgroundMusicActive(false);
                     this.ui.pauseOverlay.classList.remove('hidden');
                 }
 
                 resumeGame() {
                     if (this.state !== 'PAUSED') return;
                     this.state = 'PLAYING';
+                    this.sound.setBackgroundMusicActive(true);
                     this.lastTimestamp = performance.now();
                     this.ui.pauseOverlay.classList.add('hidden');
                 }
@@ -1102,6 +1172,7 @@
                 triggerGameOver(title, reason) {
                     if (this.state === 'GAMEOVER') return;
                     this.state = 'GAMEOVER';
+                    this.sound.setBackgroundMusicActive(false);
 
                     const finalScoreVal = Math.floor(this.score);
                     if (finalScoreVal > this.bestScore) {
