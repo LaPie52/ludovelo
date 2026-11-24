@@ -528,6 +528,7 @@
                     this.frames = [];
                     this.framesLoadedCount = 0;
                     this.obstacleSprites = [];
+                    this.holeSprite = null;
                     this.bgImage = null;
                     this.bgLoaded = false;
                     this.welcomeUrl = null;
@@ -685,49 +686,35 @@
                     }
 
                     // Chargement exclusif des obstacles présents sous assets/obstacles/
-                    const obstacleBaseNames = [
-                        'canard',
-                        'poule',
-                        'chien',
-                        'scooter',
-                        'marchande',
-                        'charrette',
-                        'velo',
-                        'buffles',
-                        'buffle',
-                        'vache',
-                        'cochon',
-                        'panier',
-                        'caisse',
-                        'barriere',
-                        'rocher',
-                        'obstacle1',
-                        'obstacle2',
-                        'obstacle3',
-                        'obstacle4',
-                        'obstacle5',
-                        'obstacle6'
+                    const obstacleFiles = [
+                        'canard.jpg',
+                        'scooter1.jpg',
+                        'scooter2.jpg',
+                        'scooter3.jpg',
+                        'scooter4.jpg',
+                        'scooter5.jpg',
+                        'scooter6.jpg',
+                        'scooter7.jpg',
+                        'vendeur1.jpg',
+                        'vendeur2.jpg',
+                        'vendeur3.jpg',
+                        'vendeur4.jpg',
+                        'poule.jpg'
                     ];
-                    const obstacleExtensions = ['jpg', 'jpeg', 'png', 'webp', 'JPG', 'JPEG', 'PNG', 'WEBP'];
-                    const obstacleFiles = [];
-                    obstacleBaseNames.forEach((base) => {
-                        obstacleExtensions.forEach((ext) => {
-                            obstacleFiles.push(`${base}.${ext}`);
-                        });
-                    });
 
+                    const seenObstacleFiles = new Set();
                     const obstaclePromises = obstacleFiles.map((fileName) =>
                         this.loadImageWithFallback([
-                            `assets/obstacles/${fileName}`,
-                            `./assets/obstacles/${fileName}`
+                            `assets/obstacles/${fileName}`
                         ]).then((res) => {
                             if (res && res.img) {
                                 const lowerName = fileName.toLowerCase();
+                                if (seenObstacleFiles.has(lowerName)) return;
+                                seenObstacleFiles.add(lowerName);
+
                                 const isCrushable =
                                     lowerName === 'canard.jpg' ||
-                                    lowerName === 'poule.jpg' ||
-                                    lowerName === 'canard.png' ||
-                                    lowerName === 'poule.png';
+                                    lowerName === 'poule.jpg';
 
                                 this.obstacleSprites.push({
                                     fileName: lowerName,
@@ -737,6 +724,15 @@
                             }
                         })
                     );
+
+                    const holePromise = this.loadImageWithFallback([
+                        'assets/obstacles/Trou.jpg',
+                        'assets/obstacles/trou.jpg'
+                    ]).then((res) => {
+                        if (res && res.img) {
+                            this.holeSprite = this.keyOutBackground(res.img);
+                        }
+                    });
 
                     const bgPromise = this.loadImageWithFallback([
                         'assets/backgrounds/fond.png',
@@ -777,6 +773,7 @@
                     await Promise.all([
                         ...framePromises,
                         ...obstaclePromises,
+                        holePromise,
                         bgPromise,
                         welcomePromise,
                         gameOverPromise
@@ -1197,6 +1194,7 @@
 
                 spawnObstacle() {
                     const sprites = this.assets.obstacleSprites;
+                    // Ne fait apparaître que les obstacles chargés depuis assets/obstacles/
                     if (!sprites || sprites.length === 0) return;
 
                     const lane = Math.floor(Math.random() * this.laneCount);
@@ -1209,17 +1207,19 @@
 
                     const chosen = sprites[Math.floor(Math.random() * sprites.length)];
                     const isCrushable = Boolean(chosen.crushable);
+                    const isScooter = chosen.fileName.startsWith('scooter');
+                    const isVendor = chosen.fileName.startsWith('vendeur');
 
                     this.obstacles.push({
                         x: this.width + 85,
                         y,
                         lane,
-                        width: isCrushable ? 46 : 64,
-                        height: isCrushable ? 38 : 52,
+                        width: isCrushable ? 46 : (isScooter ? 68 : 60),
+                        height: isCrushable ? 38 : (isScooter ? 52 : 56),
                         sprite: chosen.img,
                         fileName: chosen.fileName,
                         crushable: isCrushable,
-                        vx: isCrushable ? 35 : 52,
+                        vx: isCrushable ? 36 : (isScooter ? 64 : (isVendor ? 22 : 45)),
                         vy: 0,
                         animPhase: Math.random() * Math.PI * 2,
                         alerted: false,
@@ -1564,34 +1564,48 @@
 
                 drawHole(ctx, hole) {
                     ctx.save();
-                    ctx.translate(hole.x, hole.y + 5);
+                    const depthFactor = 0.84 + (hole.lane / Math.max(1, this.laneCount - 1)) * 0.24;
+                    const scale = (hole.rx > 28 ? 1.18 : 1.0) * depthFactor;
 
-                    ctx.fillStyle = '#1c1917';
-                    ctx.beginPath();
-                    ctx.ellipse(0, 0, hole.rx, hole.ry, 0, 0, Math.PI * 2);
-                    ctx.fill();
+                    ctx.translate(hole.x, hole.y + 6);
 
-                    ctx.fillStyle = '#09090b';
-                    ctx.beginPath();
-                    ctx.ellipse(0, 0.8, hole.rx * 0.78, hole.ry * 0.68, 0, 0, Math.PI * 2);
-                    ctx.fill();
+                    if (this.assets.holeSprite) {
+                        ctx.save();
+                        ctx.scale(scale, scale);
+                        const targetW = 68;
+                        const natW = this.assets.holeSprite.naturalWidth || this.assets.holeSprite.width || 64;
+                        const natH = this.assets.holeSprite.naturalHeight || this.assets.holeSprite.height || 48;
+                        const targetH = targetW * (natH / natW);
+                        ctx.drawImage(this.assets.holeSprite, -targetW * 0.5, -targetH * 0.5, targetW, targetH);
+                        ctx.restore();
+                    } else {
+                        ctx.fillStyle = '#1c1917';
+                        ctx.beginPath();
+                        ctx.ellipse(0, 0, hole.rx, hole.ry, 0, 0, Math.PI * 2);
+                        ctx.fill();
 
-                    ctx.strokeStyle = 'rgba(254, 243, 199, 0.5)';
-                    ctx.lineWidth = 1;
-                    ctx.beginPath();
-                    ctx.ellipse(0, 0, hole.rx, hole.ry, 0, Math.PI, Math.PI * 2);
-                    ctx.stroke();
+                        ctx.fillStyle = '#09090b';
+                        ctx.beginPath();
+                        ctx.ellipse(0, 0.8, hole.rx * 0.78, hole.ry * 0.68, 0, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        ctx.strokeStyle = 'rgba(254, 243, 199, 0.5)';
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.ellipse(0, 0, hole.rx, hole.ry, 0, Math.PI, Math.PI * 2);
+                        ctx.stroke();
+                    }
 
                     if (hole.x > this.player.x + 40 && hole.x < this.width - 10) {
                         ctx.fillStyle = '#ef4444';
                         ctx.beginPath();
-                        ctx.roundRect(-8, -22, 16, 13, 4);
+                        ctx.roundRect(-8, -28 * depthFactor, 16, 13, 4);
                         ctx.fill();
                         ctx.fillStyle = '#ffffff';
                         ctx.font = '900 10px Nunito, sans-serif';
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'middle';
-                        ctx.fillText('!', 0, -15.5);
+                        ctx.fillText('!', 0, -21.5 * depthFactor);
                     }
 
                     ctx.restore();
@@ -1622,11 +1636,6 @@
                         const natH = obs.sprite.naturalHeight || obs.sprite.height || 64;
                         const targetW = targetH * (natW / natH);
                         ctx.drawImage(obs.sprite, -targetW * 0.5, -targetH + 2, targetW, targetH);
-                    } else {
-                        ctx.fillStyle = obs.crushable ? '#f59e0b' : '#ef4444';
-                        ctx.beginPath();
-                        ctx.arc(0, -16, 16, 0, Math.PI * 2);
-                        ctx.fill();
                     }
 
                     if (obs.alerted || obs.scaredTimer > 0) {
@@ -1655,14 +1664,16 @@
                     ctx.save();
                     const bob = Math.sin(pk.bobPhase) * 4.5;
                     const depthFactor = 0.78 + (pk.lane / Math.max(1, this.laneCount - 1)) * 0.22;
+                    // Bonus agrandis de 50% pour une meilleure visibilité
+                    const pickupScale = depthFactor * 1.5;
 
                     ctx.fillStyle = 'rgba(15, 23, 42, 0.22)';
                     ctx.beginPath();
-                    ctx.ellipse(pk.x, pk.y + 7, 13 * depthFactor, 4 * depthFactor, 0, 0, Math.PI * 2);
+                    ctx.ellipse(pk.x, pk.y + 7, 13 * pickupScale, 4 * pickupScale, 0, 0, Math.PI * 2);
                     ctx.fill();
 
                     ctx.translate(pk.x, pk.y - 12 + bob);
-                    ctx.scale(depthFactor, depthFactor);
+                    ctx.scale(pickupScale, pickupScale);
 
                     ctx.fillStyle = 'rgba(255, 251, 235, 0.92)';
                     ctx.beginPath();
