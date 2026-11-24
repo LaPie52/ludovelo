@@ -96,6 +96,17 @@
             animation: popIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
 
+        @keyframes marqueeScroll {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .marquee-track {
+            display: flex;
+            width: max-content;
+            animation: marqueeScroll 18s linear infinite;
+        }
+
         .toast-banner {
             pointer-events: none;
             transition: opacity 0.22s ease, transform 0.22s ease;
@@ -221,8 +232,20 @@
             </div>
 
             <!-- Bouton de lancement discret mais bien visible en bas -->
-            <div class="w-full max-w-xs sm:max-w-sm flex flex-col items-center gap-1.5 z-10">
-                <button id="btnStartGame" type="button" class="control-btn animate-float-slow w-full py-3 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-500 border-2 border-emerald-200/90 text-white font-display text-lg sm:text-xl font-bold tracking-wide flex items-center justify-center gap-2.5">
+            <div class="w-full max-w-md flex flex-col items-center gap-2 z-10">
+                <!-- Bandeau défilant des règles simples -->
+                <div class="w-full overflow-hidden rounded-full bg-slate-950/85 border border-amber-300/60 py-1.5 shadow-lg">
+                    <div class="marquee-track text-[11px] sm:text-xs font-extrabold text-amber-100 whitespace-nowrap">
+                        <span class="mx-4">🚫 À ÉVITER : Les trous du chemin (saute avec SAUTER !) et les scooters / marchandes !</span>
+                        <span class="mx-4">💥 À ÉCRASER : Les petites poules et petits chiens sur le chemin !</span>
+                        <span class="mx-4">🧺 À RAMASSER : Bánh mì, Phở et fruits !</span>
+                        <span class="mx-4">🚫 À ÉVITER : Les trous du chemin (saute avec SAUTER !) et les scooters / marchandes !</span>
+                        <span class="mx-4">💥 À ÉCRASER : Les petites poules et petits chiens sur le chemin !</span>
+                        <span class="mx-4">🧺 À RAMASSER : Bánh mì, Phở et fruits !</span>
+                    </div>
+                </div>
+
+                <button id="btnStartGame" type="button" class="control-btn animate-float-slow w-full max-w-xs sm:max-w-sm py-3 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-500 border-2 border-emerald-200/90 text-white font-display text-lg sm:text-xl font-bold tracking-wide flex items-center justify-center gap-2.5">
                     <span>🚴</span>
                     <span>JOUER</span>
                 </button>
@@ -253,16 +276,16 @@
         </div>
 
         <!-- Écran Game Over mettant en valeur gameover.png et les statistiques -->
-        <div id="gameOverOverlay" class="hidden fixed inset-0 z-30 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-sm">
-            <div class="w-full max-w-md rounded-3xl bg-gradient-to-b from-amber-50 via-orange-50 to-amber-100 p-3.5 sm:p-5 text-center shadow-2xl border-4 border-amber-400 animate-pop-in flex flex-col gap-3">
+        <div id="gameOverOverlay" class="hidden fixed inset-0 z-30 flex items-center justify-center p-2.5 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
+            <div class="w-full max-w-md my-auto rounded-3xl bg-gradient-to-b from-amber-50 via-orange-50 to-amber-100 p-3 sm:p-4 text-center shadow-2xl border-4 border-amber-400 animate-pop-in flex flex-col gap-2.5">
                 <div class="flex items-center justify-between gap-2 px-1">
                     <span class="px-2.5 py-0.5 rounded-full bg-rose-600 text-white text-[11px] font-black uppercase tracking-wider">Game Over</span>
-                    <h2 id="gameOverTitle" class="font-display text-xl sm:text-2xl font-bold text-slate-900">Chute sur le chemin !</h2>
-                    <span class="text-xl">💥</span>
+                    <h2 id="gameOverTitle" class="font-display text-lg sm:text-xl font-bold text-slate-900">Chute sur le chemin !</h2>
+                    <span class="text-lg">💥</span>
                 </div>
 
-                <!-- Cadre de l'illustration gameover.png bien visible -->
-                <div class="relative w-full h-48 sm:h-60 rounded-2xl overflow-hidden border-2 border-amber-300 bg-sky-100 shadow-inner flex items-center justify-center">
+                <!-- Cadre de l'illustration gameover.png visible en entier -->
+                <div class="relative w-full aspect-square max-h-[44dvh] sm:max-h-[48dvh] mx-auto rounded-2xl overflow-hidden border-2 border-amber-300 bg-sky-100 shadow-inner flex items-center justify-center">
                     <img id="gameOverImg" alt="Fin de partie Ludo" class="w-full h-full object-contain" />
                     <div id="gameOverFallback" class="hidden flex-col items-center justify-center p-4 text-slate-800">
                         <div class="text-4xl mb-1">🚲💫</div>
@@ -270,7 +293,7 @@
                     </div>
                 </div>
 
-                <p id="gameOverReason" class="text-xs sm:text-sm font-bold text-slate-700 px-2">
+                <p id="gameOverReason" class="text-xs font-bold text-slate-700 px-2 leading-snug">
                     Un trou sur la piste a surpris le vélo de Ludo.
                 </p>
 
@@ -1138,7 +1161,7 @@
 
                 spawnHole() {
                     const isWideTrench = Math.random() < 0.34;
-                    const width = isWideTrench ? 88 : 58;
+                    const width = isWideTrench ? 52 : 34;
                     const lane = Math.floor(Math.random() * this.laneCount);
 
                     this.holes.push({
@@ -1352,23 +1375,34 @@
                             const sameLane = Math.abs(obs.y - this.player.y) < 20;
                             const overlapX = Math.abs(obs.x - this.player.x) < (obs.width * 0.38 + 28);
                             const clearJump = this.player.z > 32;
+                            const isCrushableCritter = obs.kind === 'chicken' || obs.kind === 'dog';
 
                             if (sameLane && overlapX && !clearJump) {
-                                this.lives -= 1;
-                                this.player.invulnTimer = 1.4;
-                                this.sound.playCrash();
-                                this.spawnBurst(obs.x, obs.y - this.player.z, '#f87171', 12);
-                                this.obstacles.splice(i, 1);
-
-                                if (this.lives <= 0) {
-                                    this.updateHud();
-                                    this.triggerGameOver(
-                                        'Plus de cœurs !',
-                                        'Ludo a heurté trop d’obstacles sur le chemin du village.'
-                                    );
-                                    return;
+                                if (isCrushableCritter) {
+                                    // Les petites poules et petits chiens sont écrasés et rapportent des points
+                                    this.score += 20;
+                                    this.sound.playPickup();
+                                    this.spawnBurst(obs.x, obs.y - 4, '#fde047', 12);
+                                    this.showToast(obs.kind === 'chicken' ? '💥 Poule écrasée ! +20 pts' : '💥 Chien écrasé ! +20 pts');
+                                    this.obstacles.splice(i, 1);
                                 } else {
-                                    this.showToast('Aïe ! Attention sur le chemin !');
+                                    // Scooters et marchandes restent dangereux et font perdre un cœur
+                                    this.lives -= 1;
+                                    this.player.invulnTimer = 1.4;
+                                    this.sound.playCrash();
+                                    this.spawnBurst(obs.x, obs.y - this.player.z, '#f87171', 12);
+                                    this.obstacles.splice(i, 1);
+
+                                    if (this.lives <= 0) {
+                                        this.updateHud();
+                                        this.triggerGameOver(
+                                            'Plus de cœurs !',
+                                            'Ludo a heurté trop d’obstacles sur le chemin du village.'
+                                        );
+                                        return;
+                                    } else {
+                                        this.showToast('Aïe ! Attention sur le chemin !');
+                                    }
                                 }
                             }
                         }
@@ -1455,52 +1489,52 @@
                 drawHole(ctx, hole) {
                     const y = this.laneY[hole.lane];
                     const rx = hole.width * 0.5;
-                    const ry = hole.isWideTrench ? 9 : 6.5;
+                    const ry = hole.isWideTrench ? 4.2 : 3.2;
 
                     ctx.save();
 
                     // Liseré d'alerte discret aplati sur la terre
                     ctx.strokeStyle = 'rgba(250, 204, 21, 0.45)';
-                    ctx.lineWidth = 1.5;
-                    ctx.setLineDash([5, 5]);
+                    ctx.lineWidth = 1.2;
+                    ctx.setLineDash([4, 4]);
                     ctx.beginPath();
-                    ctx.ellipse(hole.x, y, rx + 3, ry + 2.5, 0, 0, Math.PI * 2);
+                    ctx.ellipse(hole.x, y, rx + 2, ry + 1.5, 0, 0, Math.PI * 2);
                     ctx.stroke();
                     ctx.setLineDash([]);
 
                     // Bord de terre soulevé
                     ctx.fillStyle = 'rgba(87, 83, 78, 0.72)';
                     ctx.beginPath();
-                    ctx.ellipse(hole.x, y + 0.5, rx + 1.5, ry + 1, 0, 0, Math.PI * 2);
+                    ctx.ellipse(hole.x, y + 0.4, rx + 1, ry + 0.6, 0, 0, Math.PI * 2);
                     ctx.fill();
 
                     // Cavité sombre aplatie
-                    const abyssGrad = ctx.createRadialGradient(hole.x, y + 1, 2, hole.x, y + 1, rx);
+                    const abyssGrad = ctx.createRadialGradient(hole.x, y + 0.6, 1, hole.x, y + 0.6, rx);
                     abyssGrad.addColorStop(0, '#090d16');
                     abyssGrad.addColorStop(0.75, '#1e1b18');
                     abyssGrad.addColorStop(1, '#3f3a34');
                     ctx.fillStyle = abyssGrad;
                     ctx.beginPath();
-                    ctx.ellipse(hole.x, y + 1, rx, ry, 0, 0, Math.PI * 2);
+                    ctx.ellipse(hole.x, y + 0.6, rx, ry, 0, 0, Math.PI * 2);
                     ctx.fill();
 
                     // Ombre portée intérieure
                     ctx.strokeStyle = 'rgba(24, 24, 27, 0.75)';
-                    ctx.lineWidth = 2;
+                    ctx.lineWidth = 1.5;
                     ctx.beginPath();
-                    ctx.ellipse(hole.x, y + 1, rx - 0.5, ry - 0.5, 0, Math.PI * 0.1, Math.PI * 1.15);
+                    ctx.ellipse(hole.x, y + 0.6, rx - 0.5, ry - 0.4, 0, Math.PI * 0.1, Math.PI * 1.15);
                     ctx.stroke();
 
                     // Petit badge « ! » lorsque le trou approche
                     if (hole.x - rx > this.player.x && hole.x - rx < this.player.x + 240) {
                         ctx.fillStyle = '#e11d48';
                         ctx.beginPath();
-                        ctx.roundRect(hole.x - rx - 8, y - ry - 20, 16, 15, 3);
+                        ctx.roundRect(hole.x - rx - 7, y - ry - 15, 14, 12, 3);
                         ctx.fill();
                         ctx.fillStyle = '#ffffff';
-                        ctx.font = '900 11px Nunito, sans-serif';
+                        ctx.font = '900 9.5px Nunito, sans-serif';
                         ctx.textAlign = 'center';
-                        ctx.fillText('!', hole.x - rx, y - ry - 9);
+                        ctx.fillText('!', hole.x - rx, y - ry - 6);
                     }
 
                     ctx.restore();
