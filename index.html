@@ -1,0 +1,2967 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ludo-Vélo Dash : La Grande Balade !</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            touch-action: none;
+            user-select: none;
+            background-color: #0f172a;
+        }
+        h1, h2, h3, .font-arcade {
+            font-family: 'Fredoka', sans-serif;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 12px rgba(250, 204, 21, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); }
+        }
+        .btn-bell-active {
+            animation: pulse-ring 1.6s infinite;
+        }
+    </style>
+</head>
+<body class="w-screen h-screen flex items-center justify-center bg-slate-950 relative">
+
+    <!-- Conteneur principal plein écran responsive -->
+    <div id="game-container" class="relative w-full h-full bg-sky-300 overflow-hidden shadow-2xl">
+        
+        <!-- Canvas principal du jeu en vue latérale -->
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- HUD en cours de partie -->
+        <div id="hud" class="hidden absolute top-0 left-0 right-0 p-3 sm:p-4 flex justify-between items-start pointer-events-none z-10">
+            <!-- Gauche : Vies, Distance & Score -->
+            <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+                <!-- Vies (3 Cœurs) -->
+                <div class="bg-slate-900/85 backdrop-blur-md text-white px-3 py-1.5 rounded-2xl border border-white/15 shadow-lg flex items-center gap-1.5">
+                    <div id="hud-lives" class="flex items-center gap-1 text-lg sm:text-xl">❤️❤️❤️</div>
+                </div>
+
+                <!-- Distance -->
+                <div class="bg-slate-900/85 backdrop-blur-md text-white px-3.5 py-1.5 rounded-2xl border border-white/15 shadow-lg flex items-center gap-2">
+                    <span class="text-lg">🚴</span>
+                    <div>
+                        <div class="text-[10px] uppercase tracking-wider text-slate-400 font-bold leading-none">Distance</div>
+                        <div id="hud-distance" class="font-arcade text-lg sm:text-2xl font-bold text-amber-400 leading-tight">0 m</div>
+                    </div>
+                </div>
+
+                <!-- Score -->
+                <div class="bg-slate-900/85 backdrop-blur-md text-white px-3.5 py-1.5 rounded-2xl border border-white/15 shadow-lg flex items-center gap-2">
+                    <span class="text-base sm:text-lg">🥖</span>
+                    <div>
+                        <div class="text-[10px] uppercase tracking-wider text-slate-400 font-bold leading-none">Score</div>
+                        <div id="hud-score" class="font-arcade text-lg sm:text-2xl font-bold text-emerald-400 leading-tight">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Droite : Vitesse, Musique, Son & Pause -->
+            <div class="flex items-center gap-2 pointer-events-auto">
+                <div class="hidden sm:flex bg-slate-900/85 backdrop-blur-md text-white px-3 py-1.5 rounded-2xl border border-white/15 text-xs font-bold items-center gap-1.5 pointer-events-none">
+                    <span>⚡</span>
+                    <span id="hud-speed">22 km/h</span>
+                </div>
+                <button id="btn-music" title="Musique d'ambiance" class="bg-slate-900/85 hover:bg-slate-800 text-white w-10 h-10 rounded-full border border-white/15 shadow-lg flex items-center justify-center text-base transition active:scale-90">
+                    🎵
+                </button>
+                <button id="btn-mute" title="Bruitages" class="bg-slate-900/85 hover:bg-slate-800 text-white w-10 h-10 rounded-full border border-white/15 shadow-lg flex items-center justify-center text-base transition active:scale-90">
+                    🔊
+                </button>
+                <button id="btn-pause" title="Pause" class="bg-slate-900/85 hover:bg-slate-800 text-white w-10 h-10 rounded-full border border-white/15 shadow-lg flex items-center justify-center text-base font-bold transition active:scale-90">
+                    ⏸️
+                </button>
+            </div>
+        </div>
+
+        <!-- Contrôles Tactiles & Boutons d'Action en bas pendant le jeu -->
+        <div id="in-game-controls" class="hidden absolute bottom-3 left-3 right-3 sm:bottom-5 sm:left-6 sm:right-6 flex justify-between items-end pointer-events-none z-10">
+            
+            <!-- Pavé directionnel tactile (Haut / Bas pour changer de voie) -->
+            <div class="flex flex-col gap-2 pointer-events-auto sm:hidden">
+                <button id="btn-touch-up" class="w-14 h-14 bg-slate-900/75 active:bg-amber-500 text-white rounded-2xl border-2 border-white/30 shadow-lg flex items-center justify-center text-2xl font-bold">
+                    ⬆️
+                </button>
+                <button id="btn-touch-down" class="w-14 h-14 bg-slate-900/75 active:bg-amber-500 text-white rounded-2xl border-2 border-white/30 shadow-lg flex items-center justify-center text-2xl font-bold">
+                    ⬇️
+                </button>
+            </div>
+
+            <!-- Aide clavier discret sur ordinateur -->
+            <div class="hidden sm:flex items-center gap-3 bg-slate-900/70 backdrop-blur-md text-white/90 text-xs px-4 py-2 rounded-full border border-white/15">
+                <span>⬆️⬇️ Voie</span>
+                <span>•</span>
+                <span>➡️ / <b class="text-sky-300">W</b> Sauter les trous</span>
+                <span>•</span>
+                <span><b class="text-amber-300">Espace</b> Sonnette</span>
+            </div>
+
+            <!-- Boutons d'action à droite : SAUTER + DRING ! -->
+            <div class="flex items-center gap-3 pointer-events-auto">
+                <button id="btn-jump" class="bg-gradient-to-b from-sky-400 to-blue-600 hover:from-sky-300 hover:to-blue-500 active:scale-90 text-white font-arcade font-bold px-4 py-3.5 sm:px-6 sm:py-4 rounded-2xl shadow-xl border-2 border-white flex items-center gap-2 transition transform">
+                    <span class="text-xl sm:text-2xl">🦘</span>
+                    <span class="text-sm sm:text-base">SAUTER</span>
+                </button>
+
+                <button id="btn-bell" class="btn-bell-active bg-gradient-to-b from-amber-300 to-amber-500 hover:from-amber-200 hover:to-amber-400 active:scale-90 text-slate-900 font-arcade font-bold px-4 py-3.5 sm:px-6 sm:py-4 rounded-2xl shadow-xl border-2 border-white flex items-center gap-2 transition transform">
+                    <span class="text-xl sm:text-2xl">🔔</span>
+                    <span class="text-sm sm:text-base">DRING !</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ÉCRAN D'ACCUEIL / MENU PRINCIPAL -->
+        <div id="start-screen" class="absolute inset-0 bg-slate-900/65 backdrop-blur-sm flex items-center justify-center p-4 z-20 overflow-y-auto">
+            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg p-5 sm:p-6 text-center border-4 border-amber-400 relative">
+                
+                <!-- Badge Record -->
+                <div id="best-score-badge" class="hidden inline-flex items-center gap-1.5 bg-amber-100 text-amber-800 px-3.5 py-1 rounded-full text-xs font-bold mb-2 border border-amber-300">
+                    🏆 Record : <span id="menu-best-distance">0 m</span> • <span id="menu-best-score">0 pts</span>
+                </div>
+
+                <h1 class="text-3xl sm:text-4xl font-bold text-slate-800 tracking-tight mb-1">
+                    LUDO-VÉLO <span class="text-amber-500">VIETNAM</span> 🇻🇳
+                </h1>
+                <p class="text-slate-500 text-xs sm:text-sm mb-4">
+                    Balade dans un village vietnamien ! Saute par-dessus les trous de la route, esquive les scooters et fais tinter la sonnette !
+                </p>
+
+                <!-- Aperçu du cycliste détouré prêt à rouler -->
+                <div class="bg-gradient-to-b from-amber-100 to-emerald-50 rounded-2xl p-3.5 border-2 border-amber-200 mb-4 relative">
+                    <div class="flex flex-col sm:flex-row items-center gap-4">
+                        <div class="relative flex-shrink-0 bg-white/80 rounded-2xl p-2 shadow-inner border border-amber-200">
+                            <canvas id="cyclistPreviewCanvas" width="180" height="125" class="w-40 h-28 sm:w-44 sm:h-32 mx-auto"></canvas>
+                            <span id="cutout-status" class="absolute bottom-1.5 right-1.5 bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">
+                                ✨ Détouré !
+                            </span>
+                        </div>
+
+                        <div class="flex-1 text-center sm:text-left">
+                            <h3 class="font-arcade font-bold text-slate-800 text-base mb-1">Pilote : Ludo</h3>
+                            <p class="text-xs text-slate-600 mb-2.5 leading-relaxed">
+                                Attention aux <b class="text-rose-600">trous profonds</b> sur la chaussée : un saut raté et c'est la chute immédiate !
+                            </p>
+                            <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-2">
+                                <label for="asset-folder-select" class="sr-only">Dossier des images</label>
+                                <select id="asset-folder-select" title="Choisir l'emplacement des images" class="bg-amber-50 hover:bg-amber-100 text-slate-800 text-xs font-semibold px-2.5 py-1.5 rounded-xl border border-amber-300 shadow-sm transition cursor-pointer">
+                                    <option value="auto">📁 Auto (racine / assets)</option>
+                                    <option value="root">📄 Racine (./)</option>
+                                    <option value="assets">📂 Dossier assets/</option>
+                                    <option value="frames">🎞️ Dossier assets/frames/</option>
+                                    <option value="sprites">🎨 Dossier assets/sprites/</option>
+                                </select>
+                                <button id="btn-reload-assets" type="button" title="Recharger les images depuis l'emplacement choisi" class="bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-900 text-xs font-bold px-2.5 py-1.5 rounded-xl shadow-sm transition">
+                                    🔄 Appliquer
+                                </button>
+                            </div>
+                            <div class="flex flex-wrap justify-center sm:justify-start gap-2">
+                                <label for="photo-upload" class="cursor-pointer bg-slate-800 hover:bg-slate-700 active:scale-95 text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow transition inline-flex items-center gap-1.5">
+                                    <span>📸</span> Autre photo (profil)
+                                </label>
+                                <input type="file" id="photo-upload" accept="image/*" class="hidden">
+
+                                <button id="btn-restore-ludo" type="button" class="hidden bg-amber-200 hover:bg-amber-300 text-amber-900 text-xs font-bold px-2.5 py-1.5 rounded-xl transition">
+                                    ↩️ Ludo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Guide visuel des commandes et bonus -->
+                <div class="grid grid-cols-4 gap-2 text-[11px] text-slate-700 bg-slate-50 p-2.5 rounded-2xl border border-slate-200 mb-5">
+                    <div class="flex flex-col items-center">
+                        <span class="text-lg">⬆️⬇️</span>
+                        <span class="font-bold">3 Voies</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <span class="text-lg">🕳️🦘</span>
+                        <span class="font-bold">Saut Trous</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <span class="text-lg">🔔</span>
+                        <span class="font-bold">Dring (Espace)</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <span class="text-lg">🥖🍜☕</span>
+                        <span class="font-bold">Bánh mì & Phở</span>
+                    </div>
+                </div>
+
+                <!-- Bouton Démarrer -->
+                <button id="btn-start" class="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 active:scale-95 text-white font-arcade text-xl sm:text-2xl font-bold py-3.5 px-6 rounded-2xl shadow-lg shadow-emerald-500/30 border-b-4 border-emerald-700 transition transform flex items-center justify-center gap-2">
+                    <span>🚴‍♂️</span> EN ROUTE LUDO !
+                </button>
+            </div>
+        </div>
+
+        <!-- ÉCRAN DE PAUSE -->
+        <div id="pause-screen" class="hidden absolute inset-0 bg-slate-900/75 backdrop-blur-sm flex items-center justify-center p-6 z-30">
+            <div class="bg-white rounded-3xl p-6 max-w-xs w-full text-center shadow-2xl border-4 border-blue-400">
+                <div class="text-4xl mb-2">⏸️</div>
+                <h2 class="font-arcade text-2xl font-bold text-slate-800 mb-4">Pause Ravitaillement</h2>
+                <div class="flex flex-col gap-3">
+                    <button id="btn-resume" class="w-full bg-emerald-500 hover:bg-emerald-400 text-white font-arcade font-bold py-3 rounded-xl shadow transition">
+                        Reprendre la route
+                    </button>
+                    <button id="btn-quit" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2.5 rounded-xl transition">
+                        Menu principal
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ÉCRAN DE FIN DE PARTIE -->
+        <div id="gameover-screen" class="hidden absolute inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 z-30">
+            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 text-center border-4 border-rose-500">
+                <div class="inline-block bg-rose-100 text-rose-600 font-arcade font-bold text-sm px-3.5 py-1 rounded-full mb-2">
+                    💥 OH LA GAMELLE !
+                </div>
+                <h2 class="font-arcade text-3xl font-bold text-slate-800 mb-2">Fin de la balade</h2>
+                
+                <p id="gameover-reason" class="text-slate-600 text-sm sm:text-base bg-slate-100 p-3.5 rounded-2xl border border-slate-200 mb-4 font-medium">
+                    Ludo a dû poser le pied à terre !
+                </p>
+
+                <div class="grid grid-cols-3 gap-2.5 mb-5">
+                    <div class="bg-amber-50 border border-amber-200 p-2.5 rounded-2xl">
+                        <div class="text-[10px] text-amber-700 font-bold uppercase">Distance</div>
+                        <div id="final-distance" class="font-arcade text-xl font-bold text-amber-600">0 m</div>
+                    </div>
+                    <div class="bg-emerald-50 border border-emerald-200 p-2.5 rounded-2xl">
+                        <div class="text-[10px] text-emerald-700 font-bold uppercase">Score</div>
+                        <div id="final-score" class="font-arcade text-xl font-bold text-emerald-600">0</div>
+                    </div>
+                    <div class="bg-sky-50 border border-sky-200 p-2.5 rounded-2xl">
+                        <div class="text-[10px] text-sky-700 font-bold uppercase">Esquives</div>
+                        <div id="final-dodges" class="font-arcade text-xl font-bold text-sky-600">0</div>
+                    </div>
+                </div>
+
+                <div id="new-record-banner" class="hidden bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 font-arcade font-bold text-sm py-1.5 px-4 rounded-xl mb-4 shadow">
+                    🎉 NOUVEAU RECORD DE LUDO ! 🎉
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button id="btn-restart" class="flex-1 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 active:scale-95 text-white font-arcade text-lg font-bold py-3.5 px-5 rounded-2xl shadow-lg border-b-4 border-emerald-700 transition">
+                        🔄 Repartir en selle
+                    </button>
+                    <button id="btn-menu-from-go" class="bg-slate-200 hover:bg-slate-300 active:scale-95 text-slate-700 font-semibold text-sm py-3.5 px-4 rounded-2xl transition">
+                        Accueil
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+    /**
+     * ============================================================================
+     * LUDO-VÉLO DASH : SIDE-SCROLLING 2.5D AVEC DÉTOURAGE PHOTO PAR FLOODFILL
+     * ============================================================================
+     */
+
+    // --- 1. MOTEUR AUDIO SYNTHÉTISÉ (WEB AUDIO API) ---
+    class SoundEngine {
+        constructor() {
+            this.ctx = null;
+            this.muted = false;
+            this.musicEnabled = true;
+            this.musicTimer = null;
+            this.musicStep = 0;
+            this.lastSpokeTick = 0;
+        }
+
+        init() {
+            if (!this.ctx) {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) this.ctx = new AudioCtx();
+            }
+            if (this.ctx && this.ctx.state === 'suspended') {
+                this.ctx.resume();
+            }
+        }
+
+        toggleMute() {
+            this.muted = !this.muted;
+            return this.muted;
+        }
+
+        toggleMusic() {
+            this.musicEnabled = !this.musicEnabled;
+            return this.musicEnabled;
+        }
+
+        // Petite mélodie guillerette pentatonique façon đàn tranh vietnamien
+        startMusic() {
+            if (this.musicTimer) clearInterval(this.musicTimer);
+            const melody = [
+                523.25, 659.25, 783.99, 880.00, 783.99, 659.25, 587.33, 0,
+                659.25, 783.99, 1046.50, 880.00, 783.99, 587.33, 523.25, 0
+            ];
+            this.musicStep = 0;
+            this.musicTimer = setInterval(() => {
+                if (this.muted || !this.musicEnabled || !this.ctx || this.ctx.state !== 'running') return;
+                const freq = melody[this.musicStep % melody.length];
+                this.musicStep++;
+                if (freq > 0) {
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now);
+                    gain.gain.setValueAtTime(0.026, now);
+                    gain.gain.exponentialRampToValueAtTime(0.0004, now + 0.22);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.23);
+                }
+            }, 210);
+        }
+
+        stopMusic() {
+            if (this.musicTimer) {
+                clearInterval(this.musicTimer);
+                this.musicTimer = null;
+            }
+        }
+
+        // Sonnette de vélo double timbre ("Dring-Dring !")
+        playBell() {
+            if (this.muted) return;
+            this.init();
+            if (!this.ctx) return;
+
+            const now = this.ctx.currentTime;
+            [0, 0.14].forEach((offset) => {
+                [1568, 2349, 3136].forEach((f, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = idx === 0 ? 'sine' : 'triangle';
+                    osc.frequency.setValueAtTime(f, now + offset);
+
+                    const vol = idx === 0 ? 0.18 : 0.06;
+                    gain.gain.setValueAtTime(0.001, now + offset);
+                    gain.gain.linearRampToValueAtTime(vol, now + offset + 0.01);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.45);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + offset);
+                    osc.stop(now + offset + 0.46);
+                });
+            });
+        }
+
+        // Saut / Wheelie
+        playJump() {
+            if (this.muted) return;
+            this.init();
+            if (!this.ctx) return;
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(220, now);
+            osc.frequency.exponentialRampToValueAtTime(540, now + 0.18);
+            gain.gain.setValueAtTime(0.11, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.21);
+        }
+
+        // Roulement discret de chaîne / roue libre
+        playWheelTick(speedRatio) {
+            if (this.muted || !this.ctx) return;
+            const now = this.ctx.currentTime;
+            if (now - this.lastSpokeTick < Math.max(0.09, 0.24 - speedRatio * 0.1)) return;
+            this.lastSpokeTick = now;
+
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(130 + speedRatio * 35, now);
+            osc.frequency.exponentialRampToValueAtTime(55, now + 0.025);
+            gain.gain.setValueAtTime(0.02, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.03);
+        }
+
+        // Éclaboussure flaque d'eau
+        playSplash() {
+            if (this.muted || !this.ctx) return;
+            const now = this.ctx.currentTime;
+            const bufferSize = this.ctx.sampleRate * 0.25;
+            const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.35));
+            }
+            const noise = this.ctx.createBufferSource();
+            noise.buffer = buffer;
+
+            const filter = this.ctx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(950, now);
+
+            const gain = this.ctx.createGain();
+            gain.gain.setValueAtTime(0.18, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
+            noise.connect(filter);
+            filter.connect(gain);
+            gain.connect(this.ctx.destination);
+            noise.start(now);
+        }
+
+        // Réactions animaux & klaxon
+        playCat() {
+            if (this.muted || !this.ctx) return;
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(640, now);
+            osc.frequency.linearRampToValueAtTime(920, now + 0.11);
+            osc.frequency.exponentialRampToValueAtTime(490, now + 0.34);
+            gain.gain.setValueAtTime(0.09, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.36);
+        }
+
+        playDog() {
+            if (this.muted || !this.ctx) return;
+            const now = this.ctx.currentTime;
+            [0, 0.16].forEach(delay => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(250, now + delay);
+                osc.frequency.exponentialRampToValueAtTime(115, now + delay + 0.11);
+                gain.gain.setValueAtTime(0.08, now + delay);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.12);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now + delay);
+                osc.stop(now + delay + 0.13);
+            });
+        }
+
+        playCarHorn() {
+            if (this.muted || !this.ctx) return;
+            const now = this.ctx.currentTime;
+            [370, 466].forEach(freq => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(freq, now);
+                gain.gain.setValueAtTime(0.06, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.29);
+            });
+        }
+
+        playBonus() {
+            if (this.muted) return;
+            this.init();
+            if (!this.ctx) return;
+            const now = this.ctx.currentTime;
+            [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, now + i * 0.05);
+                gain.gain.setValueAtTime(0.11, now + i * 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.05 + 0.22);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now + i * 0.05);
+                osc.stop(now + i * 0.05 + 0.23);
+            });
+        }
+
+        playHit() {
+            if (this.muted) return;
+            this.init();
+            if (!this.ctx) return;
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(175, now);
+            osc.frequency.exponentialRampToValueAtTime(38, now + 0.42);
+            gain.gain.setValueAtTime(0.24, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.43);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.44);
+        }
+
+        // Sifflement cartoon + bruit sourd quand Ludo tombe dans un trou de la route !
+        playFallIntoHole() {
+            if (this.muted) return;
+            this.init();
+            if (!this.ctx) return;
+            const now = this.ctx.currentTime;
+
+            const whistle = this.ctx.createOscillator();
+            const wGain = this.ctx.createGain();
+            whistle.type = 'sine';
+            whistle.frequency.setValueAtTime(880, now);
+            whistle.frequency.exponentialRampToValueAtTime(160, now + 0.48);
+            wGain.gain.setValueAtTime(0.16, now);
+            wGain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+            whistle.connect(wGain);
+            wGain.connect(this.ctx.destination);
+            whistle.start(now);
+            whistle.stop(now + 0.52);
+
+            const thud = this.ctx.createOscillator();
+            const tGain = this.ctx.createGain();
+            thud.type = 'triangle';
+            thud.frequency.setValueAtTime(135, now + 0.42);
+            thud.frequency.exponentialRampToValueAtTime(32, now + 0.72);
+            tGain.gain.setValueAtTime(0.001, now);
+            tGain.gain.setValueAtTime(0.28, now + 0.42);
+            tGain.gain.exponentialRampToValueAtTime(0.001, now + 0.74);
+            thud.connect(tGain);
+            tGain.connect(this.ctx.destination);
+            thud.start(now + 0.42);
+            thud.stop(now + 0.75);
+        }
+
+        // Gloussement de poule vietnamienne
+        playChicken() {
+            if (this.muted || !this.ctx) return;
+            const now = this.ctx.currentTime;
+            [0, 0.08, 0.16].forEach((off, i) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(520 + i * 75, now + off);
+                osc.frequency.exponentialRampToValueAtTime(340, now + off + 0.06);
+                gain.gain.setValueAtTime(0.08, now + off);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + off + 0.07);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now + off);
+                osc.stop(now + off + 0.08);
+            });
+        }
+    }
+
+    // --- 2. GESTIONNAIRE DU SPRITE PHOTO (FLOODFILL CHROMAKEY + ROUES ANIMÉES) ---
+    class LudoSpriteManager {
+        constructor(previewCanvas) {
+            this.previewCanvas = previewCanvas;
+            this.previewCtx = previewCanvas.getContext('2d');
+            this.spriteCanvas = null;
+            this.frames = [];
+            this.frameIndex = 0;
+            this.isCustomPhoto = false;
+            this.framesDirectory = 'assets/frames';
+            this.assetMode = 'auto';
+            this.frameFileNames = [
+                'fram1.jpg',
+                'fram2.jpg',
+                'fram3.jpg',
+                'fram4.jpg',
+                'fram5.jpg',
+                'fram6.jpg',
+                'fram7.jpg',
+                'fram8.jpg'
+            ];
+            this.wheelCenters = {
+                rear: { nx: 0.26, ny: 0.78, nr: 0.19 },
+                front: { nx: 0.73, ny: 0.78, nr: 0.19 }
+            };
+
+            this.buildFallbackLudoSprite();
+            this.drawPreview(0);
+            this.applyAssetFolder('auto');
+        }
+
+        getCandidateDirs(mode = this.assetMode) {
+            if (mode === 'root') return ['.'];
+            if (mode === 'assets') return ['assets', 'assets/backgrounds', 'assets/frames'];
+            if (mode === 'frames') return ['assets/frames', 'frames', '.'];
+            if (mode === 'sprites') return ['assets/sprites', 'sprites', 'assets/frames', '.'];
+            return ['.', 'assets', 'assets/frames', 'assets/sprites', 'assets/backgrounds'];
+        }
+
+        applyAssetFolder(mode = 'auto') {
+            this.assetMode = mode;
+            const dirs = this.getCandidateDirs(mode);
+            this.framesDirectory = dirs[0];
+            this.loadFramesFromDirectoryList(dirs, 0, this.frameFileNames);
+        }
+
+        loadFramesFromDirectoryList(dirs, dirIdx, fileNames) {
+            if (dirIdx >= dirs.length) {
+                this.loadSpriteSheet([
+                    'Sprite de cycliste pixel-art et animation.png',
+                    'Cycliste pixel art en série d’animation.png',
+                    'ludovelo.jpg',
+                    'assets/Sprite de cycliste pixel-art et animation.png',
+                    'assets/ludovelo.jpg'
+                ]);
+                return;
+            }
+
+            const cleanDir = dirs[dirIdx].replace(/\/+$/, '');
+            const loadedFrames = new Array(fileNames.length);
+            let completed = 0;
+            let loadedCount = 0;
+
+            fileNames.forEach((fileName, idx) => {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = () => {
+                    try {
+                        loadedFrames[idx] = this.cutoutBackgroundFloodfill(img);
+                        loadedCount++;
+                    } catch (err) {
+                        console.warn(`Détourage impossible pour ${fileName} :`, err);
+                    }
+                    completed++;
+                    if (completed === fileNames.length) {
+                        const validFrames = loadedFrames.filter(Boolean);
+                        if (validFrames.length === fileNames.length) {
+                            this.frames = validFrames;
+                            this.spriteCanvas = validFrames[0];
+                            this.isCustomPhoto = false;
+                            this.framesDirectory = cleanDir;
+                            const statusEl = document.getElementById('cutout-status');
+                            if (statusEl) {
+                                statusEl.textContent = `✨ 8 frames (${cleanDir === '.' ? 'racine' : cleanDir + '/'})`;
+                            }
+                            this.drawPreview(0);
+                        } else if (loadedCount > 0) {
+                            this.frames = validFrames;
+                            this.spriteCanvas = validFrames[0];
+                            this.isCustomPhoto = false;
+                            const statusEl = document.getElementById('cutout-status');
+                            if (statusEl) {
+                                statusEl.textContent = `✨ ${validFrames.length} frames (${cleanDir === '.' ? 'racine' : cleanDir + '/'})`;
+                            }
+                            this.drawPreview(0);
+                        } else {
+                            this.loadFramesFromDirectoryList(dirs, dirIdx + 1, fileNames);
+                        }
+                    }
+                };
+                img.onerror = () => {
+                    completed++;
+                    if (completed === fileNames.length) {
+                        const validFrames = loadedFrames.filter(Boolean);
+                        if (validFrames.length > 0) {
+                            this.frames = validFrames;
+                            this.spriteCanvas = validFrames[0];
+                            this.isCustomPhoto = false;
+                            this.drawPreview(0);
+                        } else {
+                            this.loadFramesFromDirectoryList(dirs, dirIdx + 1, fileNames);
+                        }
+                    }
+                };
+                img.src = cleanDir === '.' ? fileName : `${cleanDir}/${fileName}`;
+            });
+        }
+
+        loadFramesFromDirectory(dir, fileNames) {
+            this.loadFramesFromDirectoryList([dir], 0, fileNames);
+        }
+
+        loadFramesFromDirectory(dir, fileNames) {
+            const cleanDir = dir.replace(/\/+$/, '');
+            const loadedFrames = new Array(fileNames.length);
+            let completed = 0;
+            let loadedCount = 0;
+
+            const finalizeBatch = () => {
+                const validFrames = loadedFrames.filter(Boolean);
+                if (validFrames.length === fileNames.length) {
+                    this.frames = validFrames;
+                    this.spriteCanvas = validFrames[0];
+                    this.isCustomPhoto = false;
+                    const statusEl = document.getElementById('cutout-status');
+                    if (statusEl) {
+                        statusEl.textContent = `✨ 8 frames (${cleanDir}/)`;
+                    }
+                    this.drawPreview(0);
+                } else if (loadedCount > 0 && cleanDir !== '.') {
+                    this.loadFramesFromDirectory('.', fileNames);
+                } else if (loadedCount > 0) {
+                    this.frames = validFrames;
+                    this.spriteCanvas = validFrames[0];
+                    this.drawPreview(0);
+                } else {
+                    this.loadSpriteSheet([
+                        'Sprite de cycliste pixel-art et animation.png',
+                        'Cycliste pixel art en série d’animation.png',
+                        'ludovelo.jpg'
+                    ]);
+                }
+            };
+
+            fileNames.forEach((fileName, idx) => {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = () => {
+                    try {
+                        loadedFrames[idx] = this.cutoutBackgroundFloodfill(img);
+                        loadedCount++;
+                    } catch (err) {
+                        console.warn(`Détourage impossible pour ${fileName} :`, err);
+                    }
+                    completed++;
+                    if (completed === fileNames.length) finalizeBatch();
+                };
+                img.onerror = () => {
+                    completed++;
+                    if (completed === fileNames.length) finalizeBatch();
+                };
+                img.src = cleanDir === '.' ? fileName : `${cleanDir}/${fileName}`;
+            });
+        }
+
+        loadSpriteSheet(candidates, idx = 0, isCustom = false) {
+            if (idx >= candidates.length) {
+                this.drawPreview(0);
+                return;
+            }
+            const src = candidates[idx];
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => {
+                try {
+                    const extractedFrames = this.extractAnimationFrames(img, src);
+                    if (extractedFrames && extractedFrames.length > 0) {
+                        this.frames = extractedFrames;
+                        this.spriteCanvas = extractedFrames[0];
+                        this.isCustomPhoto = isCustom;
+                        this.wheelCenters = {
+                            rear: { nx: 0.265, ny: 0.775, nr: 0.185 },
+                            front: { nx: 0.732, ny: 0.775, nr: 0.185 }
+                        };
+                        const statusEl = document.getElementById('cutout-status');
+                        if (statusEl) {
+                            statusEl.textContent = isCustom
+                                ? '📸 Photo active'
+                                : `✨ ${extractedFrames.length} frames prêtes !`;
+                        }
+                        this.drawPreview(0);
+                    } else {
+                        this.loadSpriteSheet(candidates, idx + 1, isCustom);
+                    }
+                } catch (err) {
+                    console.warn('Extraction de sprite impossible :', err);
+                    this.loadSpriteSheet(candidates, idx + 1, isCustom);
+                }
+            };
+            img.onerror = () => {
+                this.loadSpriteSheet(candidates, idx + 1, isCustom);
+            };
+            img.src = src;
+        }
+
+        extractAnimationFrames(img, srcName) {
+            const w = img.width;
+            const h = img.height;
+            const fullCanvas = document.createElement('canvas');
+            fullCanvas.width = w;
+            fullCanvas.height = h;
+            const fctx = fullCanvas.getContext('2d');
+            fctx.drawImage(img, 0, 0, w, h);
+
+            if (srcName.includes('Sprite de cycliste')) {
+                const gridLeft = Math.round(w * 0.455);
+                const gridTop = Math.round(h * 0.055);
+                const gridW = Math.round(w * 0.54);
+                const gridH = Math.round(h * 0.56);
+
+                const cols = 4;
+                const rows = 2;
+                const cellW = gridW / cols;
+                const cellH = gridH / rows;
+                const frames = [];
+
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        const sx = Math.round(gridLeft + c * cellW + cellW * 0.04);
+                        const sy = Math.round(gridTop + r * cellH + cellH * 0.04);
+                        const sw = Math.round(cellW * 0.92);
+                        const sh = Math.round(cellH * 0.76);
+
+                        const cellCanvas = document.createElement('canvas');
+                        cellCanvas.width = sw;
+                        cellCanvas.height = sh;
+                        cellCanvas.getContext('2d').drawImage(fullCanvas, sx, sy, sw, sh, 0, 0, sw, sh);
+                        frames.push(this.cutoutBackgroundFloodfill(cellCanvas));
+                    }
+                }
+                return frames;
+            }
+
+            if (srcName.includes('série d’animation') || srcName.includes('serie d')) {
+                const stripTop = Math.round(h * 0.64);
+                const stripH = Math.round(h * 0.31);
+                const count = 8;
+                const cellW = w / count;
+                const frames = [];
+
+                for (let i = 0; i < count; i++) {
+                    const sx = Math.round(i * cellW + cellW * 0.03);
+                    const sw = Math.round(cellW * 0.94);
+                    const cellCanvas = document.createElement('canvas');
+                    cellCanvas.width = sw;
+                    cellCanvas.height = stripH;
+                    cellCanvas.getContext('2d').drawImage(fullCanvas, sx, stripTop, sw, stripH, 0, 0, sw, stripH);
+                    frames.push(this.cutoutBackgroundFloodfill(cellCanvas));
+                }
+                return frames;
+            }
+
+            return [this.cutoutBackgroundFloodfill(img)];
+        }
+
+        loadAndProcessImage(src, isCustom = false) {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => {
+                try {
+                    const processed = this.cutoutBackgroundFloodfill(img);
+                    this.frames = [processed];
+                    this.spriteCanvas = processed;
+                    this.isCustomPhoto = isCustom;
+                    this.wheelCenters = {
+                        rear: { nx: 0.27, ny: 0.78, nr: 0.18 },
+                        front: { nx: 0.73, ny: 0.78, nr: 0.18 }
+                    };
+                    const statusEl = document.getElementById('cutout-status');
+                    if (statusEl) statusEl.textContent = isCustom ? '📸 Photo active' : '✨ Ludo prêt !';
+                    this.drawPreview(0);
+                } catch (err) {
+                    console.warn('Détourage canvas impossible, conservation du rendu de secours :', err);
+                }
+            };
+            img.onerror = () => {
+                this.drawPreview(0);
+            };
+            img.src = src;
+        }
+
+        cutoutBackgroundFloodfill(img) {
+            const maxDim = 560;
+            const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+            const w = Math.round(img.width * scale);
+            const h = Math.round(img.height * scale);
+
+            const off = document.createElement('canvas');
+            off.width = w;
+            off.height = h;
+            const ctx = off.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+
+            const imgData = ctx.getImageData(0, 0, w, h);
+            const data = imgData.data;
+
+            const sampleCorner = (x, y) => {
+                const i = (y * w + x) * 4;
+                return [data[i], data[i + 1], data[i + 2]];
+            };
+            const c1 = sampleCorner(2, 2);
+            const c2 = sampleCorner(w - 3, 2);
+            const bgR = (c1[0] + c2[0]) / 2;
+            const bgG = (c1[1] + c2[1]) / 2;
+            const bgB = (c1[2] + c2[2]) / 2;
+
+            const mask = new Uint8Array(w * h);
+            const queue = new Int32Array(w * h);
+            let head = 0;
+            let tail = 0;
+
+            const isBgColor = (idx, tol) => {
+                const p = idx * 4;
+                const r = data[p];
+                const g = data[p + 1];
+                const b = data[p + 2];
+
+                const dr = r - bgR;
+                const dg = g - bgG;
+                const db = b - bgB;
+                const dist = Math.sqrt(dr * dr + dg * dg + db * db);
+
+                const maxC = Math.max(r, g, b);
+                const minC = Math.min(r, g, b);
+                const sat = maxC - minC;
+
+                return (dist < tol && sat < 26) || (r > 228 && g > 230 && b > 234 && sat < 18);
+            };
+
+            for (let x = 0; x < w; x++) {
+                const top = x;
+                const bot = (h - 1) * w + x;
+                if (isBgColor(top, 38)) { mask[top] = 1; queue[tail++] = top; }
+                if (isBgColor(bot, 48)) { mask[bot] = 1; queue[tail++] = bot; }
+            }
+            for (let y = 1; y < h - 1; y++) {
+                const left = y * w;
+                const right = y * w + (w - 1);
+                if (isBgColor(left, 38)) { mask[left] = 1; queue[tail++] = left; }
+                if (isBgColor(right, 38)) { mask[right] = 1; queue[tail++] = right; }
+            }
+
+            while (head < tail) {
+                const curr = queue[head++];
+                const cx = curr % w;
+                const cy = (curr - cx) / w;
+                const tol = cy > h * 0.85 ? 52 : 34;
+
+                if (cx > 0) {
+                    const n = curr - 1;
+                    if (mask[n] === 0 && isBgColor(n, tol)) { mask[n] = 1; queue[tail++] = n; }
+                }
+                if (cx < w - 1) {
+                    const n = curr + 1;
+                    if (mask[n] === 0 && isBgColor(n, tol)) { mask[n] = 1; queue[tail++] = n; }
+                }
+                if (cy > 0) {
+                    const n = curr - w;
+                    if (mask[n] === 0 && isBgColor(n, tol)) { mask[n] = 1; queue[tail++] = n; }
+                }
+                if (cy < h - 1) {
+                    const n = curr + w;
+                    if (mask[n] === 0 && isBgColor(n, tol)) { mask[n] = 1; queue[tail++] = n; }
+                }
+            }
+
+            let minX = w, minY = h, maxX = 0, maxY = 0;
+
+            for (let y = 0; y < h; y++) {
+                for (let x = 0; x < w; x++) {
+                    const idx = y * w + x;
+                    const p = idx * 4;
+                    if (mask[idx] === 1) {
+                        data[p + 3] = 0;
+                    } else {
+                        let bgNeighbors = 0;
+                        if (x > 0 && mask[idx - 1] === 1) bgNeighbors++;
+                        if (x < w - 1 && mask[idx + 1] === 1) bgNeighbors++;
+                        if (y > 0 && mask[idx - w] === 1) bgNeighbors++;
+                        if (y < h - 1 && mask[idx + w] === 1) bgNeighbors++;
+
+                        if (bgNeighbors > 0) {
+                            data[p + 3] = Math.round(255 * (1 - bgNeighbors * 0.18));
+                        }
+
+                        if (x < minX) minX = x;
+                        if (x > maxX) maxX = x;
+                        if (y < minY) minY = y;
+                        if (y > maxY) maxY = y;
+                    }
+                }
+            }
+
+            ctx.putImageData(imgData, 0, 0);
+
+            if (maxX > minX && maxY > minY) {
+                const pad = 6;
+                const cropX = Math.max(0, minX - pad);
+                const cropY = Math.max(0, minY - pad);
+                const cropW = Math.min(w - cropX, maxX - minX + pad * 2);
+                const cropH = Math.min(h - cropY, maxY - minY + pad * 2);
+
+                const cropped = document.createElement('canvas');
+                cropped.width = cropW;
+                cropped.height = cropH;
+                cropped.getContext('2d').drawImage(off, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+                return cropped;
+            }
+
+            return off;
+        }
+
+        buildFallbackLudoSprite() {
+            const c = document.createElement('canvas');
+            c.width = 320;
+            c.height = 240;
+            const ctx = c.getContext('2d');
+
+            const drawWheel = (cx, cy, r) => {
+                ctx.strokeStyle = '#334155';
+                ctx.lineWidth = 7;
+                ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+                ctx.strokeStyle = '#cbd5e1';
+                ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.arc(cx, cy, r - 4, 0, Math.PI * 2); ctx.stroke();
+            };
+            drawWheel(85, 186, 44);
+            drawWheel(235, 186, 44);
+
+            ctx.fillStyle = '#1e293b';
+            ctx.beginPath();
+            ctx.roundRect(52, 128, 48, 10, 4);
+            ctx.fill();
+
+            ctx.strokeStyle = '#1d4ed8';
+            ctx.lineWidth = 6;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(85, 186); ctx.lineTo(148, 186);
+            ctx.lineTo(205, 118);
+            ctx.moveTo(148, 186); ctx.lineTo(125, 122);
+            ctx.moveTo(205, 118); ctx.lineTo(235, 186);
+            ctx.stroke();
+
+            ctx.fillStyle = '#0f172a';
+            ctx.beginPath();
+            ctx.roundRect(216, 86, 26, 30, 6);
+            ctx.fill();
+            ctx.fillStyle = '#94a3b8';
+            ctx.beginPath();
+            ctx.roundRect(212, 102, 34, 34, 4);
+            ctx.fill();
+
+            ctx.fillStyle = '#9a5b3c';
+            ctx.beginPath();
+            ctx.roundRect(112, 116, 44, 28, 8);
+            ctx.fill();
+            ctx.fillStyle = '#eab696';
+            ctx.fillRect(142, 134, 14, 38);
+            ctx.fillStyle = '#cbd5e1';
+            ctx.fillRect(138, 172, 26, 5);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.roundRect(108, 56, 42, 64, 12);
+            ctx.fill();
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.strokeStyle = '#eab696';
+            ctx.lineWidth = 10;
+            ctx.beginPath();
+            ctx.moveTo(136, 72);
+            ctx.lineTo(192, 106);
+            ctx.stroke();
+
+            ctx.fillStyle = '#eab696';
+            ctx.beginPath();
+            ctx.arc(142, 38, 16, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#f8fafc';
+            ctx.beginPath();
+            ctx.arc(141, 31, 16, Math.PI, 0);
+            ctx.fill();
+            ctx.fillRect(142, 28, 24, 4);
+
+            this.spriteCanvas = c;
+        }
+
+        draw(ctx, x, y, targetHeight, wheelAngle, pedalBob, pitchAngle = 0, bellWave = 0, frameIdx = 0) {
+            const activeSprite = (this.frames && this.frames.length > 0)
+                ? this.frames[((Math.floor(frameIdx) % this.frames.length) + this.frames.length) % this.frames.length]
+                : this.spriteCanvas;
+            if (!activeSprite) return;
+
+            const aspect = activeSprite.width / activeSprite.height;
+            const drawH = targetHeight;
+            const drawW = drawH * aspect;
+
+            ctx.save();
+            ctx.translate(x, y);
+
+            if (bellWave > 0) {
+                const r = (1 - bellWave) * 95 + 18;
+                ctx.strokeStyle = `rgba(250, 204, 21, ${bellWave * 0.9})`;
+                ctx.lineWidth = 3.5;
+                ctx.beginPath();
+                ctx.arc(drawW * 0.22, -drawH * 0.54, r, -Math.PI * 0.45, Math.PI * 0.35);
+                ctx.stroke();
+            }
+
+            ctx.rotate(pitchAngle);
+
+            const topY = -drawH + pedalBob;
+            const leftX = -drawW * 0.48;
+            ctx.drawImage(activeSprite, leftX, topY, drawW, drawH);
+
+            if (this.isCustomPhoto || this.frames.length <= 1) {
+                [this.wheelCenters.rear, this.wheelCenters.front].forEach((wc) => {
+                    const wx = leftX + wc.nx * drawW;
+                    const wy = topY + wc.ny * drawH;
+                    const wr = wc.nr * drawW * 0.86;
+
+                    ctx.save();
+                    ctx.translate(wx, wy);
+                    ctx.rotate(wheelAngle);
+
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.32)';
+                    ctx.lineWidth = 1.5;
+                    for (let s = 0; s < 6; s++) {
+                        const ang = (Math.PI * s) / 3;
+                        ctx.beginPath();
+                        ctx.moveTo(Math.cos(ang) * -wr, Math.sin(ang) * -wr);
+                        ctx.lineTo(Math.cos(ang) * wr, Math.sin(ang) * wr);
+                        ctx.stroke();
+                    }
+
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 3.2, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                });
+            }
+
+            ctx.restore();
+        }
+
+        drawPreview(wheelAngle = 0) {
+            const w = this.previewCanvas.width;
+            const h = this.previewCanvas.height;
+            const ctx = this.previewCtx;
+            ctx.clearRect(0, 0, w, h);
+            this.draw(ctx, w * 0.5, h * 0.94, h * 0.88, wheelAngle, 0, 0, 0, wheelAngle * 1.4);
+        }
+    }
+
+    // --- 3. MOTEUR DU JEU EN VUE LATÉRALE (SIDE-SCROLLING 2.5D) ---
+    class LudoSideScrollerGame {
+        constructor() {
+            this.canvas = document.getElementById('gameCanvas');
+            this.ctx = this.canvas.getContext('2d');
+            this.sound = new SoundEngine();
+            this.ludoSprite = new LudoSpriteManager(document.getElementById('cyclistPreviewCanvas'));
+
+            this.width = 960;
+            this.height = 540;
+
+            this.roadTopY = 300;
+            this.roadBottomY = 490;
+            this.lanesCount = 3;
+
+            this.state = 'MENU';
+            this.distance = 0;
+            this.score = 0;
+            this.dodges = 0;
+            this.lives = 3;
+            this.bestDistance = parseInt(localStorage.getItem('ludovelo_best_dist') || '0', 10);
+            this.bestScore = parseInt(localStorage.getItem('ludovelo_best_score') || '0', 10);
+
+            this.player = {
+                x: 170,
+                baseX: 170,
+                lane: 1,
+                currentY: 395,
+                z: 0,
+                vz: 0,
+                speed: 380,
+                wheelAngle: 0,
+                pedalPhase: 0,
+                animFrame: 0,
+                invulnTimer: 0,
+                boostTimer: 0,
+                shieldTimer: 0,
+                bellWave: 0,
+                fallTimer: 0,
+                fallHole: null,
+                fallDepth: 0,
+                fallAngle: 0
+            };
+
+            this.keys = { up: false, down: false, right: false, left: false };
+            this.touchStartY = null;
+
+            this.scrollFar = 0;
+            this.scrollRice = 0;
+            this.scrollMid = 0;
+            this.scrollRoad = 0;
+            this.bgImage = null;
+            this.bgLoaded = false;
+            this.bgRevealProgress = 0.2;
+            this.bgScrollX = 0;
+            this.clouds = [];
+            this.villageBuildings = [];
+            this.crosswalks = [];
+            this.holes = [];
+            this.obstacles = [];
+            this.bonuses = [];
+            this.particles = [];
+            this.floatingTexts = [];
+            this.roadSurfaceCache = null;
+
+            this.spawnTimer = 1.0;
+            this.holeTimer = 2.4;
+            this.bonusTimer = 2.2;
+            this.lastTime = 0;
+            this.previewAnimAngle = 0;
+
+            this.initUI();
+            this.buildRealisticRoadTexture();
+            this.resize();
+            this.loadBackgroundImage();
+            window.addEventListener('resize', () => this.resize());
+            this.initWorldScenery();
+            this.updateBestScoreUI();
+        }
+
+        loadBackgroundImage(mode = 'auto') {
+            const candidatesByMode = {
+                auto: [
+                    'fond.png',
+                    'assets/fond.png',
+                    'assets/backgrounds/fond.png',
+                    'assets/frames/fond.png',
+                    'images/fond.png'
+                ],
+                root: ['fond.png'],
+                assets: ['assets/fond.png', 'assets/backgrounds/fond.png', 'fond.png'],
+                frames: ['assets/frames/fond.png', 'fond.png', 'assets/fond.png'],
+                sprites: ['assets/sprites/fond.png', 'assets/fond.png', 'fond.png']
+            };
+            const candidates = candidatesByMode[mode] || candidatesByMode.auto;
+            const tryLoad = (idx) => {
+                if (idx >= candidates.length) {
+                    this.bgLoaded = false;
+                    return;
+                }
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = () => {
+                    this.bgImage = img;
+                    this.bgLoaded = true;
+                    this.bgRevealProgress = 0.2;
+                };
+                img.onerror = () => tryLoad(idx + 1);
+                img.src = candidates[idx];
+            };
+            tryLoad(0);
+        }
+
+        reloadAssetsFromUI() {
+            const selectEl = document.getElementById('asset-folder-select');
+            const chosenMode = selectEl ? selectEl.value : 'auto';
+            document.getElementById('btn-restore-ludo').classList.add('hidden');
+            this.ludoSprite.applyAssetFolder(chosenMode);
+            this.loadBackgroundImage(chosenMode);
+        }
+
+        buildRealisticRoadTexture() {
+            const tile = document.createElement('canvas');
+            tile.width = 256;
+            tile.height = 128;
+            const rctx = tile.getContext('2d');
+
+            const baseGrad = rctx.createLinearGradient(0, 0, 0, tile.height);
+            baseGrad.addColorStop(0, '#4c525a');
+            baseGrad.addColorStop(0.5, '#3e444c');
+            baseGrad.addColorStop(1, '#2f343b');
+            rctx.fillStyle = baseGrad;
+            rctx.fillRect(0, 0, tile.width, tile.height);
+
+            for (let i = 0; i < 1800; i++) {
+                const gx = (i * 73) % tile.width;
+                const gy = (i * 41) % tile.height;
+                const shade = (i % 3 === 0) ? 'rgba(226, 232, 240, 0.06)' : 'rgba(15, 23, 42, 0.14)';
+                rctx.fillStyle = shade;
+                rctx.fillRect(gx, gy, (i % 2) + 1, 1);
+            }
+
+            rctx.strokeStyle = 'rgba(15, 23, 42, 0.35)';
+            rctx.lineWidth = 1.1;
+            rctx.beginPath();
+            rctx.moveTo(24, 18);
+            rctx.lineTo(58, 34);
+            rctx.lineTo(82, 29);
+            rctx.lineTo(114, 48);
+            rctx.moveTo(152, 86);
+            rctx.lineTo(188, 74);
+            rctx.lineTo(226, 92);
+            rctx.stroke();
+
+            this.roadSurfaceCache = tile;
+        }
+
+        resize() {
+            const container = document.getElementById('game-container');
+            const rect = container.getBoundingClientRect();
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+            this.canvas.width = rect.width * dpr;
+            this.canvas.height = rect.height * dpr;
+            this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            this.width = rect.width;
+            this.height = rect.height;
+
+            this.roadTopY = Math.round(this.height * 0.54);
+            this.roadBottomY = Math.round(this.height * 0.90);
+
+            this.player.x = Math.max(95, Math.min(210, this.width * 0.19));
+            this.player.baseX = this.player.x;
+            this.player.currentY = this.getLaneY(this.player.lane);
+        }
+
+        getLaneY(laneIndex) {
+            const clamped = Math.max(0, Math.min(this.lanesCount - 1, laneIndex));
+            const laneHeight = (this.roadBottomY - this.roadTopY) / this.lanesCount;
+            return this.roadTopY + laneHeight * (clamped + 0.62);
+        }
+
+        initUI() {
+            const uploadInput = document.getElementById('photo-upload');
+            const restoreBtn = document.getElementById('btn-restore-ludo');
+            const folderSelect = document.getElementById('asset-folder-select');
+            const reloadBtn = document.getElementById('btn-reload-assets');
+
+            if (folderSelect) {
+                folderSelect.addEventListener('change', () => this.reloadAssetsFromUI());
+            }
+            if (reloadBtn) {
+                reloadBtn.addEventListener('click', () => this.reloadAssetsFromUI());
+            }
+
+            uploadInput.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        this.ludoSprite.loadAndProcessImage(ev.target.result, true);
+                        restoreBtn.classList.remove('hidden');
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            });
+
+            restoreBtn.addEventListener('click', () => {
+                const mode = folderSelect ? folderSelect.value : 'auto';
+                this.ludoSprite.applyAssetFolder(mode);
+                this.loadBackgroundImage(mode);
+                restoreBtn.classList.add('hidden');
+                uploadInput.value = '';
+            });
+
+            document.getElementById('btn-start').addEventListener('click', () => this.startGame());
+            document.getElementById('btn-restart').addEventListener('click', () => this.startGame());
+            document.getElementById('btn-menu-from-go').addEventListener('click', () => {
+                document.getElementById('gameover-screen').classList.add('hidden');
+                document.getElementById('start-screen').classList.remove('hidden');
+                this.state = 'MENU';
+            });
+
+            document.getElementById('btn-pause').addEventListener('click', () => this.togglePause());
+            document.getElementById('btn-resume').addEventListener('click', () => this.togglePause());
+            document.getElementById('btn-quit').addEventListener('click', () => {
+                this.sound.stopMusic();
+                document.getElementById('pause-screen').classList.add('hidden');
+                document.getElementById('hud').classList.add('hidden');
+                document.getElementById('in-game-controls').classList.add('hidden');
+                document.getElementById('start-screen').classList.remove('hidden');
+                this.state = 'MENU';
+            });
+
+            const btnMute = document.getElementById('btn-mute');
+            btnMute.addEventListener('click', () => {
+                const muted = this.sound.toggleMute();
+                btnMute.textContent = muted ? '🔇' : '🔊';
+            });
+
+            const btnMusic = document.getElementById('btn-music');
+            btnMusic.addEventListener('click', () => {
+                const on = this.sound.toggleMusic();
+                btnMusic.style.opacity = on ? '1' : '0.45';
+            });
+
+            document.getElementById('btn-bell').addEventListener('pointerdown', (e) => {
+                e.stopPropagation();
+                this.ringBell();
+            });
+            document.getElementById('btn-jump').addEventListener('pointerdown', (e) => {
+                e.stopPropagation();
+                this.triggerJump();
+            });
+            document.getElementById('btn-touch-up').addEventListener('pointerdown', (e) => {
+                e.stopPropagation();
+                this.changeLane(-1);
+            });
+            document.getElementById('btn-touch-down').addEventListener('pointerdown', (e) => {
+                e.stopPropagation();
+                this.changeLane(1);
+            });
+
+            window.addEventListener('keydown', (e) => {
+                if (this.state !== 'PLAYING') {
+                    if (e.code === 'Escape' && this.state === 'PAUSED') this.togglePause();
+                    return;
+                }
+
+                if (e.code === 'ArrowUp' || e.code === 'KeyZ') {
+                    e.preventDefault();
+                    this.changeLane(-1);
+                } else if (e.code === 'ArrowDown' || e.code === 'KeyS') {
+                    e.preventDefault();
+                    this.changeLane(1);
+                } else if (e.code === 'ArrowRight' || e.code === 'KeyW' || e.code === 'KeyD') {
+                    e.preventDefault();
+                    this.triggerJump();
+                } else if (e.code === 'ArrowLeft' || e.code === 'KeyA' || e.code === 'KeyQ') {
+                    this.keys.left = true;
+                } else if (e.code === 'Space') {
+                    e.preventDefault();
+                    this.ringBell();
+                } else if (e.code === 'Escape' || e.code === 'KeyP') {
+                    this.togglePause();
+                }
+            });
+
+            window.addEventListener('keyup', (e) => {
+                if (e.code === 'ArrowLeft' || e.code === 'KeyA' || e.code === 'KeyQ') {
+                    this.keys.left = false;
+                }
+            });
+
+            this.canvas.addEventListener('pointerdown', (e) => {
+                if (this.state !== 'PLAYING') return;
+                this.touchStartY = e.clientY;
+            });
+
+            this.canvas.addEventListener('pointerup', (e) => {
+                if (this.state !== 'PLAYING' || this.touchStartY === null) return;
+                const dy = e.clientY - this.touchStartY;
+                if (Math.abs(dy) > 26) {
+                    this.changeLane(dy < 0 ? -1 : 1);
+                } else {
+                    this.triggerJump();
+                }
+                this.touchStartY = null;
+            });
+        }
+
+        updateBestScoreUI() {
+            if (this.bestDistance > 0 || this.bestScore > 0) {
+                document.getElementById('best-score-badge').classList.remove('hidden');
+                document.getElementById('menu-best-distance').textContent = `${this.bestDistance} m`;
+                document.getElementById('menu-best-score').textContent = `${this.bestScore} pts`;
+            }
+        }
+
+        initWorldScenery() {
+            this.clouds = [];
+            for (let i = 0; i < 6; i++) {
+                this.clouds.push({
+                    x: Math.random() * 1200,
+                    y: 38 + Math.random() * 95,
+                    scale: 0.7 + Math.random() * 0.6,
+                    speed: 14 + Math.random() * 14
+                });
+            }
+
+            this.villageBuildings = [];
+            const wallShades = ['#fef08a', '#fde047', '#fed7aa', '#fef3c7', '#fecdd3'];
+            const roofShades = ['#9a3412', '#7c2d12', '#b91c1c', '#78350f'];
+            let index = 0;
+            for (let x = 0; x < 2000; x += 200) {
+                const isGate = (index % 7 === 3);
+                const isStall = (!isGate && index % 3 === 1);
+                this.villageBuildings.push({
+                    x: x,
+                    kind: isGate ? 'gate' : (isStall ? 'stall' : 'house'),
+                    w: isGate ? 130 : (isStall ? 115 : 120 + Math.random() * 35),
+                    h: isGate ? 128 : (isStall ? 76 : 92 + Math.random() * 36),
+                    wallColor: wallShades[index % wallShades.length],
+                    roofColor: roofShades[index % roofShades.length],
+                    treeType: index % 2 === 0 ? 'banana' : 'palm',
+                    hasLanterns: index % 2 === 0,
+                    hasPole: index % 3 === 0
+                });
+                index++;
+            }
+        }
+
+        changeLane(delta) {
+            if (this.state !== 'PLAYING') return;
+            const next = Math.max(0, Math.min(this.lanesCount - 1, this.player.lane + delta));
+            if (next !== this.player.lane) {
+                this.player.lane = next;
+            }
+        }
+
+        triggerJump() {
+            if (this.state !== 'PLAYING') return;
+            if (this.player.z === 0) {
+                this.player.vz = 580;
+                this.sound.playJump();
+            }
+        }
+
+        ringBell() {
+            if (this.state !== 'PLAYING') return;
+            this.sound.playBell();
+            this.player.bellWave = 1.0;
+
+            this.floatingTexts.push({
+                x: this.player.x + 35,
+                y: this.player.currentY - this.player.z - 115,
+                text: 'DRING-DRING ! 🔔',
+                color: '#facc15',
+                life: 0.85
+            });
+
+            this.obstacles.forEach((obs) => {
+                const dx = obs.x - this.player.x;
+                if (dx > 0 && dx < 470 && !obs.alerted) {
+                    if (obs.type === 'cat') {
+                        obs.alerted = true;
+                        obs.jumpZ = 38;
+                        obs.lane = (obs.lane === 0) ? 1 : 0;
+                        this.sound.playCat();
+                        this.score += 20;
+                        this.floatingTexts.push({
+                            x: obs.x, y: obs.y - 45, text: 'Miaou ! 🙀', color: '#ffffff', life: 0.8
+                        });
+                    } else if (obs.type === 'chicken') {
+                        obs.alerted = true;
+                        obs.jumpZ = 42;
+                        obs.lane = (obs.lane === 2) ? 1 : 2;
+                        this.sound.playChicken();
+                        this.score += 20;
+                        this.floatingTexts.push({
+                            x: obs.x, y: obs.y - 45, text: 'Cot-cot ! 🐔', color: '#fef08a', life: 0.8
+                        });
+                    } else if (obs.type === 'dog') {
+                        obs.alerted = true;
+                        obs.vx = 185;
+                        this.sound.playDog();
+                        this.score += 20;
+                        this.floatingTexts.push({
+                            x: obs.x, y: obs.y - 45, text: 'Ouaf ! 🐶', color: '#ffffff', life: 0.8
+                        });
+                    } else if (obs.type === 'vendor') {
+                        obs.alerted = true;
+                        obs.crossingSpeed = 0;
+                        this.score += 30;
+                        this.floatingTexts.push({
+                            x: obs.x, y: obs.y - 72, text: 'Xin chào ! 👋', color: '#fde047', life: 1.0
+                        });
+                    } else if (obs.type === 'scooter' || obs.type === 'car') {
+                        obs.alerted = true;
+                        this.sound.playCarHorn();
+                    }
+                }
+            });
+        }
+
+        startGame() {
+            this.sound.init();
+            this.sound.playBell();
+            this.sound.startMusic();
+
+            this.state = 'PLAYING';
+            this.distance = 0;
+            this.score = 0;
+            this.dodges = 0;
+            this.lives = 3;
+
+            this.player.lane = 1;
+            this.player.currentY = this.getLaneY(1);
+            this.player.baseX = this.player.x;
+            this.player.z = 0;
+            this.player.vz = 0;
+            this.player.speed = 380;
+            this.player.animFrame = 0;
+            this.player.invulnTimer = 0;
+            this.player.boostTimer = 0;
+            this.player.shieldTimer = 0;
+            this.player.bellWave = 0;
+            this.player.fallTimer = 0;
+            this.player.fallHole = null;
+            this.player.fallDepth = 0;
+            this.player.fallAngle = 0;
+            this.bgRevealProgress = 0.2;
+            this.bgScrollX = 0;
+
+            this.holes = [];
+            this.obstacles = [];
+            this.bonuses = [];
+            this.particles = [];
+            this.floatingTexts = [];
+            this.crosswalks = [];
+
+            this.spawnTimer = 1.0;
+            this.holeTimer = 2.6;
+            this.bonusTimer = 2.0;
+
+            this.updateLivesUI();
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('gameover-screen').classList.add('hidden');
+            document.getElementById('pause-screen').classList.add('hidden');
+            document.getElementById('hud').classList.remove('hidden');
+            document.getElementById('in-game-controls').classList.remove('hidden');
+        }
+
+        togglePause() {
+            if (this.state === 'PLAYING') {
+                this.state = 'PAUSED';
+                document.getElementById('pause-screen').classList.remove('hidden');
+            } else if (this.state === 'PAUSED') {
+                this.state = 'PLAYING';
+                document.getElementById('pause-screen').classList.add('hidden');
+            }
+        }
+
+        updateLivesUI() {
+            const hearts = '❤️'.repeat(Math.max(0, this.lives)) + '🖤'.repeat(Math.max(0, 3 - this.lives));
+            document.getElementById('hud-lives').textContent = hearts;
+        }
+
+        spawnRoadHole() {
+            const spawnX = this.width + 160;
+            const isWideTrench = (this.distance > 120 && Math.random() < 0.38);
+
+            if (isWideTrench) {
+                const startLane = Math.random() < 0.5 ? 0 : 1;
+                const y1 = this.getLaneY(startLane);
+                const y2 = this.getLaneY(startLane + 1);
+                const centerY = (y1 + y2) / 2;
+                const spanH = Math.abs(y2 - y1) + 28;
+
+                const hole = {
+                    kind: 'trench',
+                    label: 'une grande tranchée de travaux dans la route',
+                    x: spawnX,
+                    lanes: [startLane, startLane + 1],
+                    y: centerY,
+                    w: 84,
+                    h: spanH,
+                    hasWater: Math.random() < 0.5,
+                    passed: false
+                };
+
+                const conflict = this.obstacles.some(o => Math.abs(o.x - hole.x) < 260) ||
+                                 this.holes.some(h => Math.abs(h.x - hole.x) < 320);
+                if (!conflict) {
+                    this.holes.push(hole);
+                }
+            } else {
+                const lane = Math.floor(Math.random() * this.lanesCount);
+                const hole = {
+                    kind: 'pothole',
+                    label: 'un trou profond au milieu de la route',
+                    x: spawnX,
+                    lanes: [lane],
+                    y: this.getLaneY(lane),
+                    w: 78,
+                    h: 26,
+                    hasWater: Math.random() < 0.45,
+                    passed: false
+                };
+
+                const conflict = this.obstacles.some(o => o.lane === lane && Math.abs(o.x - hole.x) < 250) ||
+                                 this.holes.some(h => Math.abs(h.x - hole.x) < 280);
+                if (!conflict) {
+                    this.holes.push(hole);
+                }
+            }
+        }
+
+        spawnObstacle() {
+            const spawnX = this.width + 130;
+            const lane = Math.floor(Math.random() * this.lanesCount);
+
+            if (this.holes.some(h => Math.abs(h.x - spawnX) < 240)) return;
+
+            const r = Math.random();
+            let obs = null;
+
+            if (r < 0.17) {
+                obs = {
+                    type: 'chicken',
+                    label: 'une poule du village en liberté',
+                    x: spawnX,
+                    lane: lane,
+                    y: this.getLaneY(lane),
+                    vx: -40,
+                    jumpZ: 0,
+                    jumpable: true,
+                    w: 38,
+                    h: 28,
+                    anim: Math.random() * 6
+                };
+            } else if (r < 0.31) {
+                const isCat = Math.random() < 0.5;
+                obs = {
+                    type: isCat ? 'cat' : 'dog',
+                    label: isCat ? 'un chaton du village' : 'un chien errant',
+                    x: spawnX,
+                    lane: lane,
+                    y: this.getLaneY(lane),
+                    vx: isCat ? -45 : -65,
+                    jumpZ: 0,
+                    jumpable: true,
+                    w: isCat ? 44 : 54,
+                    h: isCat ? 28 : 34,
+                    color: isCat ? '#f97316' : '#b45309',
+                    anim: Math.random() * 6
+                };
+            } else if (r < 0.47) {
+                this.crosswalks.push({ x: spawnX });
+                obs = {
+                    type: 'vendor',
+                    label: 'une marchande avec ses paniers en bambou',
+                    x: spawnX,
+                    lane: 0,
+                    y: this.getLaneY(0) - 8,
+                    vx: 0,
+                    crossingSpeed: 26,
+                    jumpable: false,
+                    w: 44,
+                    h: 68,
+                    anim: 0
+                };
+            } else if (r < 0.63) {
+                const isPuddle = Math.random() < 0.6;
+                obs = {
+                    type: isPuddle ? 'puddle' : 'cone',
+                    label: isPuddle ? 'une flaque de mousson' : 'un plot de signalisation',
+                    x: spawnX,
+                    lane: lane,
+                    y: this.getLaneY(lane),
+                    vx: 0,
+                    jumpable: true,
+                    w: isPuddle ? 74 : 30,
+                    h: isPuddle ? 16 : 34
+                };
+            } else if (r < 0.84) {
+                const oncoming = (lane === 0 && Math.random() < 0.5);
+                obs = {
+                    type: 'scooter',
+                    label: oncoming ? 'un scooter à contresens' : 'un scooter chargé de paquets',
+                    x: spawnX,
+                    lane: lane,
+                    y: this.getLaneY(lane),
+                    vx: oncoming ? -190 : 165,
+                    oncoming: oncoming,
+                    jumpable: false,
+                    w: 76,
+                    h: 68,
+                    color: ['#dc2626', '#0284c7', '#16a34a', '#f59e0b'][Math.floor(Math.random() * 4)],
+                    anim: Math.random() * 6
+                };
+            } else {
+                const oncoming = (lane === 0);
+                obs = {
+                    type: 'car',
+                    label: oncoming ? 'un taxi arrivant en face' : 'une voiture de village',
+                    x: spawnX + 40,
+                    lane: lane,
+                    y: this.getLaneY(lane),
+                    vx: oncoming ? -255 : 170,
+                    oncoming: oncoming,
+                    jumpable: false,
+                    w: 132,
+                    h: 56,
+                    color: ['#10b981', '#ffffff', '#ef4444', '#f59e0b'][Math.floor(Math.random() * 4)]
+                };
+            }
+
+            const tooClose = this.obstacles.some(o => o.lane === obs.lane && Math.abs(o.x - obs.x) < 230);
+            if (!tooClose) {
+                this.obstacles.push(obs);
+            }
+        }
+
+        spawnBonus() {
+            const lane = Math.floor(Math.random() * this.lanesCount);
+            const types = ['banhmi', 'pho', 'coffee', 'nonla'];
+            const type = types[Math.floor(Math.random() * types.length)];
+            this.bonuses.push({
+                x: this.width + 60,
+                lane: lane,
+                y: this.getLaneY(lane),
+                type: type,
+                bob: Math.random() * Math.PI * 2
+            });
+        }
+
+        update(dt) {
+            if (this.state === 'MENU') {
+                this.previewAnimAngle += dt * 5;
+                this.ludoSprite.drawPreview(this.previewAnimAngle);
+                this.scrollFar = (this.scrollFar + 20 * dt) % 1600;
+                this.scrollRice = (this.scrollRice + 35 * dt) % 1600;
+                if (this.bgLoaded) {
+                    this.bgRevealProgress = Math.min(1, this.bgRevealProgress + dt * 0.25);
+                    this.bgScrollX += 90 * dt;
+                }
+                return;
+            }
+
+            if (this.state !== 'PLAYING') return;
+
+            const ramp = Math.min(230, this.distance * 0.24);
+            let targetSpeed = 380 + ramp + (this.player.boostTimer > 0 ? 150 : 0);
+            if (this.keys.left) targetSpeed -= 130;
+            this.player.speed += (targetSpeed - this.player.speed) * Math.min(1, dt * 6);
+
+            if (this.player.boostTimer > 0) this.player.boostTimer -= dt;
+            if (this.player.invulnTimer > 0) this.player.invulnTimer -= dt;
+            if (this.player.shieldTimer > 0) this.player.shieldTimer -= dt;
+            if (this.player.bellWave > 0) this.player.bellWave = Math.max(0, this.player.bellWave - dt * 2.2);
+
+            const targetY = this.getLaneY(this.player.lane);
+            this.player.currentY += (targetY - this.player.currentY) * Math.min(1, dt * 13);
+
+            if (this.player.z > 0 || this.player.vz > 0) {
+                this.player.z += this.player.vz * dt;
+                this.player.vz -= 1460 * dt;
+                if (this.player.z <= 0) {
+                    this.player.z = 0;
+                    this.player.vz = 0;
+                }
+            }
+
+            const speedRatio = this.player.speed / 380;
+            this.player.wheelAngle += dt * 11 * speedRatio;
+            if (this.player.z === 0) {
+                this.player.pedalPhase += dt * 13 * speedRatio;
+                const frameCount = (this.ludoSprite.frames && this.ludoSprite.frames.length > 0)
+                    ? this.ludoSprite.frames.length
+                    : 8;
+                this.player.animFrame = (this.player.animFrame + dt * 14 * speedRatio) % frameCount;
+                this.sound.playWheelTick(speedRatio);
+            }
+
+            const dx = this.player.speed * dt;
+            this.scrollFar = (this.scrollFar + dx * 0.14) % 1600;
+            this.scrollRice = (this.scrollRice + dx * 0.30) % 1600;
+            this.scrollMid = (this.scrollMid + dx * 0.58) % 2000;
+            this.scrollRoad = (this.scrollRoad + dx) % 100;
+            if (this.bgLoaded) {
+                this.bgRevealProgress = Math.min(1, this.bgRevealProgress + dt * 0.45);
+                this.bgScrollX += dx;
+            }
+
+            this.distance += dx / 36;
+            this.score += (dx / 36) * 2;
+
+            this.clouds.forEach(c => {
+                c.x -= (c.speed + this.player.speed * 0.05) * dt;
+                if (c.x < -140) c.x = this.width + 140;
+            });
+
+            this.crosswalks.forEach(cw => cw.x -= dx);
+            this.crosswalks = this.crosswalks.filter(cw => cw.x > -140);
+
+            this.holeTimer -= dt;
+            if (this.holeTimer <= 0) {
+                this.spawnRoadHole();
+                const holeInterval = Math.max(1.55, 3.2 - this.distance / 1400);
+                this.holeTimer = holeInterval * (0.85 + Math.random() * 0.45);
+            }
+
+            this.spawnTimer -= dt;
+            if (this.spawnTimer <= 0) {
+                this.spawnObstacle();
+                const baseInterval = Math.max(0.85, 1.75 - this.distance / 1300);
+                this.spawnTimer = baseInterval * (0.85 + Math.random() * 0.4);
+            }
+
+            this.bonusTimer -= dt;
+            if (this.bonusTimer <= 0) {
+                this.spawnBonus();
+                this.bonusTimer = 2.6 + Math.random() * 1.8;
+            }
+
+            for (let i = this.holes.length - 1; i >= 0; i--) {
+                const hole = this.holes[i];
+                hole.x -= dx;
+
+                const distX = Math.abs(hole.x - this.player.x);
+                const inLaneRange = (hole.kind === 'trench')
+                    ? Math.abs(hole.y - this.player.currentY) < (hole.h * 0.46)
+                    : Math.abs(hole.y - this.player.currentY) < 20;
+
+                if (inLaneRange && distX < (hole.w * 0.36) && this.player.z <= 14) {
+                    this.startFallIntoHole(hole);
+                    return;
+                }
+
+                if (!hole.passed && hole.x + hole.w * 0.5 < this.player.x - 32) {
+                    hole.passed = true;
+                    this.dodges++;
+                    this.score += 50;
+                    if (this.player.z > 10) {
+                        this.floatingTexts.push({
+                            x: this.player.x,
+                            y: this.player.currentY - this.player.z - 95,
+                            text: 'Super saut ! +50 🦘',
+                            color: '#38bdf8',
+                            life: 0.75
+                        });
+                    }
+                }
+
+                if (hole.x < -220) {
+                    this.holes.splice(i, 1);
+                }
+            }
+
+            for (let i = this.obstacles.length - 1; i >= 0; i--) {
+                const obs = this.obstacles[i];
+                obs.x += (obs.vx - this.player.speed) * dt;
+                if (obs.anim !== undefined) obs.anim += dt * 11;
+
+                if (obs.type === 'vendor' && obs.crossingSpeed > 0) {
+                    obs.y += obs.crossingSpeed * dt;
+                    if (obs.y > this.roadBottomY - 12) obs.crossingSpeed = 0;
+                } else if (obs.type === 'cat' || obs.type === 'chicken') {
+                    const targetObsY = this.getLaneY(obs.lane);
+                    obs.y += (targetObsY - obs.y) * Math.min(1, dt * 8);
+                    if (obs.jumpZ > 0) obs.jumpZ = Math.max(0, obs.jumpZ - 95 * dt);
+                }
+
+                const distX = Math.abs(obs.x - this.player.x);
+                const distY = Math.abs(obs.y - this.player.currentY);
+
+                if (distY < 24 && distX < (obs.w * 0.42 + 28)) {
+                    const clearedByJump = obs.jumpable && this.player.z > (obs.h * 0.72);
+
+                    if (!clearedByJump && this.player.invulnTimer <= 0) {
+                        if (obs.type === 'puddle') {
+                            if (!obs.splashed) {
+                                obs.splashed = true;
+                                this.sound.playSplash();
+                                this.player.speed *= 0.74;
+                                this.floatingTexts.push({
+                                    x: this.player.x, y: this.player.currentY - 90,
+                                    text: 'PLOUF ! 💦', color: '#38bdf8', life: 0.85
+                                });
+                                for (let p = 0; p < 12; p++) {
+                                    this.particles.push({
+                                        x: this.player.x + (Math.random() * 20 - 10),
+                                        y: this.player.currentY,
+                                        vx: (Math.random() - 0.5) * 180,
+                                        vy: -120 - Math.random() * 140,
+                                        color: '#bae6fd',
+                                        life: 0.55
+                                    });
+                                }
+                            }
+                        } else if (this.player.shieldTimer > 0) {
+                            this.player.shieldTimer = 0;
+                            this.player.invulnTimer = 1.2;
+                            this.sound.playBonus();
+                            this.floatingTexts.push({
+                                x: this.player.x, y: this.player.currentY - 105,
+                                text: 'Protégé par le Nón Lá ! 👒', color: '#fde047', life: 0.9
+                            });
+                        } else {
+                            this.handleCrash(obs);
+                            if (this.state === 'GAMEOVER') return;
+                        }
+                    }
+                }
+
+                if (!obs.passed && obs.x + obs.w * 0.5 < this.player.x - 35) {
+                    obs.passed = true;
+                    this.dodges++;
+                    this.score += 25;
+                }
+
+                if (obs.x < -220) {
+                    this.obstacles.splice(i, 1);
+                }
+            }
+
+            for (let i = this.bonuses.length - 1; i >= 0; i--) {
+                const b = this.bonuses[i];
+                b.x -= dx;
+                b.bob += dt * 5;
+
+                const distX = Math.abs(b.x - this.player.x);
+                const distY = Math.abs(b.y - this.player.currentY);
+
+                if (distX < 46 && distY < 28 && this.player.z < 65) {
+                    this.sound.playBonus();
+                    let label = '+100 pts !';
+                    if (b.type === 'banhmi') {
+                        this.score += 150;
+                        label = 'Bánh Mì croustillant ! +150 🥖';
+                    } else if (b.type === 'pho') {
+                        this.score += 200;
+                        label = 'Bol de Phở chaud ! +200 🍜';
+                    } else if (b.type === 'coffee') {
+                        this.player.boostTimer = 3.2;
+                        this.score += 120;
+                        label = 'Cà phê sữa đá Turbo ! ⚡';
+                    } else if (b.type === 'nonla') {
+                        this.player.shieldTimer = 8.0;
+                        this.score += 120;
+                        label = 'Chapeau Nón Lá Protecteur ! 👒';
+                    }
+
+                    this.floatingTexts.push({
+                        x: b.x, y: b.y - 45,
+                        text: label, color: '#fde047', life: 0.95
+                    });
+                    this.bonuses.splice(i, 1);
+                    continue;
+                }
+
+                if (b.x < -80) {
+                    this.bonuses.splice(i, 1);
+                }
+            }
+
+            for (let i = this.particles.length - 1; i >= 0; i--) {
+                const p = this.particles[i];
+                p.x += p.vx * dt;
+                p.y += p.vy * dt;
+                p.vy += 420 * dt;
+                p.life -= dt;
+                if (p.life <= 0) this.particles.splice(i, 1);
+            }
+
+            for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+                const ft = this.floatingTexts[i];
+                ft.y -= 35 * dt;
+                ft.life -= dt;
+                if (ft.life <= 0) this.floatingTexts.splice(i, 1);
+            }
+
+            document.getElementById('hud-distance').textContent = `${Math.floor(this.distance)} m`;
+            document.getElementById('hud-score').textContent = `${Math.floor(this.score)}`;
+            document.getElementById('hud-speed').textContent = `${Math.round(this.player.speed / 16)} km/h`;
+        }
+
+        startFallIntoHole(hole) {
+            if (this.state === 'FALLING' || this.state === 'GAMEOVER') return;
+            this.state = 'FALLING';
+            this.player.fallTimer = 0;
+            this.player.fallHole = hole;
+            this.player.fallDepth = 0;
+            this.player.fallAngle = 0;
+            this.sound.playFallIntoHole();
+
+            this.floatingTexts.push({
+                x: hole.x,
+                y: hole.y - 75,
+                text: 'DANS LE TROU ! 🕳️💥',
+                color: '#f87171',
+                life: 0.95
+            });
+
+            for (let p = 0; p < 18; p++) {
+                this.particles.push({
+                    x: hole.x + (Math.random() * 40 - 20),
+                    y: hole.y,
+                    vx: (Math.random() - 0.5) * 220,
+                    vy: -110 - Math.random() * 170,
+                    color: hole.hasWater ? '#38bdf8' : '#78716c',
+                    life: 0.75
+                });
+            }
+        }
+
+        handleCrash(obs) {
+            this.sound.playHit();
+            this.lives--;
+            this.updateLivesUI();
+
+            for (let p = 0; p < 14; p++) {
+                this.particles.push({
+                    x: this.player.x + 15,
+                    y: this.player.currentY - 35,
+                    vx: (Math.random() - 0.5) * 220,
+                    vy: -80 - Math.random() * 160,
+                    color: '#fbbf24',
+                    life: 0.65
+                });
+            }
+
+            if (this.lives <= 0) {
+                this.triggerGameOver(obs);
+            } else {
+                this.player.invulnTimer = 1.6;
+                this.player.speed *= 0.72;
+                this.floatingTexts.push({
+                    x: this.player.x,
+                    y: this.player.currentY - 95,
+                    text: 'Aïe ! -1 vie 💥',
+                    color: '#f87171',
+                    life: 0.9
+                });
+            }
+        }
+
+        triggerGameOver(cause) {
+            this.state = 'GAMEOVER';
+            this.sound.stopMusic();
+            document.getElementById('hud').classList.add('hidden');
+            document.getElementById('in-game-controls').classList.add('hidden');
+
+            const distInt = Math.floor(this.distance);
+            const scoreInt = Math.floor(this.score);
+            let isNewRecord = false;
+
+            if (distInt > this.bestDistance || scoreInt > this.bestScore) {
+                isNewRecord = true;
+                this.bestDistance = Math.max(this.bestDistance, distInt);
+                this.bestScore = Math.max(this.bestScore, scoreInt);
+                localStorage.setItem('ludovelo_best_dist', String(this.bestDistance));
+                localStorage.setItem('ludovelo_best_score', String(this.bestScore));
+                this.updateBestScoreUI();
+            }
+
+            const reasons = cause && cause.fellInHole
+                ? [
+                    `Ludo n'a pas sauté assez haut et a plongé dans ${cause.label} !`,
+                    `Le vélo a basculé dans ${cause.label} : fin de la balade vietnamienne !`,
+                    `Aïe ! Les roues de Ludo ont disparu dans ${cause.label} !`
+                ]
+                : [
+                    `Ludo a calé contre ${cause ? cause.label : 'un obstacle imprévu'} sur la route du village !`,
+                    `Faut-il faire "Dring-Dring !" plus tôt ? Ludo a percuté ${cause ? cause.label : 'un obstacle'} !`,
+                    `Fin de la balade pour Ludo après une rencontre avec ${cause ? cause.label : 'un obstacle'} !`
+                ];
+
+            document.getElementById('gameover-reason').textContent =
+                reasons[Math.floor(Math.random() * reasons.length)];
+            document.getElementById('final-distance').textContent = `${distInt} m`;
+            document.getElementById('final-score').textContent = `${scoreInt}`;
+            document.getElementById('final-dodges').textContent = `${this.dodges}`;
+
+            const recordBanner = document.getElementById('new-record-banner');
+            if (isNewRecord) {
+                recordBanner.classList.remove('hidden');
+            } else {
+                recordBanner.classList.add('hidden');
+            }
+
+            document.getElementById('gameover-screen').classList.remove('hidden');
+        }
+
+        draw() {
+            const ctx = this.ctx;
+            ctx.clearRect(0, 0, this.width, this.height);
+
+            if (this.bgLoaded && this.bgImage) {
+                this.drawLoopingBackground(ctx);
+                this.drawRoadOverlay(ctx);
+            } else {
+                this.drawFallbackScenery(ctx);
+            }
+
+            const renderables = [];
+
+            this.bonuses.forEach(b => {
+                renderables.push({ y: b.y, draw: () => this.drawBonus(ctx, b) });
+            });
+
+            this.obstacles.forEach(obs => {
+                renderables.push({ y: obs.y, draw: () => this.drawObstacle(ctx, obs) });
+            });
+
+            renderables.push({
+                y: this.player.currentY,
+                draw: () => this.drawPlayerLudo(ctx)
+            });
+
+            renderables.sort((a, b) => a.y - b.y);
+            renderables.forEach(item => item.draw());
+
+            this.particles.forEach(p => {
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = Math.max(0, p.life * 1.8);
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            });
+
+            this.floatingTexts.forEach(ft => {
+                ctx.save();
+                ctx.font = 'bold 17px Fredoka, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.globalAlpha = Math.min(1, ft.life * 1.3);
+                ctx.strokeStyle = 'rgba(15, 23, 42, 0.85)';
+                ctx.lineWidth = 4;
+                ctx.strokeText(ft.text, ft.x, ft.y);
+                ctx.fillStyle = ft.color;
+                ctx.fillText(ft.text, ft.x, ft.y);
+                ctx.restore();
+            });
+        }
+
+        drawLoopingBackground(ctx) {
+            const img = this.bgImage;
+            const scale = Math.max(this.width / img.width, this.height / img.height);
+            const tileW = Math.max(1, img.width * scale);
+            const tileH = Math.max(1, img.height * scale);
+            const offsetY = (this.height - tileH) * 0.5;
+            const loopX = ((this.bgScrollX % tileW) + tileW) % tileW;
+
+            const revealRatio = Math.max(0.2, Math.min(1, this.bgRevealProgress));
+            const revealW = this.width * revealRatio;
+
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, this.width, this.height);
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(0, 0, revealW, this.height);
+            ctx.clip();
+
+            for (let x = -loopX; x < revealW + tileW; x += tileW) {
+                ctx.drawImage(img, x, offsetY, tileW + 1, tileH);
+            }
+
+            if (revealRatio < 1) {
+                const edgeGrad = ctx.createLinearGradient(revealW - 48, 0, revealW, 0);
+                edgeGrad.addColorStop(0, 'rgba(15, 23, 42, 0)');
+                edgeGrad.addColorStop(1, 'rgba(15, 23, 42, 0.65)');
+                ctx.fillStyle = edgeGrad;
+                ctx.fillRect(revealW - 48, 0, 48, this.height);
+            }
+            ctx.restore();
+        }
+
+        drawRoadOverlay(ctx) {
+            const roadH = this.roadBottomY - this.roadTopY;
+
+            this.crosswalks.forEach(cw => {
+                ctx.fillStyle = 'rgba(241, 245, 249, 0.55)';
+                for (let y = this.roadTopY + 8; y < this.roadBottomY - 12; y += 22) {
+                    ctx.fillRect(cw.x - 24, y, 48, 10);
+                }
+            });
+
+            ctx.strokeStyle = 'rgba(248, 250, 252, 0.45)';
+            ctx.lineWidth = 2.5;
+            ctx.setLineDash([42, 58]);
+            ctx.lineDashOffset = this.scrollRoad;
+            for (let i = 1; i < this.lanesCount; i++) {
+                const ly = this.roadTopY + (roadH / this.lanesCount) * i;
+                ctx.beginPath();
+                ctx.moveTo(0, ly);
+                ctx.lineTo(this.width, ly);
+                ctx.stroke();
+            }
+            ctx.setLineDash([]);
+
+            this.holes.forEach(hole => this.drawRoadHole(ctx, hole));
+        }
+
+        drawFallbackScenery(ctx) {
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, this.roadTopY);
+            skyGrad.addColorStop(0.0, '#1d6fa5');
+            skyGrad.addColorStop(0.38, '#67add6');
+            skyGrad.addColorStop(0.74, '#cbe5f2');
+            skyGrad.addColorStop(1.0, '#f4ebd4');
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, this.width, this.roadTopY);
+
+            const sunX = this.width - 115;
+            const sunY = 66;
+            const sunGlow = ctx.createRadialGradient(sunX, sunY, 8, sunX, sunY, 130);
+            sunGlow.addColorStop(0, 'rgba(255, 251, 235, 0.95)');
+            sunGlow.addColorStop(0.25, 'rgba(254, 240, 138, 0.45)');
+            sunGlow.addColorStop(1, 'rgba(254, 240, 138, 0)');
+            ctx.fillStyle = sunGlow;
+            ctx.beginPath();
+            ctx.arc(sunX, sunY, 130, 0, Math.PI * 2);
+            ctx.fill();
+
+            this.clouds.forEach(c => {
+                ctx.save();
+                ctx.translate(c.x, c.y);
+                ctx.scale(c.scale, c.scale);
+
+                const cloudGrad = ctx.createLinearGradient(0, -24, 0, 16);
+                cloudGrad.addColorStop(0, 'rgba(255, 253, 245, 0.92)');
+                cloudGrad.addColorStop(0.65, 'rgba(235, 242, 247, 0.78)');
+                cloudGrad.addColorStop(1, 'rgba(186, 204, 218, 0.52)');
+                ctx.fillStyle = cloudGrad;
+
+                ctx.beginPath();
+                ctx.arc(-18, 2, 18, 0, Math.PI * 2);
+                ctx.arc(4, -7, 25, 0, Math.PI * 2);
+                ctx.arc(28, -2, 21, 0, Math.PI * 2);
+                ctx.arc(46, 4, 15, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+
+            const horizonY = this.roadTopY - 36;
+            const karstGrad = ctx.createLinearGradient(0, horizonY - 125, 0, horizonY);
+            karstGrad.addColorStop(0, '#5f8794');
+            karstGrad.addColorStop(0.65, '#7fa1a8');
+            karstGrad.addColorStop(1, '#b9cec9');
+            ctx.fillStyle = karstGrad;
+
+            for (let i = 0; i < 8; i++) {
+                const mx = ((i * 240 - this.scrollFar) % 1920 + 1920) % 1920 - 220;
+                const mh = 78 + (i % 3) * 28;
+                const mw = 150 + (i % 2) * 42;
+                ctx.beginPath();
+                ctx.moveTo(mx, horizonY);
+                ctx.bezierCurveTo(mx + mw * 0.12, horizonY - mh * 0.75, mx + mw * 0.25, horizonY - mh, mx + mw * 0.48, horizonY - mh * 0.86);
+                ctx.bezierCurveTo(mx + mw * 0.68, horizonY - mh * 1.02, mx + mw * 0.86, horizonY - mh * 0.55, mx + mw, horizonY);
+                ctx.closePath();
+                ctx.fill();
+            }
+
+            const mistGrad = ctx.createLinearGradient(0, horizonY - 42, 0, horizonY + 8);
+            mistGrad.addColorStop(0, 'rgba(241, 245, 249, 0)');
+            mistGrad.addColorStop(0.65, 'rgba(241, 245, 249, 0.42)');
+            mistGrad.addColorStop(1, 'rgba(248, 250, 252, 0.68)');
+            ctx.fillStyle = mistGrad;
+            ctx.fillRect(0, horizonY - 42, this.width, 50);
+
+            const paddyGrad = ctx.createLinearGradient(0, horizonY - 14, 0, horizonY + 14);
+            paddyGrad.addColorStop(0, '#4d7c3f');
+            paddyGrad.addColorStop(1, '#689948');
+            ctx.fillStyle = paddyGrad;
+            ctx.fillRect(0, horizonY - 14, this.width, 28);
+
+            for (let x = -120; x < this.width + 200; x += 150) {
+                const rx = x - (this.scrollRice % 150);
+                ctx.fillStyle = 'rgba(224, 242, 254, 0.34)';
+                ctx.beginPath();
+                ctx.ellipse(rx + 65, horizonY - 2, 54, 5.5, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.strokeStyle = 'rgba(54, 94, 38, 0.72)';
+                ctx.lineWidth = 1.2;
+                for (let t = 0; t < 7; t++) {
+                    const gx = rx + 18 + t * 18;
+                    const gy = horizonY + 3;
+                    ctx.beginPath();
+                    ctx.moveTo(gx, gy);
+                    ctx.lineTo(gx - 3, gy - 7);
+                    ctx.moveTo(gx, gy);
+                    ctx.lineTo(gx + 3, gy - 7);
+                    ctx.stroke();
+                }
+
+                ctx.fillStyle = 'rgba(120, 83, 46, 0.55)';
+                ctx.fillRect(rx + 146, horizonY - 10, 4, 22);
+            }
+
+            const sidewalkY = this.roadTopY - 22;
+            this.villageBuildings.forEach(b => {
+                const bx = ((b.x - this.scrollMid) % 2000 + 2000) % 2000 - 240;
+                if (bx > this.width + 80) return;
+
+                if (b.kind === 'gate') {
+                    const pillarGrad = ctx.createLinearGradient(bx, 0, bx + b.w, 0);
+                    pillarGrad.addColorStop(0, '#d8c39e');
+                    pillarGrad.addColorStop(0.5, '#ead8b7');
+                    pillarGrad.addColorStop(1, '#b89f78');
+                    ctx.fillStyle = pillarGrad;
+                    ctx.fillRect(bx + 12, sidewalkY - b.h + 26, 22, b.h - 26);
+                    ctx.fillRect(bx + b.w - 34, sidewalkY - b.h + 26, 22, b.h - 26);
+
+                    ctx.fillStyle = '#8c2d23';
+                    ctx.fillRect(bx + 8, sidewalkY - b.h + 24, b.w - 16, 22);
+                    ctx.fillStyle = '#f3e5ab';
+                    ctx.font = 'bold 9px Inter, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('LÀNG VIỆT', bx + b.w / 2, sidewalkY - b.h + 38);
+
+                    const roofGrad = ctx.createLinearGradient(0, sidewalkY - b.h - 14, 0, sidewalkY - b.h + 24);
+                    roofGrad.addColorStop(0, '#9e3f28');
+                    roofGrad.addColorStop(1, '#6e2818');
+                    ctx.fillStyle = roofGrad;
+                    ctx.beginPath();
+                    ctx.moveTo(bx - 10, sidewalkY - b.h + 24);
+                    ctx.quadraticCurveTo(bx + b.w / 2, sidewalkY - b.h - 16, bx + b.w + 10, sidewalkY - b.h + 24);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    [bx + 23, bx + b.w - 23].forEach(lx => {
+                        ctx.fillStyle = '#b93829';
+                        ctx.beginPath(); ctx.ellipse(lx, sidewalkY - b.h + 56, 5.5, 7.5, 0, 0, Math.PI * 2); ctx.fill();
+                    });
+
+                } else if (b.kind === 'stall') {
+                    const wallGrad = ctx.createLinearGradient(0, sidewalkY - b.h + 18, 0, sidewalkY);
+                    wallGrad.addColorStop(0, '#e8cf96');
+                    wallGrad.addColorStop(1, '#c9ab72');
+                    ctx.fillStyle = wallGrad;
+                    ctx.fillRect(bx + 10, sidewalkY - b.h + 18, b.w - 20, b.h - 18);
+
+                    ctx.fillStyle = 'rgba(71, 85, 105, 0.22)';
+                    ctx.fillRect(bx + 10, sidewalkY - 14, b.w - 20, 14);
+
+                    ctx.fillStyle = '#9e382b';
+                    ctx.beginPath();
+                    ctx.moveTo(bx, sidewalkY - b.h + 24);
+                    ctx.lineTo(bx + 14, sidewalkY - b.h + 4);
+                    ctx.lineTo(bx + b.w - 14, sidewalkY - b.h + 4);
+                    ctx.lineTo(bx + b.w, sidewalkY - b.h + 24);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    ctx.fillStyle = '#2b5b84';
+                    ctx.fillRect(bx + 24, sidewalkY - 12, 12, 12);
+                    ctx.fillStyle = '#b63b2d';
+                    ctx.fillRect(bx + 44, sidewalkY - 12, 12, 12);
+                    ctx.fillRect(bx + 68, sidewalkY - 12, 12, 12);
+
+                } else {
+                    const wallGrad = ctx.createLinearGradient(0, sidewalkY - b.h, 0, sidewalkY);
+                    wallGrad.addColorStop(0, '#e5c88b');
+                    wallGrad.addColorStop(0.75, '#d4b272');
+                    wallGrad.addColorStop(1, '#b69458');
+                    ctx.fillStyle = wallGrad;
+                    ctx.fillRect(bx, sidewalkY - b.h, b.w, b.h);
+
+                    ctx.fillStyle = 'rgba(82, 72, 54, 0.16)';
+                    ctx.fillRect(bx, sidewalkY - 16, b.w, 16);
+                    ctx.strokeStyle = 'rgba(68, 52, 34, 0.28)';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(bx, sidewalkY - b.h, b.w, b.h);
+
+                    const tileGrad = ctx.createLinearGradient(0, sidewalkY - b.h - 28, 0, sidewalkY - b.h);
+                    tileGrad.addColorStop(0, '#9c4229');
+                    tileGrad.addColorStop(1, '#6d2b19');
+                    ctx.fillStyle = tileGrad;
+                    ctx.beginPath();
+                    ctx.moveTo(bx - 8, sidewalkY - b.h);
+                    ctx.lineTo(bx + b.w / 2, sidewalkY - b.h - 28);
+                    ctx.lineTo(bx + b.w + 8, sidewalkY - b.h);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    ctx.strokeStyle = 'rgba(41, 18, 10, 0.32)';
+                    ctx.lineWidth = 1;
+                    for (let tx = bx + 6; tx < bx + b.w - 4; tx += 10) {
+                        ctx.beginPath();
+                        ctx.moveTo(tx, sidewalkY - b.h);
+                        ctx.lineTo(bx + b.w / 2 + (tx - (bx + b.w / 2)) * 0.2, sidewalkY - b.h - 26);
+                        ctx.stroke();
+                    }
+
+                    ctx.fillStyle = '#2f4f3e';
+                    ctx.fillRect(bx + 16, sidewalkY - b.h + 20, 24, 28);
+                    ctx.fillRect(bx + b.w - 40, sidewalkY - b.h + 20, 24, 28);
+                    ctx.strokeStyle = 'rgba(15, 23, 42, 0.45)';
+                    for (let ly = sidewalkY - b.h + 24; ly < sidewalkY - b.h + 46; ly += 4) {
+                        ctx.beginPath();
+                        ctx.moveTo(bx + 17, ly); ctx.lineTo(bx + 39, ly);
+                        ctx.moveTo(bx + b.w - 39, ly); ctx.lineTo(bx + b.w - 17, ly);
+                        ctx.stroke();
+                    }
+
+                    ctx.fillStyle = '#5c3a21';
+                    ctx.fillRect(bx + b.w / 2 - 12, sidewalkY - 40, 24, 40);
+
+                    if (b.hasLanterns) {
+                        ctx.fillStyle = '#b93829';
+                        ctx.beginPath(); ctx.ellipse(bx + b.w / 2, sidewalkY - b.h + 10, 5.5, 7.5, 0, 0, Math.PI * 2); ctx.fill();
+                    }
+                }
+
+                const tx = bx + b.w + 24;
+                if (b.treeType === 'banana') {
+                    ctx.fillStyle = 'rgba(15, 23, 42, 0.16)';
+                    ctx.beginPath(); ctx.ellipse(tx + 8, sidewalkY + 1, 16, 4, 0, 0, Math.PI * 2); ctx.fill();
+
+                    ctx.fillStyle = '#5b7c34';
+                    ctx.fillRect(tx - 4, sidewalkY - 34, 8, 34);
+                    [-0.6, -0.2, 0.25, 0.65].forEach(ang => {
+                        ctx.save();
+                        ctx.translate(tx, sidewalkY - 34);
+                        ctx.rotate(ang);
+                        ctx.fillStyle = '#3f6e29';
+                        ctx.beginPath();
+                        ctx.ellipse(0, -18, 6.5, 22, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.strokeStyle = 'rgba(217, 249, 157, 0.45)';
+                        ctx.lineWidth = 1;
+                        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -36); ctx.stroke();
+                        ctx.restore();
+                    });
+                } else {
+                    ctx.fillStyle = 'rgba(15, 23, 42, 0.16)';
+                    ctx.beginPath(); ctx.ellipse(tx + 10, sidewalkY + 1, 18, 4, 0, 0, Math.PI * 2); ctx.fill();
+
+                    ctx.strokeStyle = '#6b4c35';
+                    ctx.lineWidth = 6;
+                    ctx.beginPath();
+                    ctx.moveTo(tx, sidewalkY);
+                    ctx.quadraticCurveTo(tx + 8, sidewalkY - 38, tx + 3, sidewalkY - 72);
+                    ctx.stroke();
+
+                    for (let f = 0; f < 5; f++) {
+                        const a = (Math.PI * 2 * f) / 5;
+                        ctx.fillStyle = (f % 2 === 0) ? '#2f6328' : '#3d7832';
+                        ctx.beginPath();
+                        ctx.ellipse(tx + 3 + Math.cos(a) * 16, sidewalkY - 72 + Math.sin(a) * 10, 18, 4.5, a, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+
+                if (b.hasPole) {
+                    const px = bx - 10;
+                    ctx.fillStyle = '#6e7378';
+                    ctx.fillRect(px - 3, sidewalkY - 115, 6, 115);
+                    ctx.fillRect(px - 14, sidewalkY - 106, 28, 3);
+                    ctx.strokeStyle = 'rgba(30, 41, 59, 0.52)';
+                    ctx.lineWidth = 1.2;
+                    ctx.beginPath();
+                    ctx.moveTo(px, sidewalkY - 105);
+                    ctx.quadraticCurveTo(px + 100, sidewalkY - 84, px + 200, sidewalkY - 105);
+                    ctx.stroke();
+                }
+            });
+
+            const shoulderGrad = ctx.createLinearGradient(0, sidewalkY, 0, this.roadTopY);
+            shoulderGrad.addColorStop(0, '#b5895a');
+            shoulderGrad.addColorStop(1, '#8c643c');
+            ctx.fillStyle = shoulderGrad;
+            ctx.fillRect(0, sidewalkY, this.width, 22);
+            ctx.fillStyle = '#5c4026';
+            ctx.fillRect(0, this.roadTopY - 4, this.width, 4);
+
+            const roadH = this.roadBottomY - this.roadTopY;
+            if (this.roadSurfaceCache) {
+                const pat = ctx.createPattern(this.roadSurfaceCache, 'repeat');
+                ctx.save();
+                ctx.translate(-this.scrollRoad, this.roadTopY);
+                ctx.fillStyle = pat;
+                ctx.fillRect(0, 0, this.width + 256, roadH);
+                ctx.restore();
+            } else {
+                ctx.fillStyle = '#3e444c';
+                ctx.fillRect(0, this.roadTopY, this.width, roadH);
+            }
+
+            const roadLight = ctx.createLinearGradient(0, this.roadTopY, 0, this.roadBottomY);
+            roadLight.addColorStop(0, 'rgba(255, 250, 235, 0.10)');
+            roadLight.addColorStop(0.5, 'rgba(15, 23, 42, 0.04)');
+            roadLight.addColorStop(1, 'rgba(15, 23, 42, 0.22)');
+            ctx.fillStyle = roadLight;
+            ctx.fillRect(0, this.roadTopY, this.width, roadH);
+
+            this.crosswalks.forEach(cw => {
+                ctx.fillStyle = 'rgba(241, 245, 249, 0.62)';
+                for (let y = this.roadTopY + 8; y < this.roadBottomY - 12; y += 22) {
+                    ctx.fillRect(cw.x - 24, y, 48, 10);
+                }
+            });
+
+            ctx.strokeStyle = 'rgba(248, 250, 252, 0.52)';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([42, 58]);
+            ctx.lineDashOffset = this.scrollRoad;
+            for (let i = 1; i < this.lanesCount; i++) {
+                const ly = this.roadTopY + (roadH / this.lanesCount) * i;
+                ctx.beginPath();
+                ctx.moveTo(0, ly);
+                ctx.lineTo(this.width, ly);
+                ctx.stroke();
+            }
+            ctx.setLineDash([]);
+
+            this.holes.forEach(hole => this.drawRoadHole(ctx, hole));
+
+            ctx.fillStyle = '#785536';
+            ctx.fillRect(0, this.roadBottomY, this.width, 8);
+            const fgGrad = ctx.createLinearGradient(0, this.roadBottomY + 8, 0, this.height);
+            fgGrad.addColorStop(0, '#2d5a27');
+            fgGrad.addColorStop(1, '#183316');
+            ctx.fillStyle = fgGrad;
+            ctx.fillRect(0, this.roadBottomY + 8, this.width, this.height - this.roadBottomY);
+        }
+
+        drawRoadHole(ctx, hole) {
+            ctx.save();
+            ctx.translate(hole.x, hole.y);
+
+            const rx = hole.w * 0.5;
+            const ry = hole.h * 0.5;
+
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.34)';
+            ctx.beginPath();
+            ctx.ellipse(3, 3, rx + 7, ry + 5, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#252930';
+            ctx.beginPath();
+            const pts = 18;
+            for (let i = 0; i < pts; i++) {
+                const ang = (Math.PI * 2 * i) / pts;
+                const jag = 1 + Math.sin(i * 3.7) * 0.09 + Math.cos(i * 2.1) * 0.06;
+                const px = Math.cos(ang) * (rx + 4) * jag;
+                const py = Math.sin(ang) * (ry + 3) * jag;
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.save();
+            ctx.beginPath();
+            for (let i = 0; i < pts; i++) {
+                const ang = (Math.PI * 2 * i) / pts;
+                const jag = 1 + Math.sin(i * 3.7) * 0.07;
+                const px = Math.cos(ang) * rx * jag;
+                const py = Math.sin(ang) * ry * jag;
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
+            ctx.clip();
+
+            const pitGrad = ctx.createLinearGradient(0, -ry, 0, ry + 10);
+            if (hole.hasWater) {
+                pitGrad.addColorStop(0, '#1e293b');
+                pitGrad.addColorStop(0.35, '#2b4c65');
+                pitGrad.addColorStop(1, '#0f172a');
+            } else {
+                pitGrad.addColorStop(0, '#1c1917');
+                pitGrad.addColorStop(0.45, '#29221d');
+                pitGrad.addColorStop(1, '#0c0a09');
+            }
+            ctx.fillStyle = pitGrad;
+            ctx.fillRect(-rx - 10, -ry - 10, hole.w + 20, hole.h + 20);
+
+            if (hole.hasWater) {
+                ctx.fillStyle = 'rgba(186, 219, 240, 0.28)';
+                ctx.beginPath();
+                ctx.ellipse(-4, 2, rx * 0.55, ry * 0.34, -0.08, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                ctx.fillStyle = 'rgba(120, 98, 76, 0.35)';
+                for (let g = -2; g <= 2; g++) {
+                    ctx.beginPath();
+                    ctx.arc(g * 9, 3 + (g % 2) * 2, 2.2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.42)';
+            ctx.fillRect(-rx - 10, -ry, hole.w + 20, ry * 0.65);
+            ctx.restore();
+
+            ctx.strokeStyle = '#57534e';
+            ctx.lineWidth = 1.6;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+            ctx.stroke();
+
+            const warnX = -rx - 14;
+            const warnY = -ry - 4;
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.28)';
+            ctx.beginPath(); ctx.ellipse(warnX + 3, warnY + 1, 7, 2.5, 0, 0, Math.PI * 2); ctx.fill();
+
+            ctx.fillStyle = '#92400e';
+            ctx.fillRect(warnX - 1.5, warnY - 17, 3, 17);
+            ctx.fillStyle = '#c2410c';
+            ctx.beginPath();
+            ctx.moveTo(warnX, warnY - 28);
+            ctx.lineTo(warnX - 8.5, warnY - 14);
+            ctx.lineTo(warnX + 8.5, warnY - 14);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillStyle = '#fef3c7';
+            ctx.font = 'bold 9px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('!', warnX, warnY - 16);
+
+            ctx.restore();
+        }
+
+        drawPlayerLudo(ctx) {
+            const p = this.player;
+
+            if (p.invulnTimer > 0 && Math.floor(p.invulnTimer * 14) % 2 === 0) {
+                return;
+            }
+
+            if (this.state === 'FALLING' && p.fallHole) {
+                const hole = p.fallHole;
+                const spriteHeight = Math.max(96, Math.min(128, this.height * 0.21));
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.rect(hole.x - 160, 0, 320, hole.y + hole.h * 0.42);
+                ctx.clip();
+
+                this.ludoSprite.draw(
+                    ctx,
+                    p.x,
+                    p.currentY + p.fallDepth,
+                    spriteHeight,
+                    p.wheelAngle,
+                    0,
+                    p.fallAngle,
+                    0,
+                    p.animFrame
+                );
+                ctx.restore();
+                return;
+            }
+
+            const shadowScale = Math.max(0.45, 1 - p.z / 220);
+            ctx.fillStyle = `rgba(0, 0, 0, ${0.32 * shadowScale})`;
+            ctx.beginPath();
+            ctx.ellipse(p.x, p.currentY + 2, 54 * shadowScale, 11 * shadowScale, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            if (p.boostTimer > 0) {
+                ctx.fillStyle = 'rgba(56, 189, 248, 0.25)';
+                ctx.beginPath();
+                ctx.ellipse(p.x, p.currentY - p.z - 52, 68, 46, 0, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            if (p.shieldTimer > 0) {
+                ctx.strokeStyle = 'rgba(250, 204, 21, 0.75)';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.ellipse(p.x, p.currentY - p.z - 54, 64, 52, 0, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            const spriteHeight = Math.max(96, Math.min(128, this.height * 0.21));
+            const pedalBob = p.z === 0 ? Math.sin(p.pedalPhase) * 2.2 : 0;
+            const pitchAngle = p.z > 0 ? -Math.min(0.24, p.vz * 0.00042) : 0;
+
+            this.ludoSprite.draw(
+                ctx,
+                p.x,
+                p.currentY - p.z,
+                spriteHeight,
+                p.wheelAngle,
+                pedalBob,
+                pitchAngle,
+                p.bellWave,
+                p.animFrame
+            );
+        }
+
+        drawObstacle(ctx, obs) {
+            ctx.save();
+            ctx.translate(obs.x, obs.y);
+
+            if (obs.type === 'puddle') {
+                ctx.fillStyle = '#0284c7';
+                ctx.beginPath();
+                ctx.ellipse(0, 0, 38, 9, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#7dd3fc';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.ellipse(-6, -1, 20, 4, 0, 0, Math.PI * 2);
+                ctx.stroke();
+
+            } else if (obs.type === 'cone') {
+                ctx.fillStyle = 'rgba(0,0,0,0.25)';
+                ctx.beginPath(); ctx.ellipse(0, 2, 14, 5, 0, 0, Math.PI * 2); ctx.fill();
+
+                ctx.fillStyle = '#f97316';
+                ctx.beginPath();
+                ctx.moveTo(-11, 0); ctx.lineTo(-3, -30); ctx.lineTo(3, -30); ctx.lineTo(11, 0);
+                ctx.closePath();
+                ctx.fill();
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(-6, -18, 12, 6);
+
+            } else if (obs.type === 'chicken') {
+                const hop = obs.jumpZ || Math.abs(Math.sin(obs.anim * 1.3)) * 3;
+                ctx.fillStyle = 'rgba(0,0,0,0.25)';
+                ctx.beginPath(); ctx.ellipse(0, 2, 14, 4, 0, 0, Math.PI * 2); ctx.fill();
+
+                ctx.translate(0, -hop);
+                ctx.fillStyle = '#fef3c7';
+                ctx.beginPath(); ctx.ellipse(0, -11, 13, 9, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(-10, -18, 6, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#ef4444';
+                ctx.beginPath(); ctx.arc(-10, -24, 3.5, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#f59e0b';
+                ctx.beginPath(); ctx.moveTo(-16, -18); ctx.lineTo(-21, -16); ctx.lineTo(-16, -15); ctx.fill();
+
+            } else if (obs.type === 'cat') {
+                const hop = obs.jumpZ || Math.abs(Math.sin(obs.anim)) * 3;
+                ctx.fillStyle = 'rgba(0,0,0,0.25)';
+                ctx.beginPath(); ctx.ellipse(0, 2, 18, 5, 0, 0, Math.PI * 2); ctx.fill();
+
+                ctx.translate(0, -hop);
+                ctx.fillStyle = obs.color;
+                ctx.beginPath(); ctx.ellipse(0, -10, 15, 9, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(-13, -16, 8, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath();
+                ctx.moveTo(-18, -21); ctx.lineTo(-16, -29); ctx.lineTo(-12, -22);
+                ctx.moveTo(-11, -21); ctx.lineTo(-8, -29); ctx.lineTo(-6, -21);
+                ctx.fill();
+                ctx.strokeStyle = obs.color;
+                ctx.lineWidth = 3.5;
+                ctx.beginPath();
+                ctx.moveTo(13, -12); ctx.quadraticCurveTo(22, -24, 18, -30);
+                ctx.stroke();
+
+            } else if (obs.type === 'dog') {
+                const run = Math.abs(Math.sin(obs.anim * 1.2)) * 4;
+                ctx.fillStyle = 'rgba(0,0,0,0.25)';
+                ctx.beginPath(); ctx.ellipse(0, 2, 22, 6, 0, 0, Math.PI * 2); ctx.fill();
+
+                ctx.translate(0, -run);
+                ctx.fillStyle = obs.color;
+                ctx.beginPath(); ctx.ellipse(0, -13, 20, 11, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(-17, -21, 10, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.ellipse(-25, -19, 7, 5, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#ef4444';
+                ctx.fillRect(-13, -24, 4, 15);
+
+            } else if (obs.type === 'vendor') {
+                const step = Math.sin(obs.anim * 0.6) * 2;
+                ctx.fillStyle = 'rgba(0,0,0,0.25)';
+                ctx.beginPath(); ctx.ellipse(0, 2, 18, 6, 0, 0, Math.PI * 2); ctx.fill();
+
+                ctx.fillStyle = '#92400e';
+                ctx.beginPath(); ctx.roundRect(-11, -48 + step, 22, 38, 8); ctx.fill();
+                ctx.strokeStyle = '#d97706';
+                ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.moveTo(-26, -34 + step); ctx.lineTo(26, -34 + step); ctx.stroke();
+                ctx.fillStyle = '#b45309';
+                ctx.fillRect(-30, -24 + step, 12, 12);
+                ctx.fillRect(18, -24 + step, 12, 12);
+                ctx.fillStyle = '#fed7aa';
+                ctx.beginPath(); ctx.arc(0, -55 + step, 8, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#fef08a';
+                ctx.beginPath();
+                ctx.moveTo(-16, -58 + step); ctx.lineTo(0, -72 + step); ctx.lineTo(16, -58 + step);
+                ctx.closePath();
+                ctx.fill();
+
+            } else if (obs.type === 'scooter') {
+                if (obs.oncoming) ctx.scale(-1, 1);
+                ctx.fillStyle = 'rgba(0,0,0,0.25)';
+                ctx.beginPath(); ctx.ellipse(0, 2, 36, 7, 0, 0, Math.PI * 2); ctx.fill();
+
+                [-22, 22].forEach(wx => {
+                    ctx.fillStyle = '#0f172a';
+                    ctx.beginPath(); ctx.arc(wx, -13, 13, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#cbd5e1';
+                    ctx.beginPath(); ctx.arc(wx, -13, 5, 0, Math.PI * 2); ctx.fill();
+                });
+                ctx.fillStyle = obs.color;
+                ctx.beginPath();
+                ctx.roundRect(-26, -32, 52, 18, 8);
+                ctx.fill();
+                ctx.fillStyle = '#38bdf8';
+                ctx.beginPath(); ctx.roundRect(-10, -56, 18, 26, 6); ctx.fill();
+                ctx.fillStyle = '#f8fafc';
+                ctx.beginPath(); ctx.arc(2, -64, 9, 0, Math.PI * 2); ctx.fill();
+
+            } else if (obs.type === 'car') {
+                if (obs.oncoming) ctx.scale(-1, 1);
+                ctx.fillStyle = 'rgba(0,0,0,0.32)';
+                ctx.beginPath(); ctx.ellipse(0, 3, 64, 10, 0, 0, Math.PI * 2); ctx.fill();
+
+                ctx.fillStyle = obs.color;
+                ctx.beginPath();
+                ctx.roundRect(-62, -34, 124, 24, 8);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.roundRect(-36, -54, 72, 24, 10);
+                ctx.fill();
+                ctx.fillStyle = '#bae6fd';
+                ctx.beginPath();
+                ctx.roundRect(-30, -50, 26, 15, 4);
+                ctx.roundRect(2, -50, 28, 15, 4);
+                ctx.fill();
+                ctx.fillStyle = '#fef08a';
+                ctx.fillRect(56, -28, 6, 8);
+                ctx.fillStyle = '#ef4444';
+                ctx.fillRect(-62, -28, 6, 8);
+                [-38, 38].forEach(wx => {
+                    ctx.fillStyle = '#0f172a';
+                    ctx.beginPath(); ctx.arc(wx, -10, 12, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#cbd5e1';
+                    ctx.beginPath(); ctx.arc(wx, -10, 5, 0, Math.PI * 2); ctx.fill();
+                });
+            }
+
+            ctx.restore();
+        }
+
+        drawBonus(ctx, b) {
+            const floatY = Math.sin(b.bob) * 5;
+            ctx.save();
+            ctx.translate(b.x, b.y - 26 + floatY);
+
+            ctx.fillStyle = 'rgba(250, 204, 21, 0.35)';
+            ctx.beginPath(); ctx.arc(0, 0, 22, 0, Math.PI * 2); ctx.fill();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.arc(0, 0, 16, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            ctx.font = '19px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            const iconMap = {
+                banhmi: '🥖',
+                pho: '🍜',
+                coffee: '☕',
+                nonla: '👒'
+            };
+            ctx.fillText(iconMap[b.type] || '🥖', 0, 1);
+
+            ctx.restore();
+        }
+
+        loop(timestamp) {
+            if (!this.lastTime) this.lastTime = timestamp;
+            const dt = Math.min(0.05, (timestamp - this.lastTime) / 1000);
+            this.lastTime = timestamp;
+
+            this.update(dt);
+            this.draw();
+
+            requestAnimationFrame((t) => this.loop(t));
+        }
+    }
+
+    window.onload = function () {
+        const game = new LudoSideScrollerGame();
+        requestAnimationFrame((t) => game.loop(t));
+    };
+    </script>
+</body>
+</html>
