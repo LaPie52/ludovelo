@@ -128,15 +128,22 @@
         <!-- Contrôles tactiles / écran (vue latérale : Voies Haut/Bas, Saut, Sonnette) -->
         <div id="touch-controls" class="hidden absolute bottom-3 left-3 right-3 sm:bottom-5 sm:left-6 sm:right-6 flex items-end justify-between pointer-events-none z-20">
             <!-- Changement de voie : Haut / Bas -->
-            <div class="flex flex-col gap-2 pointer-events-auto">
-                <button id="btn-up" aria-label="Voie du haut" class="touch-btn w-14 h-12 sm:w-16 sm:h-14 rounded-2xl bg-white/90 hover:bg-white text-slate-900 shadow-xl border-2 border-slate-300 flex flex-col items-center justify-center font-arcade font-bold">
-                    <span class="text-lg leading-none">⬆️</span>
-                    <span class="text-[9px] uppercase text-slate-500">Voie +</span>
+            <div class="flex flex-col gap-2.5 pointer-events-auto">
+                <button id="btn-up" aria-label="Voie du haut" class="touch-btn w-16 h-14 sm:w-20 sm:h-16 rounded-2xl bg-white/95 hover:bg-white text-slate-900 shadow-2xl border-2 border-amber-400 flex flex-col items-center justify-center font-arcade font-bold">
+                    <span class="text-xl leading-none">⬆️</span>
+                    <span class="text-[10px] uppercase text-slate-700 font-extrabold mt-0.5">Voie Haut</span>
                 </button>
-                <button id="btn-down" aria-label="Voie du bas" class="touch-btn w-14 h-12 sm:w-16 sm:h-14 rounded-2xl bg-white/90 hover:bg-white text-slate-900 shadow-xl border-2 border-slate-300 flex flex-col items-center justify-center font-arcade font-bold">
-                    <span class="text-lg leading-none">⬇️</span>
-                    <span class="text-[9px] uppercase text-slate-500">Voie -</span>
+                <button id="btn-down" aria-label="Voie du bas" class="touch-btn w-16 h-14 sm:w-20 sm:h-16 rounded-2xl bg-white/95 hover:bg-white text-slate-900 shadow-2xl border-2 border-amber-400 flex flex-col items-center justify-center font-arcade font-bold">
+                    <span class="text-xl leading-none">⬇️</span>
+                    <span class="text-[10px] uppercase text-slate-700 font-extrabold mt-0.5">Voie Bas</span>
                 </button>
+            </div>
+
+            <!-- Indicateur mobile central -->
+            <div class="hidden sm:flex items-center gap-1.5 bg-slate-900/65 text-white/90 px-3 py-1 rounded-full text-[11px] font-bold backdrop-blur-xs">
+                <span>👆 Glisse ↕️ Voie</span>
+                <span>•</span>
+                <span>Tap 🦘 Saut</span>
             </div>
 
             <!-- Actions principales : SAUTER & SONNETTE -->
@@ -158,19 +165,19 @@
             <div class="glass-panel w-full max-w-2xl rounded-3xl p-5 sm:p-7 shadow-2xl border-4 border-amber-400 my-auto">
                 <!-- Titre -->
                 <div class="text-center mb-4">
-                    <div class="inline-flex items-center gap-2 bg-amber-100 text-amber-900 border border-amber-300 px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider mb-2">
-                        <span>🇻🇳</span> Vue Latérale • Village Vietnamien
+                    <div class="inline-flex items-center gap-2 bg-red-600 text-yellow-300 border-2 border-yellow-400 px-3.5 py-1 rounded-full text-xs sm:text-sm font-arcade font-bold tracking-wide mb-2 shadow-sm">
+                        <span>🏮</span> Xin chào mọi người ! <span class="font-nunito font-normal text-yellow-100">(Bonjour tout le monde !)</span> <span>🏮</span>
                     </div>
                     <h1 class="font-arcade text-3xl sm:text-5xl font-bold text-slate-900 tracking-tight">
                         LUDO-VÉLO <span class="text-amber-500">VIETNAM</span>
                     </h1>
                     <p class="text-slate-600 text-xs sm:text-sm font-semibold mt-1">
-                        Pédale à travers le village vietnamien ! Saute par-dessus les <b>trous profonds</b>, évite les obstacles et fais tinter la sonnette !
+                        Bienvenue au village ! Pédale sur le chemin de terre, saute par-dessus les <b class="text-rose-600">trous profonds</b> et fais tinter ta sonnette !
                     </p>
                 </div>
 
                 <!-- Carte Ludo + Import photo optionnel -->
-                <div class="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200/90 rounded-2xl p-3.5 sm:p-4 mb-4">
+                <div class="bg-gradient-to-r from-amber-50 via-yellow-50 to-orange-50 border-2 border-amber-300/90 rounded-2xl p-3.5 sm:p-4 mb-4">
                     <div class="flex flex-col sm:flex-row items-center gap-4">
                         <!-- Aperçu en direct du sprite de Ludo en profil -->
                         <div class="relative shrink-0">
@@ -178,7 +185,7 @@
                                 <canvas id="ludo-preview-canvas" width="180" height="130" class="w-full h-full object-contain"></canvas>
                             </div>
                             <span id="cutout-status" class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full shadow whitespace-nowrap">
-                                ✨ 8 frames prêtes !
+                                👒 Prêt à pédaler !
                             </span>
                         </div>
 
@@ -186,7 +193,7 @@
                         <div class="flex-1 text-center sm:text-left">
                             <h3 class="font-arcade font-bold text-slate-800 text-base mb-1">Pilote : Ludo</h3>
                             <p class="text-xs text-slate-600 mb-3 leading-relaxed">
-                                Les 8 frames (<span class="font-mono text-[11px]">assets/frames/fram1..8.jpg</span>) et le décor (<span class="font-mono text-[11px]">assets/backgrounds/fond.png</span>) se chargent automatiquement. Attention aux <b class="text-rose-600">trous profonds</b> : un saut raté et c'est la chute immédiate !
+                                Attention aux <b class="text-rose-600">trous profonds</b> sur le chemin du village : un saut raté et c’est la chute immédiate ! Ramasse les <b>Bánh mì</b> et <b>Phở</b> en chemin.
                             </p>
                             <div class="flex flex-wrap justify-center sm:justify-start gap-2">
                                 <label for="photo-upload" class="cursor-pointer bg-slate-800 hover:bg-slate-700 active:scale-95 text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow transition inline-flex items-center gap-1.5">
@@ -205,16 +212,16 @@
                 <!-- Aide rapide des commandes -->
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center mb-5 text-xs">
                     <div class="bg-slate-100/90 rounded-xl p-2 border border-slate-200">
-                        <div class="font-bold text-slate-800">⬆️ ⬇️ / Z S</div>
+                        <div class="font-bold text-slate-800">👆 Glisse ↕️ / ⬆️⬇️</div>
                         <div class="text-[11px] text-slate-500">Changer de voie</div>
                     </div>
                     <div class="bg-slate-100/90 rounded-xl p-2 border border-slate-200">
-                        <div class="font-bold text-rose-700">🦘 W / ➡️ / Clic</div>
+                        <div class="font-bold text-rose-700">👆 Tap / 🦘 Sauter</div>
                         <div class="text-[11px] text-slate-500">Sauter les trous !</div>
                     </div>
                     <div class="bg-slate-100/90 rounded-xl p-2 border border-slate-200">
-                        <div class="font-bold text-amber-700">🔔 Espace</div>
-                        <div class="text-[11px] text-slate-500">Sonnette (Dring)</div>
+                        <div class="font-bold text-amber-700">🔔 Dring / Espace</div>
+                        <div class="text-[11px] text-slate-500">Faire réagir</div>
                     </div>
                     <div class="bg-slate-100/90 rounded-xl p-2 border border-slate-200">
                         <div class="font-bold text-emerald-700">🥖 🍜 ☕</div>
@@ -638,7 +645,7 @@
                     if (statusEl) {
                         statusEl.textContent = isCustom
                             ? '📸 Photo active !'
-                            : `✨ ${this.frames.length} frames prêtes !`;
+                            : '👒 Prêt à pédaler !';
                     }
                     this.drawPreview(0);
                 } catch (err) {
@@ -1051,6 +1058,12 @@
             this.bannerTimeout = null;
             this.lastTimestamp = 0;
             this.elapsed = 0;
+            this.touchGesture = {
+                active: false,
+                startX: 0,
+                startY: 0,
+                handled: false
+            };
 
             this.roadPatternCanvas = null;
             this.loadBackgroundImage();
@@ -1066,11 +1079,18 @@
         loadBackgroundImage() {
             const candidates = [
                 'assets/backgrounds/fond.png',
+                'assets/backgrounds/fond.jpeg',
+                'assets/backgrounds/fond.jpg',
                 './assets/backgrounds/fond.png',
+                './assets/backgrounds/fond.jpeg',
                 'C:/Users/fredb/Desktop/Ludovelo/assets/backgrounds/fond.png',
+                'C:/Users/fredb/Desktop/Ludovelo/assets/backgrounds/fond.jpeg',
                 'file:///C:/Users/fredb/Desktop/Ludovelo/assets/backgrounds/fond.png',
                 'fond.png',
+                'fond.jpeg',
+                'fond.jpg',
                 'assets/fond.png',
+                'assets/fond.jpeg',
                 'assets/frames/fond.png'
             ];
             try {
@@ -1080,7 +1100,8 @@
                     const owner = host.replace('.github.io', '');
                     const parts = pathname.split('/').filter(Boolean);
                     const repo = parts.length > 0 ? parts[0] : 'Ludovelo';
-                    candidates.splice(2, 0, `https://raw.githubusercontent.com/${owner}/${repo}/main/assets/backgrounds/fond.png`);
+                    candidates.splice(3, 0, `https://raw.githubusercontent.com/${owner}/${repo}/main/assets/backgrounds/fond.png`);
+                    candidates.splice(4, 0, `https://raw.githubusercontent.com/${owner}/${repo}/main/assets/backgrounds/fond.jpeg`);
                 }
             } catch (_) {
                 // Ignore URL parsing issues
@@ -1156,18 +1177,19 @@
             this.canvas.height = Math.round(this.height * this.dpr);
             this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
 
-            this.roadTop = Math.round(this.height * 0.60);
-            this.roadBottom = Math.round(this.height * 0.86);
+            // Calé directement sur le chemin de terre visible dans fond.png / fond.jpeg (entre ~63% et ~74% de la hauteur)
+            this.roadTop = Math.round(this.height * 0.61);
+            this.roadBottom = Math.round(this.height * 0.76);
             const roadHeight = this.roadBottom - this.roadTop;
 
-            // Voies resserrées sur la chaussée pour que Ludo ne monte jamais dans le décor
+            // 3 voies bien espacées sur la piste en terre pour une meilleure lisibilité sur téléphone
             this.laneY = [
-                this.roadTop + roadHeight * 0.34,
-                this.roadTop + roadHeight * 0.56,
-                this.roadTop + roadHeight * 0.78
+                this.roadTop + roadHeight * 0.18,
+                this.roadTop + roadHeight * 0.50,
+                this.roadTop + roadHeight * 0.84
             ];
 
-            this.player.x = Math.max(115, Math.min(265, this.width * 0.22));
+            this.player.x = Math.max(105, Math.min(250, this.width * 0.21));
             if (!this.player.fallingIntoHole) {
                 this.player.y = this.laneY[this.player.lane] ?? this.laneY[1];
             }
@@ -1215,13 +1237,46 @@
             this.canvas.addEventListener('pointerdown', (e) => {
                 if (this.state !== 'playing') return;
                 this.sound.init();
-                const rect = this.canvas.getBoundingClientRect();
-                const clickY = e.clientY - rect.top;
-                if (clickY < this.roadTop - 20) {
-                    this.jump();
-                } else {
+                this.touchGesture.active = true;
+                this.touchGesture.startX = e.clientX;
+                this.touchGesture.startY = e.clientY;
+                this.touchGesture.handled = false;
+            });
+
+            this.canvas.addEventListener('pointermove', (e) => {
+                if (!this.touchGesture.active || this.touchGesture.handled || this.state !== 'playing') return;
+                const dx = e.clientX - this.touchGesture.startX;
+                const dy = e.clientY - this.touchGesture.startY;
+                const swipeThreshold = 26;
+
+                if (Math.abs(dy) > swipeThreshold && Math.abs(dy) > Math.abs(dx)) {
+                    this.touchGesture.handled = true;
+                    if (dy < 0) {
+                        this.changeLane(-1);
+                    } else {
+                        this.changeLane(1);
+                    }
+                } else if (dx > swipeThreshold * 1.35 && Math.abs(dx) > Math.abs(dy)) {
+                    this.touchGesture.handled = true;
                     this.jump();
                 }
+            });
+
+            const finishPointerGesture = (e) => {
+                if (!this.touchGesture.active) return;
+                const wasHandled = this.touchGesture.handled;
+                this.touchGesture.active = false;
+                this.touchGesture.handled = false;
+
+                if (!wasHandled && this.state === 'playing') {
+                    this.jump();
+                }
+            };
+
+            this.canvas.addEventListener('pointerup', finishPointerGesture);
+            this.canvas.addEventListener('pointercancel', () => {
+                this.touchGesture.active = false;
+                this.touchGesture.handled = false;
             });
 
             document.getElementById('btn-up').addEventListener('pointerdown', (e) => {
@@ -1904,8 +1959,12 @@
             ctx.clearRect(0, 0, w, h);
 
             this.drawVietnameseVillageBackdrop(ctx, w, h);
-            this.drawRoadAndHoles(ctx, w, h);
-            this.drawForegroundGrass(ctx, w, h);
+            if (!this.bgLoaded) {
+                this.drawRoadAndHoles(ctx, w, h);
+                this.drawForegroundGrass(ctx, w, h);
+            } else {
+                this.drawSubtleDirtLaneGuides(ctx, w);
+            }
 
             const renderables = [];
 
@@ -1961,8 +2020,7 @@
             if (this.bgLoaded && this.bgImage) {
                 const imgW = this.bgImage.naturalWidth || this.bgImage.width;
                 const imgH = this.bgImage.naturalHeight || this.bgImage.height;
-                const targetH = Math.max(220, horizonY + 18);
-                const scale = targetH / imgH;
+                const scale = h / imgH;
                 const tileW = Math.max(320, Math.round(imgW * scale));
                 const revealRatio = this.state === 'playing' ? this.bgRevealProgress : 1;
                 const visibleWidth = Math.max(w * 0.2, w * revealRatio);
@@ -1970,11 +2028,11 @@
 
                 ctx.save();
                 ctx.beginPath();
-                ctx.rect(0, 0, visibleWidth, targetH);
+                ctx.rect(0, 0, visibleWidth, h);
                 ctx.clip();
 
                 for (let x = -offset - tileW; x < visibleWidth + tileW; x += tileW) {
-                    ctx.drawImage(this.bgImage, x, 0, tileW + 1, targetH);
+                    ctx.drawImage(this.bgImage, x, 0, tileW + 1, h);
                 }
                 ctx.restore();
                 return;
@@ -2254,6 +2312,38 @@
                 ctx.lineTo(x + 12, bot + 3);
                 ctx.stroke();
             }
+        }
+
+        drawSubtleDirtLaneGuides(ctx, w) {
+            ctx.save();
+            // Repères discrets des 3 voies sur le chemin de terre + halo sur la voie active de Ludo
+            for (let l = 0; l < this.laneCount; l++) {
+                const ly = this.laneY[l];
+                const isCurrent = l === this.player.lane;
+
+                if (isCurrent) {
+                    const activeGrad = ctx.createLinearGradient(0, ly - 10, 0, ly + 10);
+                    activeGrad.addColorStop(0, 'rgba(254, 240, 138, 0)');
+                    activeGrad.addColorStop(0.5, 'rgba(254, 240, 138, 0.22)');
+                    activeGrad.addColorStop(1, 'rgba(254, 240, 138, 0)');
+                    ctx.fillStyle = activeGrad;
+                    ctx.fillRect(0, ly - 10, w, 20);
+                }
+
+                if (l < this.laneCount - 1) {
+                    const sepY = (this.laneY[l] + this.laneY[l + 1]) * 0.5;
+                    ctx.strokeStyle = 'rgba(255, 251, 235, 0.22)';
+                    ctx.lineWidth = 1.5;
+                    ctx.setLineDash([16, 22]);
+                    ctx.lineDashOffset = this.scrollX;
+                    ctx.beginPath();
+                    ctx.moveTo(0, sepY);
+                    ctx.lineTo(w, sepY);
+                    ctx.stroke();
+                }
+            }
+            ctx.setLineDash([]);
+            ctx.restore();
         }
 
         drawHole(ctx, hole) {
