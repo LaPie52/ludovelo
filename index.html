@@ -1,219 +1,304 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ludo-Vélo Vietnam : La Grande Balade !</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Ludo-Vélo Vietnam — Jeu d'Aventure à Vélo</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet" />
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap');
-
-        body {
-            font-family: 'Nunito', sans-serif;
-            touch-action: none;
+        * {
+            -webkit-tap-highlight-color: transparent;
             user-select: none;
             -webkit-user-select: none;
-            overflow: hidden;
-            background-color: #0f172a;
+            box-sizing: border-box;
         }
 
-        .font-arcade {
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100dvh;
+            overflow: hidden;
+            background-color: #0b1320;
+            font-family: 'Nunito', sans-serif;
+        }
+
+        .font-display {
             font-family: 'Fredoka', sans-serif;
         }
 
-        @keyframes pulseRing {
-            0% { transform: scale(0.95); opacity: 0.85; }
-            100% { transform: scale(1.45); opacity: 0; }
+        .game-shell {
+            position: relative;
+            width: 100vw;
+            height: 100dvh;
+            overflow: hidden;
+            background: linear-gradient(180deg, #38bdf8 0%, #bae6fd 52%, #86efac 52%, #4ade80 100%);
         }
-        .bell-pulse::after {
-            content: '';
+
+        .bg-layer {
             position: absolute;
-            inset: -4px;
-            border-radius: 9999px;
-            border: 3px solid #facc15;
-            animation: pulseRing 0.55s ease-out forwards;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center center;
             pointer-events: none;
+            z-index: 1;
+            transition: opacity 0.25s ease;
         }
 
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.94);
+        #gameCanvas {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            height: 100%;
+            display: block;
+            touch-action: manipulation;
+        }
+
+        .hud-pill {
+            background: rgba(255, 255, 255, 0.92);
             backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.7);
+            border: 2px solid rgba(255, 255, 255, 0.95);
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.16);
         }
 
-        .touch-btn {
-            -webkit-tap-highlight-color: transparent;
-            transition: transform 0.08s ease, background-color 0.12s ease;
+        .control-btn {
+            backdrop-filter: blur(10px);
+            transition: transform 0.08s ease, box-shadow 0.12s ease, background-color 0.15s ease;
+            box-shadow: 0 7px 0 rgba(15, 23, 42, 0.24), 0 12px 20px rgba(15, 23, 42, 0.22);
         }
-        .touch-btn:active {
-            transform: scale(0.92);
+
+        .control-btn:active,
+        .control-btn.is-pressed {
+            transform: translateY(5px);
+            box-shadow: 0 2px 0 rgba(15, 23, 42, 0.24), 0 5px 10px rgba(15, 23, 42, 0.2);
+        }
+
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-4px); }
+        }
+
+        .animate-float-slow {
+            animation: floatSlow 2.6s ease-in-out infinite;
+        }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.94) translateY(8px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .animate-pop-in {
+            animation: popIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        .toast-banner {
+            pointer-events: none;
+            transition: opacity 0.22s ease, transform 0.22s ease;
         }
     </style>
 </head>
-<body class="w-screen h-[100dvh] flex items-center justify-center bg-slate-950 overflow-hidden">
+<body>
+    <div id="app" class="game-shell">
+        <!-- Image de fond du décor (chemin de terre / village) -->
+        <img id="bgImage" class="bg-layer" alt="Décor du village vietnamien" />
 
-    <!-- Conteneur principal du jeu -->
-    <div id="game-wrapper" class="relative w-full h-full max-w-[1280px] max-h-[100dvh] sm:rounded-2xl overflow-hidden shadow-2xl border-0 sm:border-4 border-amber-400/80 bg-sky-900">
+        <!-- Canvas principal de rendu du jeu -->
+        <canvas id="gameCanvas"></canvas>
 
-        <!-- Canvas principal -->
-        <canvas id="gameCanvas" class="block w-full h-full"></canvas>
-
-        <!-- HUD supérieur pendant la partie -->
-        <div id="hud" class="hidden absolute top-0 left-0 right-0 p-3 sm:p-4 flex items-start justify-between pointer-events-none z-20">
-            <!-- Gauche : Score, Distance, Combo -->
-            <div class="flex flex-wrap items-center gap-2 sm:gap-3">
-                <div class="glass-panel px-3.5 py-1.5 rounded-2xl shadow-lg flex items-center gap-2">
-                    <span class="text-xl">🏆</span>
+        <!-- HUD supérieur en cours de partie -->
+        <div id="hudTop" class="hidden fixed top-2.5 left-2.5 right-2.5 z-20 flex items-start justify-between gap-2 pointer-events-none">
+            <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 pointer-events-auto">
+                <div class="hud-pill rounded-2xl px-3 py-1.5 flex items-center gap-2">
+                    <span class="text-lg leading-none">🏆</span>
                     <div>
-                        <div class="text-[10px] uppercase tracking-wider font-extrabold text-slate-500 leading-none">Score</div>
-                        <div id="hud-score" class="font-arcade text-lg sm:text-xl font-bold text-slate-900 leading-tight">0</div>
+                        <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 leading-none">Score</div>
+                        <div id="hudScore" class="font-display text-base sm:text-lg font-bold text-slate-900 leading-tight">0</div>
                     </div>
                 </div>
 
-                <div class="glass-panel px-3.5 py-1.5 rounded-2xl shadow-lg flex items-center gap-2">
-                    <span class="text-xl">🇻🇳</span>
+                <div class="hud-pill rounded-2xl px-3 py-1.5 flex items-center gap-2">
+                    <span class="text-lg leading-none">🛣️</span>
                     <div>
-                        <div class="text-[10px] uppercase tracking-wider font-extrabold text-slate-500 leading-none">Distance</div>
-                        <div id="hud-distance" class="font-arcade text-lg sm:text-xl font-bold text-emerald-700 leading-tight">0 m</div>
+                        <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 leading-none">Distance</div>
+                        <div id="hudDistance" class="font-display text-base sm:text-lg font-bold text-emerald-700 leading-tight">0 m</div>
                     </div>
                 </div>
 
-                <div id="hud-combo-badge" class="hidden bg-gradient-to-r from-amber-500 to-orange-500 text-white px-3 py-1.5 rounded-2xl shadow-lg font-arcade font-bold text-sm sm:text-base items-center gap-1 border-2 border-yellow-200">
-                    <span>🔥</span>
-                    <span id="hud-combo">x2</span>
+                <div class="hud-pill rounded-2xl px-3 py-1.5 flex items-center gap-2">
+                    <span class="text-lg leading-none">🧺</span>
+                    <div>
+                        <div class="text-[10px] font-extrabold uppercase tracking-wider text-amber-600 leading-none">Panier</div>
+                        <div id="hudBasket" class="font-display text-base sm:text-lg font-bold text-amber-700 leading-tight">0</div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Centre : Panier de Ludo & Bouclier Nón lá -->
-            <div class="hidden md:flex items-center gap-2 glass-panel px-3.5 py-1.5 rounded-2xl shadow-lg">
-                <span class="text-lg">🧺</span>
-                <span class="text-xs font-extrabold text-slate-700">Panier :</span>
-                <span id="hud-basket" class="font-arcade font-bold text-amber-600 text-base">0</span>
-                <span id="hud-shield" class="hidden ml-2 bg-amber-100 text-amber-800 border border-amber-400 text-xs font-extrabold px-2 py-0.5 rounded-full">
-                    👒 Nón lá actif
-                </span>
-            </div>
-
-            <!-- Droite : Vies & Boutons Audio/Pause -->
-            <div class="flex items-center gap-2 pointer-events-auto">
-                <div id="hud-lives" class="glass-panel px-3 py-1.5 rounded-2xl shadow-lg flex items-center gap-1 text-lg sm:text-xl">
+            <div class="flex items-center gap-1.5 sm:gap-2 pointer-events-auto">
+                <div id="hudLives" class="hud-pill rounded-2xl px-2.5 py-1.5 flex items-center gap-1 text-base sm:text-lg">
                     <span>❤️</span><span>❤️</span><span>❤️</span>
                 </div>
 
-                <button id="btn-sound" type="button" title="Couper/Activer le son" class="glass-panel hover:bg-white text-slate-800 w-10 h-10 rounded-xl shadow-lg flex items-center justify-center text-lg font-bold transition cursor-pointer">
+                <button id="btnMute" type="button" aria-label="Son" class="hud-pill control-btn w-10 h-10 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center text-lg text-slate-800">
                     🔊
                 </button>
 
-                <button id="btn-pause" type="button" title="Pause (P ou Échap)" class="glass-panel hover:bg-white text-slate-800 w-10 h-10 rounded-xl shadow-lg flex items-center justify-center text-lg font-bold transition cursor-pointer">
-                    ⏸️
+                <button id="btnPause" type="button" aria-label="Pause" class="hud-pill control-btn w-10 h-10 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center text-lg font-black text-slate-800">
+                    ⏸
                 </button>
             </div>
         </div>
 
-        <!-- Bannière d'événement / message dynamique -->
-        <div id="event-banner" class="hidden absolute top-20 left-1/2 -translate-x-1/2 z-20 pointer-events-none transition-all duration-300">
-            <div class="bg-slate-900/85 text-amber-300 border-2 border-amber-400/70 px-4 py-1.5 rounded-full font-arcade font-bold text-xs sm:text-sm shadow-xl tracking-wide whitespace-nowrap">
-                🔔 Dring ! Le village réagit !
+        <!-- Bandeau d'annonce contextuelle -->
+        <div id="toastBanner" class="toast-banner opacity-0 -translate-y-2 fixed top-16 left-1/2 -translate-x-1/2 z-20 max-w-[92vw]">
+            <div class="px-4 py-1.5 rounded-full bg-slate-900/90 text-amber-300 border-2 border-amber-400/80 shadow-xl flex items-center gap-2 text-xs sm:text-sm font-extrabold whitespace-nowrap">
+                <span class="px-1.5 py-0.5 rounded bg-amber-400 text-slate-950 text-[10px] font-black">VN</span>
+                <span id="toastText">Xin chào ! En route avec Ludo !</span>
             </div>
         </div>
 
-        <!-- Contrôles tactiles / écran (vue latérale : Voies Haut/Bas, Saut, Sonnette) -->
-        <div id="touch-controls" class="hidden absolute bottom-3 left-3 right-3 sm:bottom-5 sm:left-6 sm:right-6 flex items-end justify-between pointer-events-none z-20">
-            <!-- Changement de voie : Haut / Bas -->
-            <div class="flex flex-col gap-2.5 pointer-events-auto">
-                <button id="btn-up" type="button" aria-label="Voie du haut" class="touch-btn w-16 h-14 sm:w-20 sm:h-16 rounded-2xl bg-white/95 hover:bg-white text-slate-900 shadow-2xl border-2 border-amber-400 flex flex-col items-center justify-center font-arcade font-bold cursor-pointer">
-                    <span class="text-xl leading-none">⬆️</span>
-                    <span class="text-[10px] uppercase text-slate-700 font-extrabold mt-0.5">Voie Haut</span>
+        <!-- Contrôles tactiles dédiés (uniquement via les boutons) -->
+        <div id="touchControls" class="hidden fixed bottom-3 left-3 right-3 z-20 flex items-end justify-between pointer-events-none">
+            <!-- Changement de file Haut / Bas -->
+            <div class="flex flex-col gap-2 pointer-events-auto">
+                <button id="btnLaneUp" type="button" aria-label="Voie du haut" class="control-btn w-16 h-14 sm:w-20 sm:h-16 rounded-2xl bg-white/95 hover:bg-white border-2 border-sky-200 flex flex-col items-center justify-center text-slate-800">
+                    <span class="text-xl leading-none font-black text-sky-600">⬆️</span>
+                    <span class="text-[10px] font-extrabold uppercase tracking-wide text-slate-600 mt-0.5">Haut</span>
                 </button>
-                <button id="btn-down" type="button" aria-label="Voie du bas" class="touch-btn w-16 h-14 sm:w-20 sm:h-16 rounded-2xl bg-white/95 hover:bg-white text-slate-900 shadow-2xl border-2 border-amber-400 flex flex-col items-center justify-center font-arcade font-bold cursor-pointer">
-                    <span class="text-xl leading-none">⬇️</span>
-                    <span class="text-[10px] uppercase text-slate-700 font-extrabold mt-0.5">Voie Bas</span>
+                <button id="btnLaneDown" type="button" aria-label="Voie du bas" class="control-btn w-16 h-14 sm:w-20 sm:h-16 rounded-2xl bg-white/95 hover:bg-white border-2 border-sky-200 flex flex-col items-center justify-center text-slate-800">
+                    <span class="text-xl leading-none font-black text-sky-600">⬇️</span>
+                    <span class="text-[10px] font-extrabold uppercase tracking-wide text-slate-600 mt-0.5">Bas</span>
                 </button>
             </div>
 
-            <!-- Actions principales : SAUTER & SONNETTE -->
-            <div class="flex items-center gap-3 pointer-events-auto">
-                <button id="btn-jump" type="button" aria-label="Sauter" class="touch-btn h-16 sm:h-20 px-5 sm:px-7 rounded-2xl bg-gradient-to-b from-sky-400 to-blue-600 hover:from-sky-300 hover:to-blue-500 text-white shadow-2xl border-2 border-sky-200 flex flex-col items-center justify-center font-arcade font-bold cursor-pointer">
-                    <span class="text-2xl sm:text-3xl leading-none">🦘</span>
-                    <span class="text-[11px] sm:text-xs uppercase tracking-wider mt-0.5">Sauter</span>
+            <!-- Sauter & Sonnette -->
+            <div class="flex items-end gap-2.5 pointer-events-auto">
+                <button id="btnJump" type="button" aria-label="Sauter" class="control-btn px-4 h-16 sm:h-18 rounded-3xl bg-gradient-to-b from-sky-400 to-blue-600 border-2 border-sky-200 flex items-center gap-2 text-white">
+                    <span class="text-2xl leading-none">🦘</span>
+                    <span class="font-display text-sm sm:text-base font-bold tracking-wide uppercase">Sauter</span>
                 </button>
 
-                <button id="btn-bell" type="button" aria-label="Sonnette" class="touch-btn relative w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-b from-amber-300 to-amber-500 hover:from-amber-200 hover:to-amber-400 text-slate-950 shadow-2xl border-4 border-yellow-100 flex flex-col items-center justify-center font-arcade font-extrabold cursor-pointer">
-                    <span class="text-2xl sm:text-3xl leading-none">🔔</span>
-                    <span class="text-[10px] sm:text-xs uppercase tracking-wider mt-0.5">Dring !</span>
+                <button id="btnBell" type="button" aria-label="Sonnette" class="control-btn w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-gradient-to-b from-amber-300 to-amber-500 border-2 border-amber-100 flex flex-col items-center justify-center text-slate-950">
+                    <span class="text-xl leading-none">🔔</span>
+                    <span class="text-[10px] font-black uppercase tracking-tight mt-0.5">Dring</span>
                 </button>
             </div>
         </div>
 
-        <!-- ÉCRAN D'ACCUEIL AVEC IMAGE ACCUEIL.PNG ET BOUTON DISCRET -->
-        <div id="start-screen" class="absolute inset-0 z-30 flex flex-col justify-between p-3 sm:p-6 bg-slate-950/30 overflow-hidden">
-            <img id="welcome-bg-img" alt="Accueil Ludo-Vélo Vietnam" class="hidden absolute inset-0 w-full h-full object-cover object-center pointer-events-none select-none z-0">
+        <!-- Écran d'accueil : accueil.png bien visible + bouton discret pour lancer le jeu -->
+        <div id="startOverlay" class="fixed inset-0 z-30 flex flex-col items-center justify-between p-3 sm:p-5 bg-slate-950/65 backdrop-blur-[2px]">
+            <!-- Barre supérieure discrète avec salutation vietnamienne et bouton vocal -->
+            <div class="w-full max-w-2xl flex items-center justify-between gap-2 z-10">
+                <div class="px-3.5 py-1.5 rounded-full bg-red-600/95 text-amber-200 border border-amber-300/60 shadow-lg flex items-center gap-2 text-xs sm:text-sm font-extrabold">
+                    <span>🏮</span>
+                    <span>Xin chào mọi người !</span>
+            <!-- Barre supérieure discrète avec salutation vietnamienne -->
+            <div class="w-full max-w-2xl flex items-center justify-start gap-2 z-10">
+                <div class="px-3.5 py-1.5 rounded-full bg-red-600/95 text-amber-200 border border-amber-300/60 shadow-lg flex items-center gap-2 text-xs sm:text-sm font-extrabold">
+                    <span>🏮</span>
+                    <span>Xin chào mọi người !</span>
+                </div>
+            </div>
 
-            <div class="relative z-10 flex items-center justify-between gap-2">
-                <div class="inline-flex items-center gap-1.5 bg-slate-950/70 text-yellow-300 border border-amber-300/65 px-3 py-1 rounded-full text-xs sm:text-sm font-arcade font-bold shadow-md backdrop-blur-xs">
-                    <span>🏮</span> Xin chào mọi người !
+            <!-- Cadre d'illustration d'accueil adapté au téléphone -->
+            <div class="relative w-full max-w-md sm:max-w-lg flex-1 my-2.5 flex items-center justify-center overflow-hidden rounded-3xl border-2 border-amber-300/70 shadow-2xl bg-amber-950/50 animate-pop-in">
+                <img id="welcomeImg" alt="Accueil Ludo-Vélo Vietnam" class="w-full h-full object-contain sm:object-cover transition-opacity duration-300" />
+                <!-- Fallback illustratif si accueil.png est absent -->
+                <div id="welcomeFallback" class="hidden w-full h-full flex flex-col items-center justify-center p-5 text-center bg-gradient-to-b from-amber-100 via-orange-50 to-emerald-100 text-slate-900">
+                    <div class="text-5xl mb-2">🏮🚴🏮</div>
+                    <div class="font-display text-2xl sm:text-3xl font-bold text-red-700">LUDO-VÉLO VIETNAM</div>
+                    <p class="text-xs sm:text-sm font-bold text-slate-700 mt-1">Xin chào mọi người ! Prêt à pédaler dans le village ?</p>
                 </div>
 
-                <button id="btn-voice-welcome" type="button" class="bg-slate-950/70 hover:bg-slate-900/90 active:scale-95 text-amber-200 border border-amber-300/60 text-xs font-extrabold px-3 py-1.5 rounded-full shadow-md backdrop-blur-xs transition inline-flex items-center gap-1.5 cursor-pointer">
-                    <span>🗣️</span> Vocal
-                </button>
+                <!-- Titre compact en haut de l'image -->
+                <div class="absolute top-2.5 left-1/2 -translate-x-1/2 px-3.5 py-1 rounded-full bg-slate-950/75 backdrop-blur-sm border border-amber-300/50 text-amber-200 font-display text-xs sm:text-sm font-bold tracking-wide whitespace-nowrap shadow">
+                    🚴 LUDO-VÉLO VIETNAM
+                </div>
             </div>
 
-            <div class="relative z-10 flex justify-center pb-1 sm:pb-3">
-                <button id="btn-start" type="button" class="px-6 sm:px-8 py-2.5 sm:py-3 rounded-full bg-emerald-600/90 hover:bg-emerald-500 active:scale-95 text-white font-arcade font-bold text-base sm:text-xl shadow-xl border-2 border-amber-200/85 backdrop-blur-xs transition cursor-pointer inline-flex items-center gap-2">
-                    <span>🚴</span> JOUER
+            <!-- Bouton de lancement discret mais bien visible en bas -->
+            <div class="w-full max-w-xs sm:max-w-sm flex flex-col items-center gap-1.5 z-10">
+                <button id="btnStartGame" type="button" class="control-btn animate-float-slow w-full py-3 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-500 border-2 border-emerald-200/90 text-white font-display text-lg sm:text-xl font-bold tracking-wide flex items-center justify-center gap-2.5">
+                    <span>🚴</span>
+                    <span>JOUER</span>
                 </button>
+                <div class="px-3 py-0.5 rounded-full bg-slate-950/70 text-[11px] font-bold text-amber-100/90">
+                    Boutons Haut / Bas • Sauter • Dring
+                </div>
             </div>
         </div>
 
-        <!-- ÉCRAN DE PAUSE -->
-        <div id="pause-screen" class="hidden absolute inset-0 z-30 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs">
-            <div class="glass-panel w-full max-w-sm rounded-3xl p-6 text-center shadow-2xl border-4 border-amber-400">
+        <!-- Écran Pause -->
+        <div id="pauseOverlay" class="hidden fixed inset-0 z-30 flex items-center justify-center p-4 bg-slate-950/65 backdrop-blur-sm">
+            <div class="w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-2xl border-4 border-amber-300 animate-pop-in">
                 <div class="text-4xl mb-2">⏸️</div>
-                <h2 class="font-arcade text-2xl font-bold text-slate-900 mb-1">Pause Café</h2>
-                <p class="text-xs text-slate-600 mb-5">Ludo reprend son souffle à l'ombre d'un bananier.</p>
+                <h2 class="font-display text-2xl font-bold text-slate-900">Partie en pause</h2>
+                <p class="text-sm font-semibold text-slate-600 mt-1 mb-5">Ludo reprend son souffle au bord du chemin.</p>
                 <div class="flex flex-col gap-2.5">
-                    <button id="btn-resume" type="button" class="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-arcade font-bold text-lg shadow-lg transition cursor-pointer">
+                    <button id="btnResume" type="button" class="control-btn w-full py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-white font-display text-lg font-bold">
                         ▶️ Reprendre
                     </button>
-                    <button id="btn-quit-menu" type="button" class="w-full py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-sm transition cursor-pointer">
-                        🏠 Menu principal
+                    <button id="btnPauseRestart" type="button" class="control-btn w-full py-2.5 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-display text-base font-bold">
+                        🔄 Recommencer
+                    </button>
+                    <button id="btnPauseHome" type="button" class="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-sm">
+                        🏠 Accueil
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- ÉCRAN GAME OVER -->
-        <div id="gameover-screen" class="hidden absolute inset-0 z-30 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-xs overflow-y-auto">
-            <div id="gameover-card" class="relative glass-panel w-full max-w-md rounded-3xl p-4 sm:p-6 text-center shadow-2xl border-4 border-rose-400 my-auto overflow-hidden">
-                <img id="gameover-bg-img" alt="Illustration Game Over Ludo" class="hidden w-full h-44 sm:h-52 object-cover rounded-2xl border-2 border-amber-300 shadow-md mb-3 bg-slate-900">
-                <div id="gameover-icon" class="text-4xl sm:text-5xl mb-1.5">🕳️</div>
-                <h2 id="gameover-title" class="font-arcade text-xl sm:text-3xl font-bold text-slate-900 mb-1">Dans le trou !</h2>
-                <p id="gameover-reason" class="text-xs sm:text-sm text-slate-600 font-semibold mb-3 sm:mb-4">
-                    Ludo n'a pas sauté assez haut au-dessus du trou de la route !
-                </p>
+        <!-- Écran Game Over mettant en valeur gameover.png et les statistiques -->
+        <div id="gameOverOverlay" class="hidden fixed inset-0 z-30 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-sm">
+            <div class="w-full max-w-md rounded-3xl bg-gradient-to-b from-amber-50 via-orange-50 to-amber-100 p-3.5 sm:p-5 text-center shadow-2xl border-4 border-amber-400 animate-pop-in flex flex-col gap-3">
+                <div class="flex items-center justify-between gap-2 px-1">
+                    <span class="px-2.5 py-0.5 rounded-full bg-rose-600 text-white text-[11px] font-black uppercase tracking-wider">Game Over</span>
+                    <h2 id="gameOverTitle" class="font-display text-xl sm:text-2xl font-bold text-slate-900">Chute sur le chemin !</h2>
+                    <span class="text-xl">💥</span>
+                </div>
 
-                <div class="grid grid-cols-3 gap-2 bg-white/95 rounded-2xl p-2.5 sm:p-3 mb-4 border border-slate-200 shadow-xs">
-                    <div>
-                        <div class="text-[10px] uppercase font-extrabold text-slate-400">Score</div>
-                        <div id="final-score" class="font-arcade text-lg sm:text-xl font-bold text-slate-900">0</div>
-                    </div>
-                    <div>
-                        <div class="text-[10px] uppercase font-extrabold text-slate-400">Record</div>
-                        <div id="final-best" class="font-arcade text-lg sm:text-xl font-bold text-amber-600">0</div>
-                    </div>
-                    <div>
-                        <div class="text-[10px] uppercase font-extrabold text-slate-400">Distance</div>
-                        <div id="final-distance" class="font-arcade text-lg sm:text-xl font-bold text-emerald-600">0 m</div>
+                <!-- Cadre de l'illustration gameover.png bien visible -->
+                <div class="relative w-full h-48 sm:h-60 rounded-2xl overflow-hidden border-2 border-amber-300 bg-sky-100 shadow-inner flex items-center justify-center">
+                    <img id="gameOverImg" alt="Fin de partie Ludo" class="w-full h-full object-contain" />
+                    <div id="gameOverFallback" class="hidden flex-col items-center justify-center p-4 text-slate-800">
+                        <div class="text-4xl mb-1">🚲💫</div>
+                        <div class="font-display text-lg font-bold">Ludo a calé en chemin !</div>
                     </div>
                 </div>
 
-                <div class="flex flex-col sm:flex-row gap-2">
-                    <button id="btn-restart" type="button" class="flex-1 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-arcade font-bold text-base sm:text-lg shadow-lg border-b-4 border-emerald-700 transition cursor-pointer">
-                        🔄 Rejouer
+                <p id="gameOverReason" class="text-xs sm:text-sm font-bold text-slate-700 px-2">
+                    Un trou sur la piste a surpris le vélo de Ludo.
+                </p>
+
+                <!-- Statistiques de fin de partie -->
+                <div class="grid grid-cols-3 gap-2">
+                    <div class="rounded-2xl bg-white/90 border border-amber-200 p-2 shadow-sm">
+                        <div class="text-[10px] font-extrabold uppercase text-slate-500">Score</div>
+                        <div id="finalScore" class="font-display text-lg sm:text-xl font-bold text-slate-900">0</div>
+                    </div>
+                    <div class="rounded-2xl bg-white/90 border border-amber-200 p-2 shadow-sm">
+                        <div class="text-[10px] font-extrabold uppercase text-amber-700">Record</div>
+                        <div id="finalBest" class="font-display text-lg sm:text-xl font-bold text-amber-600">0</div>
+                    </div>
+                    <div class="rounded-2xl bg-white/90 border border-amber-200 p-2 shadow-sm">
+                        <div class="text-[10px] font-extrabold uppercase text-emerald-700">Distance</div>
+                        <div id="finalDistance" class="font-display text-lg sm:text-xl font-bold text-emerald-700">0 m</div>
+                    </div>
+                </div>
+
+                <!-- Actions de fin de partie -->
+                <div class="grid grid-cols-2 gap-2.5 pt-0.5">
+                    <button id="btnRetry" type="button" class="control-btn py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-display text-base sm:text-lg font-bold border-2 border-emerald-200 flex items-center justify-center gap-1.5">
+                        <span>🔄</span>
+                        <span>Rejouer</span>
                     </button>
-                    <button id="btn-home" type="button" class="py-3 px-4 rounded-2xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-arcade font-bold text-sm sm:text-base transition cursor-pointer">
-                        🏠 Menu
+                    <button id="btnGameOverHome" type="button" class="control-btn py-3 px-4 rounded-2xl bg-white hover:bg-amber-50 text-slate-800 font-display text-base sm:text-lg font-bold border-2 border-amber-300 flex items-center justify-center gap-1.5">
+                        <span>🏠</span>
+                        <span>Accueil</span>
                     </button>
                 </div>
             </div>
@@ -221,2368 +306,1454 @@
     </div>
 
     <script>
-    // --- 1. SYNTHÉTISEUR AUDIO WEB AUDIO API + VOIX D'ACCUEIL ---
-    class SoundEngine {
-        constructor() {
-            this.ctx = null;
-            this.muted = false;
-            this.bgmTimer = null;
-            this.noteStep = 0;
-        }
+        (() => {
+            'use strict';
 
-        init() {
-            if (!this.ctx) {
-                const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                if (AudioCtx) {
-                    this.ctx = new AudioCtx();
-                }
-            }
-            if (this.ctx && this.ctx.state === 'suspended') {
-                this.ctx.resume().catch(() => {});
-            }
-        }
-
-        toggleMute() {
-            this.muted = !this.muted;
-            if (this.muted) {
-                this.stopBgm();
-            } else if (window.gameInstance && window.gameInstance.state === 'playing') {
-                this.startBgm();
-            }
-            return this.muted;
-        }
-
-        playBell() {
-            if (this.muted) return;
-            this.init();
-            if (!this.ctx) return;
-
-            const now = this.ctx.currentTime;
-            [1320, 1760].forEach((freq, idx) => {
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'sine';
-                const start = now + idx * 0.055;
-                osc.frequency.setValueAtTime(freq, start);
-                osc.frequency.exponentialRampToValueAtTime(freq * 0.96, start + 0.24);
-
-                gain.gain.setValueAtTime(0.001, start);
-                gain.gain.linearRampToValueAtTime(0.22, start + 0.012);
-                gain.gain.exponentialRampToValueAtTime(0.0008, start + 0.26);
-
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start(start);
-                osc.stop(start + 0.28);
-            });
-        }
-
-        playJump() {
-            if (this.muted) return;
-            this.init();
-            if (!this.ctx) return;
-
-            const now = this.ctx.currentTime;
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(220, now);
-            osc.frequency.exponentialRampToValueAtTime(540, now + 0.16);
-
-            gain.gain.setValueAtTime(0.14, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
-
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-            osc.start(now);
-            osc.stop(now + 0.19);
-        }
-
-        playPickup(isSpecial = false) {
-            if (this.muted) return;
-            this.init();
-            if (!this.ctx) return;
-
-            const now = this.ctx.currentTime;
-            const notes = isSpecial ? [587.33, 783.99, 987.77, 1174.66] : [587.33, 880];
-            notes.forEach((freq, i) => {
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'triangle';
-                const t = now + i * 0.055;
-                osc.frequency.setValueAtTime(freq, t);
-                gain.gain.setValueAtTime(0.14, t);
-                gain.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start(t);
-                osc.stop(t + 0.15);
-            });
-        }
-
-        playLaneSwitch() {
-            if (this.muted) return;
-            this.init();
-            if (!this.ctx) return;
-
-            const now = this.ctx.currentTime;
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(310, now);
-            osc.frequency.exponentialRampToValueAtTime(430, now + 0.06);
-            gain.gain.setValueAtTime(0.08, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-            osc.start(now);
-            osc.stop(now + 0.075);
-        }
-
-        playHit() {
-            if (this.muted) return;
-            this.init();
-            if (!this.ctx) return;
-
-            const now = this.ctx.currentTime;
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(175, now);
-            osc.frequency.exponentialRampToValueAtTime(48, now + 0.34);
-
-            gain.gain.setValueAtTime(0.24, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.36);
-
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-            osc.start(now);
-            osc.stop(now + 0.37);
-        }
-
-        playHoleFall() {
-            if (this.muted) return;
-            this.init();
-            if (!this.ctx) return;
-
-            const now = this.ctx.currentTime;
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(520, now);
-            osc.frequency.exponentialRampToValueAtTime(75, now + 0.55);
-
-            gain.gain.setValueAtTime(0.24, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.58);
-
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-            osc.start(now);
-            osc.stop(now + 0.6);
-        }
-
-        startBgm() {
-            if (this.muted || this.bgmTimer) return;
-            this.init();
-            const scale = [293.66, 329.63, 392.00, 440.00, 587.33, 440.00, 392.00, 329.63];
-            this.bgmTimer = setInterval(() => {
-                if (this.muted || !this.ctx || this.ctx.state !== 'running') return;
-                if (!window.gameInstance || window.gameInstance.state !== 'playing') return;
-
-                const now = this.ctx.currentTime;
-                const freq = scale[this.noteStep % scale.length];
-                this.noteStep++;
-
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(freq, now);
-
-                gain.gain.setValueAtTime(0.001, now);
-                gain.gain.linearRampToValueAtTime(0.032, now + 0.02);
-                gain.gain.exponentialRampToValueAtTime(0.0008, now + 0.19);
-
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start(now);
-                osc.stop(now + 0.2);
-            }, 240);
-        }
-
-        stopBgm() {
-            if (this.bgmTimer) {
-                clearInterval(this.bgmTimer);
-                this.bgmTimer = null;
-            }
-        }
-
-        speakWelcome() {
-            if (this.muted || !('speechSynthesis' in window)) return;
-            try {
-                window.speechSynthesis.cancel();
-                const voices = window.speechSynthesis.getVoices() || [];
-                const femaleKeywords = [
-                    'linh', 'mai', 'huong', 'hương', 'lan', 'thao', 'thảo', 'an',
-                    'google tiếng việt', 'female', 'femme', 'woman'
-                ];
-
-                const viUtterance = new SpeechSynthesisUtterance('Xin chào mọi người !');
-                viUtterance.lang = 'vi-VN';
-                viUtterance.rate = 1.15;
-                viUtterance.pitch = 1.28;
-
-                const viVoices = voices.filter((v) =>
-                    (v.lang || '').toLowerCase().startsWith('vi')
-                );
-                const viFemale =
-                    viVoices.find((v) =>
-                        femaleKeywords.some((kw) => (v.name || '').toLowerCase().includes(kw))
-                    ) ||
-                    viVoices[0] ||
-                    null;
-
-                if (viFemale) {
-                    viUtterance.voice = viFemale;
+            // =========================================================================
+            // 1. MOTEUR AUDIO (SONNETTE, SAUT, PANIER, CHOC & VOIX DYNAMIQUE)
+            // =========================================================================
+            class SoundManager {
+                constructor() {
+                    this.ctx = null;
+                    this.muted = false;
+                    this.hasSpokenWelcome = false;
                 }
 
-                window.speechSynthesis.speak(viUtterance);
-            } catch (_) {
-                // Ignore speech synthesis restrictions
-            }
-        }
-    }
-
-    // --- 2. GESTIONNAIRE DU SPRITE DE LUDO (8 FRAMES + DÉTOURAGE FLOODFILL) ---
-    class LudoSpriteManager {
-        constructor() {
-            this.spriteCanvas = null;
-            this.frames = [];
-            this.frameIndex = 0;
-            this.framesDirectory = 'assets/frames';
-            this.frameFileNames = [
-                'fram1.jpg',
-                'fram2.jpg',
-                'fram3.jpg',
-                'fram4.jpg',
-                'fram5.jpg',
-                'fram6.jpg',
-                'fram7.jpg',
-                'fram8.jpg'
-            ];
-
-            this.buildFallbackLudoSprite();
-            this.loadFramesFromCandidateDirs(this.getAutoFrameDirs(), 0, this.frameFileNames);
-        }
-
-        getGithubBaseUrl() {
-            try {
-                const host = window.location.hostname || '';
-                const pathname = window.location.pathname || '';
-                if (host.endsWith('.github.io')) {
-                    const owner = host.replace('.github.io', '');
-                    const parts = pathname.split('/').filter(Boolean);
-                    const repo = parts.length > 0 ? parts[0] : 'Ludovelo';
-                    return `https://raw.githubusercontent.com/${owner}/${repo}/main`;
-                }
-                if (host === 'raw.githubusercontent.com') {
-                    const parts = pathname.split('/').filter(Boolean);
-                    if (parts.length >= 3) {
-                        return `https://raw.githubusercontent.com/${parts[0]}/${parts[1]}/${parts[2]}`;
-                    }
-                }
-            } catch (_) {
-                // Ignore URL parsing issues
-            }
-            return null;
-        }
-
-        getAutoFrameDirs() {
-            const dirs = [
-                'assets/frames',
-                './assets/frames',
-                'C:/Users/fredb/Desktop/Ludovelo/assets/frames',
-                'file:///C:/Users/fredb/Desktop/Ludovelo/assets/frames',
-                '.',
-                'assets'
-            ];
-            const ghBase = this.getGithubBaseUrl();
-            if (ghBase) {
-                dirs.splice(2, 0, `${ghBase}/assets/frames`);
-            }
-            return [...new Set(dirs)];
-        }
-
-        loadFramesFromCandidateDirs(dirs, dirIdx, fileNames) {
-            if (dirIdx >= dirs.length) {
-                this.loadSpriteSheet([
-                    'Sprite de cycliste pixel-art et animation.png',
-                    'Cycliste pixel art en série d’animation.png',
-                    'ludovelo.jpg',
-                    'assets/Sprite de cycliste pixel-art et animation.png',
-                    'assets/ludovelo.jpg'
-                ]);
-                return;
-            }
-
-            const rawDir = dirs[dirIdx];
-            const cleanDir = rawDir.replace(/\/+$/, '');
-            const loadedFrames = new Array(fileNames.length);
-            let completed = 0;
-
-            const buildUrl = (fileName) => {
-                if (/^[A-Za-z]:\//.test(cleanDir)) {
-                    return `file:///${cleanDir}/${fileName}`;
-                }
-                return cleanDir === '.' ? fileName : `${cleanDir}/${fileName}`;
-            };
-
-            fileNames.forEach((fileName, idx) => {
-                const img = new Image();
-                img.crossOrigin = 'anonymous';
-                img.onload = () => {
+                ensureContext() {
                     try {
-                        loadedFrames[idx] = this.cutoutBackgroundFloodfill(img);
+                        if (!this.ctx) {
+                            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                            if (AudioCtx) {
+                                this.ctx = new AudioCtx();
+                            }
+                        }
+                        if (this.ctx && this.ctx.state === 'suspended') {
+                            this.ctx.resume().catch(() => {});
+                        }
                     } catch (err) {
-                        console.warn(`Détourage impossible pour ${fileName} :`, err);
-                    }
-                    completed++;
-                    if (completed === fileNames.length) {
-                        const validFrames = loadedFrames.filter(Boolean);
-                        if (validFrames.length > 0) {
-                            this.frames = validFrames;
-                            this.spriteCanvas = validFrames[0];
-                            this.framesDirectory = cleanDir;
-                        } else {
-                            this.loadFramesFromCandidateDirs(dirs, dirIdx + 1, fileNames);
-                        }
-                    }
-                };
-                img.onerror = () => {
-                    completed++;
-                    if (completed === fileNames.length) {
-                        const validFrames = loadedFrames.filter(Boolean);
-                        if (validFrames.length > 0) {
-                            this.frames = validFrames;
-                            this.spriteCanvas = validFrames[0];
-                        } else {
-                            this.loadFramesFromCandidateDirs(dirs, dirIdx + 1, fileNames);
-                        }
-                    }
-                };
-                img.src = buildUrl(fileName);
-            });
-        }
-
-        loadSpriteSheet(candidates, idx = 0) {
-            if (idx >= candidates.length) return;
-            const src = candidates[idx];
-            const img = new Image();
-            if (!src.startsWith('data:')) {
-                img.crossOrigin = 'anonymous';
-            }
-            img.onload = () => {
-                try {
-                    const sheetCutout = this.cutoutBackgroundFloodfill(img);
-                    const extracted = this.extractEightFramesFromSheet(sheetCutout);
-                    if (extracted.length >= 4) {
-                        this.frames = extracted;
-                        this.spriteCanvas = extracted[0];
-                    } else {
-                        this.frames = [sheetCutout];
-                        this.spriteCanvas = sheetCutout;
-                    }
-                } catch (err) {
-                    console.warn('Détourage impossible, repli sur le sprite intégré :', err);
-                    this.loadSpriteSheet(candidates, idx + 1);
-                }
-            };
-            img.onerror = () => {
-                this.loadSpriteSheet(candidates, idx + 1);
-            };
-            img.src = src;
-        }
-
-        extractEightFramesFromSheet(sheetCanvas) {
-            const w = sheetCanvas.width;
-            const h = sheetCanvas.height;
-            const ctx = sheetCanvas.getContext('2d');
-            const { data } = ctx.getImageData(0, 0, w, h);
-
-            const minY = Math.floor(h * 0.56);
-            const colHasOpaque = new Uint8Array(w);
-            for (let x = 0; x < w; x++) {
-                for (let y = minY; y < h; y++) {
-                    if (data[(y * w + x) * 4 + 3] > 25) {
-                        colHasOpaque[x] = 1;
-                        break;
+                        // Ignore si l'audio est indisponible
                     }
                 }
-            }
 
-            const segments = [];
-            let start = -1;
-            for (let x = 0; x < w; x++) {
-                if (colHasOpaque[x] && start === -1) {
-                    start = x;
-                } else if (!colHasOpaque[x] && start !== -1) {
-                    if (x - start >= Math.floor(w * 0.04)) {
-                        segments.push({ x0: start, x1: x - 1 });
-                    }
-                    start = -1;
-                }
-            }
-            if (start !== -1 && w - start >= Math.floor(w * 0.04)) {
-                segments.push({ x0: start, x1: w - 1 });
-            }
-
-            if (segments.length < 4) return [];
-
-            const targetSegs = segments.slice(0, 8);
-            const frames = [];
-
-            for (const seg of targetSegs) {
-                let top = h;
-                let bottom = 0;
-                for (let y = 0; y < h; y++) {
-                    for (let x = seg.x0; x <= seg.x1; x++) {
-                        if (data[(y * w + x) * 4 + 3] > 25) {
-                            if (y < top) top = y;
-                            if (y > bottom) bottom = y;
-                        }
+                setMuted(mute) {
+                    this.muted = Boolean(mute);
+                    if (this.muted && 'speechSynthesis' in window) {
+                        try {
+                            window.speechSynthesis.cancel();
+                        } catch (err) {}
                     }
                 }
-                if (bottom <= top) continue;
 
-                const pad = 4;
-                const sx = Math.max(0, seg.x0 - pad);
-                const sy = Math.max(0, top - pad);
-                const sw = Math.min(w - sx, (seg.x1 - seg.x0 + 1) + pad * 2);
-                const sh = Math.min(h - sy, (bottom - top + 1) + pad * 2);
+                playBell() {
+                    if (this.muted) return;
+                    this.ensureContext();
+                    if (!this.ctx) return;
 
-                const frameCanvas = document.createElement('canvas');
-                frameCanvas.width = sw;
-                frameCanvas.height = sh;
-                const fctx = frameCanvas.getContext('2d');
-                fctx.drawImage(sheetCanvas, sx, sy, sw, sh, 0, 0, sw, sh);
-                frames.push(frameCanvas);
-            }
+                    try {
+                        const now = this.ctx.currentTime;
+                        [1318.5, 1760, 2217.5].forEach((freq, idx) => {
+                            const osc = this.ctx.createOscillator();
+                            const gain = this.ctx.createGain();
+                            osc.type = idx === 0 ? 'triangle' : 'sine';
+                            osc.frequency.setValueAtTime(freq, now);
+                            osc.frequency.exponentialRampToValueAtTime(freq * 0.985, now + 0.35);
 
-            return frames;
-        }
+                            gain.gain.setValueAtTime(0.0001, now);
+                            gain.gain.exponentialRampToValueAtTime(0.14 / (idx + 1), now + 0.012);
+                            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.36);
 
-        buildFallbackLudoSprite() {
-            const c = document.createElement('canvas');
-            c.width = 260;
-            c.height = 190;
-            const ctx = c.getContext('2d');
-
-            ctx.fillStyle = 'rgba(15, 23, 42, 0.22)';
-            ctx.beginPath();
-            ctx.ellipse(130, 178, 86, 8, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            const drawWheel = (cx, cy, r) => {
-                ctx.strokeStyle = '#1e293b';
-                ctx.lineWidth = 6;
-                ctx.beginPath();
-                ctx.arc(cx, cy, r, 0, Math.PI * 2);
-                ctx.stroke();
-
-                ctx.strokeStyle = '#cbd5e1';
-                ctx.lineWidth = 1.5;
-                for (let i = 0; i < 10; i++) {
-                    const a = (i * Math.PI) / 5;
-                    ctx.beginPath();
-                    ctx.moveTo(cx, cy);
-                    ctx.lineTo(cx + Math.cos(a) * (r - 2), cy + Math.sin(a) * (r - 2));
-                    ctx.stroke();
+                            osc.connect(gain);
+                            gain.connect(this.ctx.destination);
+                            osc.start(now);
+                            osc.stop(now + 0.38);
+                        });
+                    } catch (err) {}
                 }
 
-                ctx.fillStyle = '#334155';
-                ctx.beginPath();
-                ctx.arc(cx, cy, 5, 0, Math.PI * 2);
-                ctx.fill();
-            };
+                playJump() {
+                    if (this.muted) return;
+                    this.ensureContext();
+                    if (!this.ctx) return;
 
-            drawWheel(68, 144, 31);
-            drawWheel(184, 144, 31);
+                    try {
+                        const now = this.ctx.currentTime;
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(240, now);
+                        osc.frequency.exponentialRampToValueAtTime(560, now + 0.18);
 
-            ctx.strokeStyle = '#2563eb';
-            ctx.lineWidth = 6;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            ctx.beginPath();
-            ctx.moveTo(68, 144);
-            ctx.lineTo(126, 144);
-            ctx.lineTo(164, 96);
-            ctx.lineTo(104, 98);
-            ctx.closePath();
-            ctx.stroke();
+                        gain.gain.setValueAtTime(0.12, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
 
-            ctx.beginPath();
-            ctx.moveTo(184, 144);
-            ctx.lineTo(160, 82);
-            ctx.lineTo(174, 78);
-            ctx.stroke();
-
-            ctx.fillStyle = '#1e293b';
-            ctx.beginPath();
-            ctx.roundRect(88, 90, 28, 9, 4);
-            ctx.fill();
-
-            ctx.fillStyle = '#94a3b8';
-            ctx.strokeStyle = '#475569';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.roundRect(166, 86, 36, 26, 5);
-            ctx.fill();
-            ctx.stroke();
-
-            ctx.fillStyle = '#1e293b';
-            ctx.beginPath();
-            ctx.roundRect(171, 74, 26, 16, 4);
-            ctx.fill();
-
-            ctx.strokeStyle = '#f1c29b';
-            ctx.lineWidth = 9;
-            ctx.beginPath();
-            ctx.moveTo(106, 102);
-            ctx.lineTo(132, 126);
-            ctx.lineTo(124, 144);
-            ctx.stroke();
-
-            ctx.fillStyle = '#c85a32';
-            ctx.beginPath();
-            ctx.roundRect(88, 86, 30, 22, 6);
-            ctx.fill();
-
-            ctx.fillStyle = '#ffffff';
-            ctx.strokeStyle = '#cbd5e1';
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.roundRect(92, 52, 34, 38, 8);
-            ctx.fill();
-            ctx.stroke();
-
-            ctx.fillStyle = '#facc15';
-            ctx.beginPath();
-            ctx.arc(112, 70, 7, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.strokeStyle = '#f1c29b';
-            ctx.lineWidth = 8;
-            ctx.beginPath();
-            ctx.moveTo(122, 60);
-            ctx.lineTo(162, 82);
-            ctx.stroke();
-
-            ctx.fillStyle = '#f1c29b';
-            ctx.beginPath();
-            ctx.arc(118, 38, 14, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.fillStyle = '#ffffff';
-            ctx.strokeStyle = '#94a3b8';
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.arc(116, 33, 14, Math.PI, 0);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.moveTo(124, 30);
-            ctx.lineTo(142, 33);
-            ctx.lineTo(125, 36);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-
-            this.spriteCanvas = c;
-            this.frames = [c];
-        }
-
-        cutoutBackgroundFloodfill(img) {
-            const maxDim = 520;
-            let w = img.naturalWidth || img.width;
-            let h = img.naturalHeight || img.height;
-            if (w > maxDim || h > maxDim) {
-                const scale = Math.min(maxDim / w, maxDim / h);
-                w = Math.max(1, Math.round(w * scale));
-                h = Math.max(1, Math.round(h * scale));
-            }
-
-            const canvas = document.createElement('canvas');
-            canvas.width = w;
-            canvas.height = h;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, w, h);
-
-            const imgData = ctx.getImageData(0, 0, w, h);
-            const data = imgData.data;
-
-            const cornerCoords = [
-                [0, 0], [w - 1, 0], [0, h - 1], [w - 1, h - 1],
-                [Math.floor(w / 2), 0], [Math.floor(w / 2), h - 1],
-                [0, Math.floor(h / 2)], [w - 1, Math.floor(h / 2)]
-            ];
-
-            let bgR = 255, bgG = 255, bgB = 255, samples = 0;
-            for (const [sx, sy] of cornerCoords) {
-                const idx = (sy * w + sx) * 4;
-                const r = data[idx], g = data[idx + 1], b = data[idx + 2], a = data[idx + 3];
-                if (a > 200) {
-                    bgR += r; bgG += g; bgB += b;
-                    samples++;
-                }
-            }
-            if (samples > 0) {
-                bgR = Math.round(bgR / samples);
-                bgG = Math.round(bgG / samples);
-                bgB = Math.round(bgB / samples);
-            }
-
-            const visited = new Uint8Array(w * h);
-            const queue = new Int32Array(w * h);
-            let head = 0, tail = 0;
-
-            const tolerance = 34;
-            const isBgLike = (pixelIdx) => {
-                const i = pixelIdx * 4;
-                if (data[i + 3] < 20) return true;
-                const dr = Math.abs(data[i] - bgR);
-                const dg = Math.abs(data[i + 1] - bgG);
-                const db = Math.abs(data[i + 2] - bgB);
-                const lum = (data[i] + data[i + 1] + data[i + 2]) / 3;
-                return (dr <= tolerance && dg <= tolerance && db <= tolerance) || (lum > 244 && dr < 14 && dg < 14 && db < 14);
-            };
-
-            const tryEnqueue = (x, y) => {
-                if (x < 0 || x >= w || y < 0 || y >= h) return;
-                const pIdx = y * w + x;
-                if (!visited[pIdx] && isBgLike(pIdx)) {
-                    visited[pIdx] = 1;
-                    queue[tail++] = pIdx;
-                }
-            };
-
-            for (let x = 0; x < w; x++) {
-                tryEnqueue(x, 0);
-                tryEnqueue(x, h - 1);
-            }
-            for (let y = 0; y < h; y++) {
-                tryEnqueue(0, y);
-                tryEnqueue(w - 1, y);
-            }
-
-            while (head < tail) {
-                const curr = queue[head++];
-                const cx = curr % w;
-                const cy = (curr - cx) / w;
-
-                if (cx > 0) tryEnqueue(cx - 1, cy);
-                if (cx < w - 1) tryEnqueue(cx + 1, cy);
-                if (cy > 0) tryEnqueue(cx, cy - 1);
-                if (cy < h - 1) tryEnqueue(cx, cy + 1);
-            }
-
-            for (let p = 0; p < w * h; p++) {
-                if (visited[p]) {
-                    data[p * 4 + 3] = 0;
-                }
-            }
-
-            ctx.putImageData(imgData, 0, 0);
-            return canvas;
-        }
-
-        getFrame(index = this.frameIndex) {
-            if (this.frames && this.frames.length > 0) {
-                const idx = ((Math.floor(index) % this.frames.length) + this.frames.length) % this.frames.length;
-                return this.frames[idx];
-            }
-            return this.spriteCanvas;
-        }
-    }
-
-    // --- 3. JEU EN VUE LATÉRALE (SIDE-SCROLLER 2.5D) : VILLAGE VIETNAMIEN & TROUS FATALS ---
-    class LudoSideScrollerGame {
-        constructor() {
-            this.canvas = document.getElementById('gameCanvas');
-            this.ctx = this.canvas.getContext('2d');
-            this.sound = new SoundEngine();
-            this.ludoSprite = new LudoSpriteManager();
-
-            this.state = 'menu';
-            this.width = 1280;
-            this.height = 720;
-            this.dpr = Math.min(window.devicePixelRatio || 1, 2);
-
-            this.laneCount = 3;
-            this.laneY = [];
-            this.roadTop = 0;
-            this.roadBottom = 0;
-
-            this.score = 0;
-            this.bestScore = Number(localStorage.getItem('ludo_vn_side_best') || 0);
-            this.distance = 0;
-            this.lives = 3;
-            this.basketCount = 0;
-            this.combo = 1;
-            this.comboTimer = 0;
-            this.speed = 340;
-            this.baseSpeed = 340;
-            this.scrollX = 0;
-            this.bgScrollX = 0;
-            this.bgRevealProgress = 0.2;
-            this.bgImage = null;
-            this.bgLoaded = false;
-            this.welcomeImageSrc = null;
-            this.gameOverImageSrc = null;
-
-            this.player = {
-                x: 230,
-                lane: 1,
-                y: 0,
-                z: 0,
-                vz: 0,
-                pitch: 0,
-                wheelAngle: 0,
-                pedalPhase: 0,
-                invulnTimer: 0,
-                shieldTimer: 0,
-                bellTimer: 0,
-                fallingIntoHole: null,
-                fallProgress: 0
-            };
-
-            this.holes = [];
-            this.obstacles = [];
-            this.collectibles = [];
-            this.particles = [];
-            this.floatingTexts = [];
-            this.sceneryProps = [];
-
-            this.holeSpawnTimer = 2.4;
-            this.obstacleSpawnTimer = 1.35;
-            this.collectibleSpawnTimer = 1.6;
-            this.scenerySpawnTimer = 0.7;
-            this.bannerTimeout = null;
-            this.lastTimestamp = 0;
-            this.elapsed = 0;
-
-            this.roadPatternCanvas = null;
-            this.loadWelcomeImage();
-            this.loadBackgroundImage();
-            this.loadGameOverImage();
-            this.buildRealisticRoadTexture();
-            this.resize();
-            this.initScenery();
-            this.bindEvents();
-            this.updateHud();
-            this.initWelcomeVoice();
-
-            requestAnimationFrame((ts) => this.loop(ts));
-        }
-
-        initWelcomeVoice() {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.getVoices();
-                window.speechSynthesis.onvoiceschanged = () => {
-                    window.speechSynthesis.getVoices();
-                };
-            }
-            setTimeout(() => this.sound.speakWelcome(), 350);
-            const triggerOnce = () => {
-                if (this.state === 'menu') {
-                    this.sound.speakWelcome();
-                }
-                window.removeEventListener('pointerdown', triggerOnce);
-            };
-            window.addEventListener('pointerdown', triggerOnce, { once: true });
-        }
-
-        loadBackgroundImage() {
-            const candidates = [
-                'assets/backgrounds/fond.png',
-                'assets/backgrounds/fond.jpeg',
-                'assets/backgrounds/fond.jpg',
-                './assets/backgrounds/fond.png',
-                './assets/backgrounds/fond.jpeg',
-                'C:/Users/fredb/Desktop/Ludovelo/assets/backgrounds/fond.png',
-                'C:/Users/fredb/Desktop/Ludovelo/assets/backgrounds/fond.jpeg',
-                'file:///C:/Users/fredb/Desktop/Ludovelo/assets/backgrounds/fond.png',
-                'fond.png',
-                'fond.jpeg',
-                'fond.jpg',
-                'assets/fond.png',
-                'assets/fond.jpeg',
-                'assets/frames/fond.png'
-            ];
-            try {
-                const host = window.location.hostname || '';
-                const pathname = window.location.pathname || '';
-                if (host.endsWith('.github.io')) {
-                    const owner = host.replace('.github.io', '');
-                    const parts = pathname.split('/').filter(Boolean);
-                    const repo = parts.length > 0 ? parts[0] : 'Ludovelo';
-                    candidates.splice(3, 0, `https://raw.githubusercontent.com/${owner}/${repo}/main/assets/backgrounds/fond.png`);
-                    candidates.splice(4, 0, `https://raw.githubusercontent.com/${owner}/${repo}/main/assets/backgrounds/fond.jpeg`);
-                }
-            } catch (_) {
-                // Ignore URL parsing issues
-            }
-
-            const toSrc = (path) => (/^[A-Za-z]:\//.test(path) ? `file:///${path}` : path);
-
-            const tryLoad = (idx) => {
-                if (idx >= candidates.length) {
-                    this.bgLoaded = false;
-                    return;
-                }
-                const img = new Image();
-                img.crossOrigin = 'anonymous';
-                img.onload = () => {
-                    this.bgImage = img;
-                    this.bgLoaded = true;
-                    this.bgRevealProgress = 0.2;
-                };
-                img.onerror = () => tryLoad(idx + 1);
-                img.src = toSrc(candidates[idx]);
-            };
-            tryLoad(0);
-        }
-
-        loadWelcomeImage() {
-            const candidates = [
-                'assets/backgrounds/accueil.png',
-                'assets/backgrounds/accueil.jpg',
-                'assets/backgrounds/accueil.jpeg',
-                './assets/backgrounds/accueil.png',
-                'C:/Users/fredb/Desktop/Ludovelo/assets/backgrounds/accueil.png',
-                'file:///C:/Users/fredb/Desktop/Ludovelo/assets/backgrounds/accueil.png',
-                'accueil.png',
-                'accueil.jpg',
-                'accueil.jpeg',
-                'assets/accueil.png'
-            ];
-            try {
-                const host = window.location.hostname || '';
-                const pathname = window.location.pathname || '';
-                if (host.endsWith('.github.io')) {
-                    const owner = host.replace('.github.io', '');
-                    const parts = pathname.split('/').filter(Boolean);
-                    const repo = parts.length > 0 ? parts[0] : 'Ludovelo';
-                    candidates.splice(3, 0, `https://raw.githubusercontent.com/${owner}/${repo}/main/assets/backgrounds/accueil.png`);
-                }
-            } catch (_) {
-                // Ignore URL parsing issues
-            }
-
-            const toSrc = (path) => (/^[A-Za-z]:\//.test(path) ? `file:///${path}` : path);
-
-            const tryLoad = (idx) => {
-                if (idx >= candidates.length) return;
-                const resolvedSrc = toSrc(candidates[idx]);
-                const img = new Image();
-                img.crossOrigin = 'anonymous';
-                img.onload = () => {
-                    this.welcomeImageSrc = resolvedSrc;
-                    const welcomeImg = document.getElementById('welcome-bg-img');
-                    if (welcomeImg) {
-                        welcomeImg.src = resolvedSrc;
-                        welcomeImg.classList.remove('hidden');
-                    }
-                };
-                img.onerror = () => tryLoad(idx + 1);
-                img.src = resolvedSrc;
-            };
-            tryLoad(0);
-        }
-
-        loadGameOverImage() {
-            const candidates = [
-                'assets/backgrounds/gameover.png',
-                'assets/backgrounds/gameover.jpg',
-                'assets/backgrounds/gameover.jpeg',
-                './assets/backgrounds/gameover.png',
-                'C:/Users/fredb/Desktop/Ludovelo/assets/backgrounds/gameover.png',
-                'file:///C:/Users/fredb/Desktop/Ludovelo/assets/backgrounds/gameover.png',
-                'gameover.png',
-                'gameover.jpg',
-                'gameover.jpeg',
-                'assets/gameover.png'
-            ];
-            try {
-                const host = window.location.hostname || '';
-                const pathname = window.location.pathname || '';
-                if (host.endsWith('.github.io')) {
-                    const owner = host.replace('.github.io', '');
-                    const parts = pathname.split('/').filter(Boolean);
-                    const repo = parts.length > 0 ? parts[0] : 'Ludovelo';
-                    candidates.splice(3, 0, `https://raw.githubusercontent.com/${owner}/${repo}/main/assets/backgrounds/gameover.png`);
-                }
-            } catch (_) {
-                // Ignore URL parsing issues
-            }
-
-            const toSrc = (path) => (/^[A-Za-z]:\//.test(path) ? `file:///${path}` : path);
-
-            const tryLoad = (idx) => {
-                if (idx >= candidates.length) return;
-                const resolvedSrc = toSrc(candidates[idx]);
-                const img = new Image();
-                img.crossOrigin = 'anonymous';
-                img.onload = () => {
-                    this.gameOverImageSrc = resolvedSrc;
-                    const goImg = document.getElementById('gameover-bg-img');
-                    if (goImg) {
-                        goImg.src = resolvedSrc;
-                        goImg.classList.remove('hidden');
-                    }
-                };
-                img.onerror = () => tryLoad(idx + 1);
-                img.src = resolvedSrc;
-            };
-            tryLoad(0);
-        }
-
-        buildRealisticRoadTexture() {
-            const c = document.createElement('canvas');
-            c.width = 160;
-            c.height = 160;
-            const ctx = c.getContext('2d');
-
-            ctx.fillStyle = '#383e46';
-            ctx.fillRect(0, 0, 160, 160);
-
-            let seed = 1337;
-            const rand = () => {
-                seed = (seed * 16807) % 2147483647;
-                return (seed - 1) / 2147483646;
-            };
-
-            for (let i = 0; i < 2200; i++) {
-                const x = Math.floor(rand() * 160);
-                const y = Math.floor(rand() * 160);
-                const v = rand() > 0.5 ? 78 + Math.floor(rand() * 24) : 34 + Math.floor(rand() * 18);
-                ctx.fillStyle = `rgba(${v}, ${v + 2}, ${v + 5}, 0.45)`;
-                ctx.fillRect(x, y, 2, 2);
-            }
-
-            ctx.strokeStyle = 'rgba(20, 24, 28, 0.35)';
-            ctx.lineWidth = 1.2;
-            for (let i = 0; i < 6; i++) {
-                ctx.beginPath();
-                let cx = rand() * 160;
-                let cy = rand() * 160;
-                ctx.moveTo(cx, cy);
-                for (let s = 0; s < 4; s++) {
-                    cx += (rand() - 0.5) * 28;
-                    cy += (rand() - 0.5) * 18;
-                    ctx.lineTo(cx, cy);
-                }
-                ctx.stroke();
-            }
-
-            this.roadPatternCanvas = c;
-        }
-
-        resize() {
-            const rect = this.canvas.getBoundingClientRect();
-            this.width = Math.max(360, rect.width || window.innerWidth);
-            this.height = Math.max(420, rect.height || window.innerHeight);
-
-            this.canvas.width = Math.round(this.width * this.dpr);
-            this.canvas.height = Math.round(this.height * this.dpr);
-            this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
-
-            this.roadTop = Math.round(this.height * 0.61);
-            this.roadBottom = Math.round(this.height * 0.76);
-            const roadHeight = this.roadBottom - this.roadTop;
-
-            this.laneY = [
-                this.roadTop + roadHeight * 0.34,
-                this.roadTop + roadHeight * 0.59,
-                this.roadTop + roadHeight * 0.84
-            ];
-
-            this.player.x = Math.max(105, Math.min(250, this.width * 0.21));
-            if (!this.player.fallingIntoHole) {
-                this.player.y = this.laneY[this.player.lane] ?? this.laneY[1];
-            }
-        }
-
-        initScenery() {
-            this.sceneryProps = [];
-            const types = ['house', 'banana', 'lantern_post', 'stall', 'coconut'];
-            for (let i = 0; i < 9; i++) {
-                this.sceneryProps.push({
-                    x: (this.width / 7) * i + Math.random() * 60,
-                    type: types[i % types.length],
-                    variant: i % 3
-                });
-            }
-        }
-
-        bindEvents() {
-            window.addEventListener('resize', () => this.resize());
-
-            window.addEventListener('keydown', (e) => {
-                if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', ' '].includes(e.key)) {
-                    e.preventDefault();
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.21);
+                    } catch (err) {}
                 }
 
-                if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') {
-                    if (this.state === 'playing') this.pauseGame();
-                    else if (this.state === 'paused') this.resumeGame();
-                    return;
+                playLaneChange() {
+                    if (this.muted) return;
+                    this.ensureContext();
+                    if (!this.ctx) return;
+
+                    try {
+                        const now = this.ctx.currentTime;
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(340, now);
+                        osc.frequency.exponentialRampToValueAtTime(460, now + 0.08);
+
+                        gain.gain.setValueAtTime(0.07, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.1);
+                    } catch (err) {}
                 }
 
-                if (this.state !== 'playing') return;
+                playPickup() {
+                    if (this.muted) return;
+                    this.ensureContext();
+                    if (!this.ctx) return;
 
-                if (e.key === 'ArrowUp' || e.key === 'z' || e.key === 'Z') {
-                    this.changeLane(-1);
-                } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
-                    this.changeLane(1);
-                } else if (e.key === 'ArrowRight' || e.key === 'w' || e.key === 'W') {
-                    this.jump();
-                } else if (e.key === ' ' || e.key === 'b' || e.key === 'B') {
-                    this.ringBell();
+                    try {
+                        const now = this.ctx.currentTime;
+                        [587.33, 880].forEach((freq, i) => {
+                            const osc = this.ctx.createOscillator();
+                            const gain = this.ctx.createGain();
+                            osc.type = 'triangle';
+                            osc.frequency.setValueAtTime(freq, now + i * 0.07);
+
+                            gain.gain.setValueAtTime(0.11, now + i * 0.07);
+                            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.07 + 0.16);
+
+                            osc.connect(gain);
+                            gain.connect(this.ctx.destination);
+                            osc.start(now + i * 0.07);
+                            osc.stop(now + i * 0.07 + 0.17);
+                        });
+                    } catch (err) {}
                 }
-            });
 
-            document.getElementById('btn-up').addEventListener('pointerdown', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (this.state === 'playing') this.changeLane(-1);
-            });
-            document.getElementById('btn-down').addEventListener('pointerdown', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (this.state === 'playing') this.changeLane(1);
-            });
-            document.getElementById('btn-jump').addEventListener('pointerdown', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (this.state === 'playing') this.jump();
-            });
-            document.getElementById('btn-bell').addEventListener('pointerdown', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (this.state === 'playing') {
-                    this.ringBell();
-                    const btn = document.getElementById('btn-bell');
-                    btn.classList.remove('bell-pulse');
-                    void btn.offsetWidth;
-                    btn.classList.add('bell-pulse');
+                playCrash() {
+                    if (this.muted) return;
+                    this.ensureContext();
+                    if (!this.ctx) return;
+
+                    try {
+                        const now = this.ctx.currentTime;
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(190, now);
+                        osc.frequency.exponentialRampToValueAtTime(52, now + 0.36);
+
+                        gain.gain.setValueAtTime(0.16, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.4);
+                    } catch (err) {}
                 }
-            });
 
-            document.getElementById('btn-start').addEventListener('click', () => this.startGame());
-            document.getElementById('btn-pause').addEventListener('click', () => this.pauseGame());
-            document.getElementById('btn-resume').addEventListener('click', () => this.resumeGame());
-            document.getElementById('btn-quit-menu').addEventListener('click', () => this.showMenu());
-            document.getElementById('btn-restart').addEventListener('click', () => this.startGame());
-            document.getElementById('btn-home').addEventListener('click', () => this.showMenu());
+                pickFemaleVoice(langPrefix) {
+                    if (!('speechSynthesis' in window)) return null;
+                    const voices = window.speechSynthesis.getVoices() || [];
+                    if (!voices.length) return null;
 
-            document.getElementById('btn-sound').addEventListener('click', () => {
-                const muted = this.sound.toggleMute();
-                document.getElementById('btn-sound').textContent = muted ? '🔇' : '🔊';
-                if (muted && 'speechSynthesis' in window) {
-                    window.speechSynthesis.cancel();
-                }
-            });
-
-            document.getElementById('btn-voice-welcome').addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.sound.speakWelcome();
-            });
-        }
-
-        showEventBanner(text, duration = 1700) {
-            const el = document.getElementById('event-banner');
-            el.firstElementChild.textContent = text;
-            el.classList.remove('hidden');
-            clearTimeout(this.bannerTimeout);
-            this.bannerTimeout = setTimeout(() => {
-                el.classList.add('hidden');
-            }, duration);
-        }
-
-        startGame() {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-            }
-            this.sound.init();
-            this.sound.startBgm();
-
-            this.score = 0;
-            this.distance = 0;
-            this.lives = 3;
-            this.basketCount = 0;
-            this.combo = 1;
-            this.comboTimer = 0;
-            this.speed = this.baseSpeed;
-            this.elapsed = 0;
-            this.bgRevealProgress = 0.2;
-
-            this.player.lane = 1;
-            this.player.y = this.laneY[1];
-            this.player.z = 0;
-            this.player.vz = 0;
-            this.player.pitch = 0;
-            this.player.wheelAngle = 0;
-            this.player.pedalPhase = 0;
-            this.player.invulnTimer = 1.0;
-            this.player.shieldTimer = 0;
-            this.player.bellTimer = 0;
-            this.player.fallingIntoHole = null;
-            this.player.fallProgress = 0;
-
-            this.holes = [];
-            this.obstacles = [];
-            this.collectibles = [];
-            this.particles = [];
-            this.floatingTexts = [];
-            this.holeSpawnTimer = 2.6;
-            this.obstacleSpawnTimer = 1.2;
-            this.collectibleSpawnTimer = 1.5;
-
-            this.state = 'playing';
-            document.getElementById('start-screen').classList.add('hidden');
-            document.getElementById('pause-screen').classList.add('hidden');
-            document.getElementById('gameover-screen').classList.add('hidden');
-            document.getElementById('hud').classList.remove('hidden');
-            document.getElementById('touch-controls').classList.remove('hidden');
-
-            this.updateHud();
-            this.showEventBanner('🇻🇳 C’est parti ! Saute au-dessus des trous de la route !', 2200);
-        }
-
-        pauseGame() {
-            if (this.state !== 'playing') return;
-            this.state = 'paused';
-            this.sound.stopBgm();
-            document.getElementById('pause-screen').classList.remove('hidden');
-        }
-
-        resumeGame() {
-            if (this.state !== 'paused') return;
-            this.state = 'playing';
-            this.sound.init();
-            this.sound.startBgm();
-            document.getElementById('pause-screen').classList.add('hidden');
-            this.lastTimestamp = performance.now();
-        }
-
-        showMenu() {
-            this.state = 'menu';
-            this.sound.stopBgm();
-            document.getElementById('hud').classList.add('hidden');
-            document.getElementById('touch-controls').classList.add('hidden');
-            document.getElementById('pause-screen').classList.add('hidden');
-            document.getElementById('gameover-screen').classList.add('hidden');
-            document.getElementById('start-screen').classList.remove('hidden');
-        }
-
-        changeLane(delta) {
-            if (this.player.fallingIntoHole) return;
-            const nextLane = Math.max(0, Math.min(this.laneCount - 1, this.player.lane + delta));
-            if (nextLane !== this.player.lane) {
-                this.player.lane = nextLane;
-                this.sound.playLaneSwitch();
-                this.spawnDust(this.player.x - 20, this.player.y + 16, 5);
-            }
-        }
-
-        jump() {
-            if (this.player.fallingIntoHole) return;
-            if (this.player.z <= 1) {
-                this.player.vz = 560;
-                this.player.z = 2;
-                this.sound.playJump();
-                this.spawnDust(this.player.x - 10, this.player.y + 18, 8);
-            }
-        }
-
-        ringBell() {
-            if (this.player.fallingIntoHole) return;
-            this.sound.playBell();
-            this.player.bellTimer = 0.45;
-            this.floatingTexts.push({
-                x: this.player.x + 25,
-                y: this.player.y - this.player.z - 75,
-                text: '🔔 DRING DRING !',
-                color: '#fde047',
-                life: 0.85
-            });
-
-            let alertedCount = 0;
-            for (const obs of this.obstacles) {
-                const distX = obs.x - this.player.x;
-                if (distX > -40 && distX < 420 && !obs.alerted) {
-                    obs.alerted = true;
-                    obs.scaredTimer = 1.2;
-                    alertedCount++;
-
-                    if (obs.kind === 'chicken' || obs.kind === 'dog' || obs.kind === 'cat') {
-                        obs.vy = (obs.lane === 0 ? 1 : -1) * 95;
-                        obs.vx += 75;
-                    } else if (obs.kind === 'vendor' || obs.kind === 'scooter') {
-                        obs.vx = Math.max(obs.vx * 0.45, 35);
-                    }
-                }
-            }
-
-            if (alertedCount > 0) {
-                this.addScore(35 * alertedCount);
-                this.showEventBanner(`🔔 Dring ! ${alertedCount} obstacle(s) réagissent (+${35 * alertedCount})`, 1400);
-            }
-        }
-
-        addScore(pts) {
-            this.score += Math.round(pts * this.combo);
-            if (this.score > this.bestScore) {
-                this.bestScore = this.score;
-                localStorage.setItem('ludo_vn_side_best', String(this.bestScore));
-            }
-        }
-
-        spawnHole() {
-            const isWideTrench = Math.random() < 0.38;
-            const width = isWideTrench ? 132 : 86;
-            const lane = Math.floor(Math.random() * this.laneCount);
-
-            this.holes.push({
-                x: this.width + 90,
-                width,
-                lane,
-                isWideTrench,
-                warned: false
-            });
-        }
-
-        spawnObstacle() {
-            const lane = Math.floor(Math.random() * this.laneCount);
-            const y = this.laneY[lane];
-            const roll = Math.random();
-
-            let kind = 'chicken';
-            let width = 40;
-            let height = 30;
-            let extraSpeed = 35;
-
-            if (roll < 0.28) {
-                kind = 'chicken';
-                width = 40;
-                height = 30;
-                extraSpeed = 35;
-            } else if (roll < 0.55) {
-                kind = 'scooter';
-                width = 88;
-                height = 56;
-                extraSpeed = 125;
-            } else if (roll < 0.80) {
-                kind = 'vendor';
-                width = 78;
-                height = 54;
-                extraSpeed = 25;
-            } else {
-                kind = 'dog';
-                width = 52;
-                height = 38;
-                extraSpeed = 65;
-            }
-
-            const tooCloseToHole = this.holes.some(
-                (h) => h.lane === lane && Math.abs(h.x - (this.width + 80)) < 170
-            );
-            if (tooCloseToHole) return;
-
-            this.obstacles.push({
-                x: this.width + 80,
-                y,
-                lane,
-                width,
-                height,
-                kind,
-                vx: extraSpeed,
-                vy: 0,
-                animPhase: Math.random() * Math.PI * 2,
-                alerted: false,
-                scaredTimer: 0,
-                passed: false
-            });
-        }
-
-        spawnCollectible() {
-            const lane = Math.floor(Math.random() * this.laneCount);
-            const y = this.laneY[lane];
-            const roll = Math.random();
-
-            let kind = 'banh_mi';
-            let label = 'Bánh mì';
-            let points = 100;
-
-            if (roll < 0.36) {
-                kind = 'banh_mi';
-                label = '🥖 Bánh mì +100';
-                points = 100;
-            } else if (roll < 0.68) {
-                kind = 'pho';
-                label = '🍜 Phở +150';
-                points = 150;
-            } else if (roll < 0.88) {
-                kind = 'coffee';
-                label = '☕ Cà phê sữa đá +120';
-                points = 120;
-            } else {
-                kind = 'non_la';
-                label = '👒 Bouclier Nón lá !';
-                points = 150;
-            }
-
-            this.collectibles.push({
-                x: this.width + 70,
-                y,
-                lane,
-                z: Math.random() < 0.35 ? 42 : 0,
-                kind,
-                label,
-                points,
-                bobPhase: Math.random() * Math.PI * 2
-            });
-        }
-
-        spawnDust(x, y, count = 6, color = 'rgba(226, 232, 240, 0.75)') {
-            for (let i = 0; i < count; i++) {
-                this.particles.push({
-                    x: x + (Math.random() - 0.5) * 18,
-                    y: y + (Math.random() - 0.5) * 10,
-                    vx: -60 - Math.random() * 90,
-                    vy: -25 - Math.random() * 65,
-                    radius: 3 + Math.random() * 4.5,
-                    color,
-                    life: 0.35 + Math.random() * 0.25,
-                    maxLife: 0.6
-                });
-            }
-        }
-
-        update(dt) {
-            this.elapsed += dt;
-
-            if (this.state === 'menu') {
-                this.bgScrollX = (this.bgScrollX + 45 * dt) % 2000;
-                this.scrollX = (this.scrollX + 110 * dt) % 160;
-                return;
-            }
-
-            if (this.state !== 'playing') return;
-
-            if (this.player.fallingIntoHole) {
-                this.player.fallProgress += dt * 1.9;
-                this.player.pitch = Math.min(1.15, this.player.fallProgress * 1.35);
-                this.player.z = -this.player.fallProgress * 58;
-                this.updateParticles(dt);
-                this.updateFloatingTexts(dt);
-
-                if (this.player.fallProgress >= 1) {
-                    this.triggerGameOver(
-                        '🕳️',
-                        'Chute dans le trou !',
-                        'Ludo a plongé dans un trou de la route vietnamienne ! Pense à sauter plus tôt.'
+                    const matchingLang = voices.filter((v) =>
+                        (v.lang || '').toLowerCase().startsWith(langPrefix.toLowerCase())
                     );
+                    const pool = matchingLang.length ? matchingLang : voices;
+
+                    const femaleKeywords = [
+                        'female', 'woman', 'girl', 'zira', 'samantha', 'victoria',
+                        'amelie', 'aurélie', 'julie', 'claire', 'celine', 'céline',
+                        'hortense', 'linh', 'mai', 'huong', 'hương', 'thao', 'thảo', 'google'
+                    ];
+
+                    const femaleMatch = pool.find((v) => {
+                        const hay = `${v.name} ${v.lang}`.toLowerCase();
+                        return femaleKeywords.some((kw) => hay.includes(kw));
+                    });
+
+                    return femaleMatch || pool[0] || null;
                 }
-                return;
-            }
 
-            this.speed = Math.min(640, this.baseSpeed + this.distance * 0.14 + this.basketCount * 4);
-            const worldStep = this.speed * dt;
-            this.distance += worldStep * 0.045;
-            this.addScore(worldStep * 0.08);
+                speakVietnameseGreeting(force = false) {
+                    if (this.muted) return;
+                    if (!('speechSynthesis' in window)) return;
+                    if (this.hasSpokenWelcome && !force) return;
 
-            if (this.bgRevealProgress < 1) {
-                this.bgRevealProgress = Math.min(1, this.bgRevealProgress + dt * 0.35);
-            }
+                    try {
+                        window.speechSynthesis.cancel();
+                        const utter = new SpeechSynthesisUtterance('Xin chào mọi người !');
+                        utter.lang = 'vi-VN';
+                        utter.rate = 1.16;
+                        utter.pitch = 1.26;
+                        utter.volume = 1;
 
-            this.scrollX = (this.scrollX + worldStep) % 160;
-            this.bgScrollX += worldStep * 0.42;
+                        const voice = this.pickFemaleVoice('vi') || this.pickFemaleVoice('fr');
+                        if (voice) {
+                            utter.voice = voice;
+                        }
 
-            if (this.comboTimer > 0) {
-                this.comboTimer -= dt;
-                if (this.comboTimer <= 0) {
-                    this.combo = 1;
-                }
-            }
+                        utter.onstart = () => {
+                            this.hasSpokenWelcome = true;
+                        };
+                        utter.onend = () => {
+                            this.hasSpokenWelcome = true;
+                        };
+                        utter.onerror = () => {
+                            // Réessayera au prochain geste si bloqué par l'autoplay
+                        };
 
-            if (this.player.invulnTimer > 0) this.player.invulnTimer = Math.max(0, this.player.invulnTimer - dt);
-            if (this.player.shieldTimer > 0) this.player.shieldTimer = Math.max(0, this.player.shieldTimer - dt);
-            if (this.player.bellTimer > 0) this.player.bellTimer = Math.max(0, this.player.bellTimer - dt);
-
-            const targetY = this.laneY[this.player.lane] ?? this.laneY[1];
-            this.player.y += (targetY - this.player.y) * Math.min(1, dt * 15);
-
-            if (this.player.z > 0 || this.player.vz !== 0) {
-                this.player.z += this.player.vz * dt;
-                this.player.vz -= 1480 * dt;
-                this.player.pitch = Math.max(-0.32, Math.min(0.28, -this.player.vz * 0.00045));
-
-                if (this.player.z <= 0) {
-                    this.player.z = 0;
-                    this.player.vz = 0;
-                    this.player.pitch = 0;
-                    this.spawnDust(this.player.x, this.player.y + 18, 7);
-                }
-            } else {
-                this.player.pitch = Math.sin(this.elapsed * 14) * 0.025;
-            }
-
-            this.player.wheelAngle += (worldStep / 24);
-            const pedalSpeedMultiplier = this.player.z > 4 ? 0.35 : (this.speed / this.baseSpeed);
-            this.player.pedalPhase += dt * 11.5 * pedalSpeedMultiplier;
-            this.ludoSprite.frameIndex = Math.floor(this.player.pedalPhase) % Math.max(1, this.ludoSprite.frames.length);
-
-            this.scenerySpawnTimer -= dt;
-            if (this.scenerySpawnTimer <= 0) {
-                this.scenerySpawnTimer = 0.85 + Math.random() * 0.65;
-                const types = ['house', 'banana', 'lantern_post', 'stall', 'coconut'];
-                this.sceneryProps.push({
-                    x: this.width + 120,
-                    type: types[Math.floor(Math.random() * types.length)],
-                    variant: Math.floor(Math.random() * 3)
-                });
-            }
-            for (let i = this.sceneryProps.length - 1; i >= 0; i--) {
-                this.sceneryProps[i].x -= this.speed * 0.52 * dt;
-                if (this.sceneryProps[i].x < -220) {
-                    this.sceneryProps.splice(i, 1);
+                        window.speechSynthesis.speak(utter);
+                    } catch (err) {}
                 }
             }
 
-            this.holeSpawnTimer -= dt;
-            if (this.holeSpawnTimer <= 0) {
-                this.spawnHole();
-                this.holeSpawnTimer = Math.max(1.55, 3.2 - this.speed * 0.0022) + Math.random() * 0.9;
-            }
-
-            for (let i = this.holes.length - 1; i >= 0; i--) {
-                const h = this.holes[i];
-                h.x -= worldStep;
-
-                if (!h.warned && h.x < this.width - 80 && h.x > 0) {
-                    h.warned = true;
+            // =========================================================================
+            // 2. CHARGEUR D'ASSETS (8 FRAMES DE LUDO, DÉCOR, ACCUEIL & GAMEOVER)
+            // =========================================================================
+            class AssetLoader {
+                constructor() {
+                    this.frames = [];
+                    this.framesLoadedCount = 0;
+                    this.bgImage = null;
+                    this.bgLoaded = false;
+                    this.welcomeUrl = null;
+                    this.gameOverUrl = null;
                 }
 
-                if (h.lane === this.player.lane && this.player.z < 14) {
-                    const holeLeft = h.x - h.width * 0.36;
-                    const holeRight = h.x + h.width * 0.36;
-                    if (this.player.x > holeLeft && this.player.x < holeRight) {
-                        this.startFallIntoHole(h);
+                loadImageWithFallback(urls) {
+                    return new Promise((resolve) => {
+                        let idx = 0;
+                        const tryNext = () => {
+                            if (idx >= urls.length) {
+                                resolve(null);
+                                return;
+                            }
+                            const url = urls[idx++];
+                            const img = new Image();
+                            img.crossOrigin = 'anonymous';
+                            img.onload = () => resolve({ img, url });
+                            img.onerror = tryNext;
+                            img.src = url;
+                        };
+                        tryNext();
+                    });
+                }
+
+                keyOutBackground(img) {
+                    try {
+                        const w = img.naturalWidth || img.width;
+                        const h = img.naturalHeight || img.height;
+                        if (!w || !h) return img;
+
+                        const off = document.createElement('canvas');
+                        off.width = w;
+                        off.height = h;
+                        const octx = off.getContext('2d', { willReadFrequently: true });
+                        if (!octx) return img;
+
+                        octx.drawImage(img, 0, 0);
+                        const imageData = octx.getImageData(0, 0, w, h);
+                        const data = imageData.data;
+
+                        // Échantillon du coin supérieur gauche pour détecter un fond uni clair ou gris
+                        const bgR = data[0];
+                        const bgG = data[1];
+                        const bgB = data[2];
+
+                        const visited = new Uint8Array(w * h);
+                        const queue = new Int32Array(w * h);
+                        let head = 0;
+                        let tail = 0;
+
+                        const matchesBg = (idx) => {
+                            const p = idx * 4;
+                            const r = data[p];
+                            const g = data[p + 1];
+                            const b = data[p + 2];
+                            const a = data[p + 3];
+                            if (a < 15) return true;
+
+                            const distSeed = Math.hypot(r - bgR, g - bgG, b - bgB);
+                            const isNearWhite = r > 235 && g > 235 && b > 235;
+                            const isNearLightGray =
+                                Math.abs(r - g) < 12 &&
+                                Math.abs(g - b) < 12 &&
+                                r > 190 &&
+                                distSeed < 48;
+
+                            return distSeed < 36 || isNearWhite || isNearLightGray;
+                        };
+
+                        const enqueueIfBg = (x, y) => {
+                            if (x < 0 || y < 0 || x >= w || y >= h) return;
+                            const pos = y * w + x;
+                            if (visited[pos]) return;
+                            if (matchesBg(pos)) {
+                                visited[pos] = 1;
+                                queue[tail++] = pos;
+                            }
+                        };
+
+                        for (let x = 0; x < w; x++) {
+                            enqueueIfBg(x, 0);
+                            enqueueIfBg(x, h - 1);
+                        }
+                        for (let y = 0; y < h; y++) {
+                            enqueueIfBg(0, y);
+                            enqueueIfBg(w - 1, y);
+                        }
+
+                        while (head < tail) {
+                            const curr = queue[head++];
+                            const cx = curr % w;
+                            const cy = (curr - cx) / w;
+                            data[curr * 4 + 3] = 0;
+
+                            if (cx > 0) enqueueIfBg(cx - 1, cy);
+                            if (cx < w - 1) enqueueIfBg(cx + 1, cy);
+                            if (cy > 0) enqueueIfBg(cx, cy - 1);
+                            if (cy < h - 1) enqueueIfBg(cx, cy + 1);
+                        }
+
+                        octx.putImageData(imageData, 0, 0);
+                        return off;
+                    } catch (err) {
+                        return img;
+                    }
+                }
+
+                async loadAll() {
+                    const framePromises = [];
+                    for (let i = 1; i <= 8; i++) {
+                        const candidates = [
+                            `assets/frames/fram${i}.jpg`,
+                            `assets/frames/frame${i}.jpg`,
+                            `assets/frames/fram${i}.png`,
+                            `fram${i}.jpg`
+                        ];
+                        framePromises.push(
+                            this.loadImageWithFallback(candidates).then((res) => {
+                                if (res && res.img) {
+                                    this.frames[i - 1] = this.keyOutBackground(res.img);
+                                    this.framesLoadedCount++;
+                                } else {
+                                    this.frames[i - 1] = null;
+                                }
+                            })
+                        );
+                    }
+
+                    const bgPromise = this.loadImageWithFallback([
+                        'assets/backgrounds/fond.jpeg',
+                        'assets/backgrounds/fond.png',
+                        'assets/backgrounds/fond.jpg',
+                        'fond.jpeg',
+                        'fond.png'
+                    ]).then((res) => {
+                        if (res && res.img) {
+                            this.bgImage = res.img;
+                            this.bgLoaded = true;
+                        }
+                    });
+
+                    const welcomePromise = this.loadImageWithFallback([
+                        'assets/backgrounds/accueil.png',
+                        'assets/backgrounds/accueil.jpg',
+                        'assets/backgrounds/accueil.jpeg',
+                        'accueil.png',
+                        'accueil.jpg'
+                    ]).then((res) => {
+                        if (res && res.url) {
+                            this.welcomeUrl = res.url;
+                        }
+                    });
+
+                    const gameOverPromise = this.loadImageWithFallback([
+                        'assets/backgrounds/gameover.png',
+                        'assets/backgrounds/gameover.jpg',
+                        'assets/backgrounds/gameover.jpeg',
+                        'gameover.png',
+                        'gameover.jpg'
+                    ]).then((res) => {
+                        if (res && res.url) {
+                            this.gameOverUrl = res.url;
+                        }
+                    });
+
+                    await Promise.all([...framePromises, bgPromise, welcomePromise, gameOverPromise]);
+                }
+            }
+
+            // =========================================================================
+            // 3. JEU PRINCIPAL LUDO-VÉLO VIETNAM
+            // =========================================================================
+            class LudoBikeGame {
+                constructor() {
+                    this.canvas = document.getElementById('gameCanvas');
+                    this.ctx = this.canvas.getContext('2d');
+                    this.bgImgEl = document.getElementById('bgImage');
+
+                    this.sound = new SoundManager();
+                    this.assets = new AssetLoader();
+
+                    this.width = window.innerWidth;
+                    this.height = window.innerHeight;
+                    this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+                    // 3 voies sur le chemin de terre : haut abaissé, milieu centré, bas inchangé
+                    this.laneCount = 3;
+                    this.laneRatios = [0.34, 0.59, 0.84];
+                    this.roadTop = this.height * 0.58;
+                    this.roadHeight = this.height * 0.36;
+                    this.laneY = [0, 0, 0];
+
+                    this.state = 'MENU'; // 'MENU' | 'PLAYING' | 'PAUSED' | 'GAMEOVER'
+                    this.lastTime = 0;
+                    this.elapsed = 0;
+
+                    this.score = 0;
+                    this.bestScore = this.loadBestScore();
+                    this.distance = 0;
+                    this.basket = 0;
+                    this.lives = 3;
+                    this.speed = 270;
+                    this.baseSpeed = 270;
+
+                    this.player = {
+                        x: Math.max(92, this.width * 0.18),
+                        y: this.height * 0.72,
+                        targetY: this.height * 0.72,
+                        lane: 1,
+                        z: 0,
+                        vz: 0,
+                        jumping: false,
+                        frameIndex: 0,
+                        animAccumulator: 0,
+                        invulnTimer: 0,
+                        bellWave: 0,
+                        fallingHole: false,
+                        fallProgress: 0
+                    };
+
+                    this.holes = [];
+                    this.obstacles = [];
+                    this.pickups = [];
+                    this.particles = [];
+
+                    this.holeTimer = 1.4;
+                    this.obstacleTimer = 1.1;
+                    this.pickupTimer = 1.8;
+                    this.toastTimeout = null;
+
+                    this.bindUI();
+                    this.handleResize();
+                    this.initAssetsAndVoice();
+
+                    window.addEventListener('resize', () => this.handleResize());
+                    window.addEventListener('keydown', (e) => this.handleKeyDown(e));
+
+                    requestAnimationFrame((ts) => this.loop(ts));
+                }
+
+                loadBestScore() {
+                    try {
+                        const raw = localStorage.getItem('ludovelo_best_score');
+                        return raw ? Math.max(0, parseInt(raw, 10) || 0) : 0;
+                    } catch (err) {
+                        return 0;
+                    }
+                }
+
+                saveBestScore(val) {
+                    try {
+                        localStorage.setItem('ludovelo_best_score', String(Math.max(0, Math.floor(val))));
+                    } catch (err) {}
+                }
+
+                async initAssetsAndVoice() {
+                    await this.assets.loadAll();
+
+                    if (this.assets.bgLoaded && this.assets.bgImage) {
+                        this.bgImgEl.src = this.assets.bgImage.currentSrc || this.assets.bgImage.src;
+                        this.bgImgEl.classList.remove('hidden');
+                    } else {
+                        this.bgImgEl.classList.add('hidden');
+                    }
+
+                    const welcomeImg = document.getElementById('welcomeImg');
+                    const welcomeFallback = document.getElementById('welcomeFallback');
+                    if (this.assets.welcomeUrl) {
+                        welcomeImg.src = this.assets.welcomeUrl;
+                        welcomeImg.classList.remove('hidden');
+                        welcomeFallback.classList.add('hidden');
+                    } else {
+                        welcomeImg.classList.add('hidden');
+                        welcomeFallback.classList.remove('hidden');
+                    }
+
+                    const gameOverImg = document.getElementById('gameOverImg');
+                    const gameOverFallback = document.getElementById('gameOverFallback');
+                    if (this.assets.gameOverUrl) {
+                        gameOverImg.src = this.assets.gameOverUrl;
+                        gameOverImg.classList.remove('hidden');
+                        gameOverFallback.classList.add('hidden');
+                    } else {
+                        gameOverImg.classList.add('hidden');
+                        gameOverFallback.classList.remove('hidden');
+                    }
+
+                    this.computeLanes();
+                    this.player.y = this.laneY[this.player.lane];
+                    this.player.targetY = this.player.y;
+
+                    // Tentative de lancement vocal immédiat + déblocage au premier geste sur le menu
+                    this.sound.speakVietnameseGreeting(false);
+                    if ('speechSynthesis' in window) {
+                        const prevHandler = window.speechSynthesis.onvoiceschanged;
+                        window.speechSynthesis.onvoiceschanged = () => {
+                            if (typeof prevHandler === 'function') prevHandler();
+                            if (this.state === 'MENU' && !this.sound.hasSpokenWelcome) {
+                                this.sound.speakVietnameseGreeting(false);
+                            }
+                        };
+                    }
+                }
+
+                computeLanes() {
+                    this.width = window.innerWidth;
+                    this.height = window.innerHeight;
+                    this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+                    this.canvas.width = Math.floor(this.width * this.dpr);
+                    this.canvas.height = Math.floor(this.height * this.dpr);
+                    this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+
+                    // Chemin de terre positionné en bas / centre-bas
+                    this.roadTop = this.height * 0.56;
+                    this.roadHeight = this.height * 0.36;
+
+                    const trackTop = this.roadTop + this.roadHeight * 0.14;
+                    const trackBottom = this.roadTop + this.roadHeight * 0.94;
+                    const trackSpan = Math.max(60, trackBottom - trackTop);
+
+                    for (let i = 0; i < this.laneCount; i++) {
+                        this.laneY[i] = trackTop + trackSpan * this.laneRatios[i];
+                    }
+
+                    this.player.x = Math.max(82, Math.min(this.width * 0.22, 190));
+                    this.player.targetY = this.laneY[this.player.lane];
+                    if (!this.player.fallingHole) {
+                        this.player.y = this.player.targetY;
+                    }
+                }
+
+                handleResize() {
+                    this.computeLanes();
+                    for (const obs of this.obstacles) {
+                        obs.y = this.laneY[obs.lane];
+                    }
+                    for (const pk of this.pickups) {
+                        pk.y = this.laneY[pk.lane];
+                    }
+                }
+
+                bindUI() {
+                    const startOverlay = document.getElementById('startOverlay');
+
+                    // Déblocage vocal fiable dès le premier toucher/clic sur l'accueil si nécessaire
+                    const unlockGreeting = () => {
+                        this.sound.ensureContext();
+                        if (this.state === 'MENU' && !this.sound.hasSpokenWelcome) {
+                            this.sound.speakVietnameseGreeting(false);
+                        }
+                    };
+                    startOverlay.addEventListener('pointerdown', unlockGreeting, { passive: true });
+                    startOverlay.addEventListener('touchstart', unlockGreeting, { passive: true });
+
+                    document.getElementById('btnStartGame').addEventListener('click', () => {
+                        this.sound.ensureContext();
+                        this.startGame();
+                    });
+
+                    document.getElementById('btnPause').addEventListener('click', () => {
+                        if (this.state === 'PLAYING') {
+                            this.pauseGame();
+                        } else if (this.state === 'PAUSED') {
+                            this.resumeGame();
+                        }
+                    });
+
+                    document.getElementById('btnResume').addEventListener('click', () => this.resumeGame());
+                    document.getElementById('btnPauseRestart').addEventListener('click', () => this.startGame());
+                    document.getElementById('btnPauseHome').addEventListener('click', () => this.goToMenu());
+
+                    document.getElementById('btnRetry').addEventListener('click', () => this.startGame());
+                    document.getElementById('btnGameOverHome').addEventListener('click', () => this.goToMenu());
+
+                    const btnMute = document.getElementById('btnMute');
+                    btnMute.addEventListener('click', () => {
+                        this.sound.setMuted(!this.sound.muted);
+                        btnMute.textContent = this.sound.muted ? '🔇' : '🔊';
+                    });
+
+                    // Boutons dédiés : changement de file uniquement via Haut / Bas, saut via Sauter
+                    const bindPressButton = (id, action) => {
+                        const btn = document.getElementById(id);
+                        const trigger = (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            btn.classList.add('is-pressed');
+                            setTimeout(() => btn.classList.remove('is-pressed'), 120);
+                            action();
+                        };
+                        btn.addEventListener('pointerdown', trigger);
+                    };
+
+                    bindPressButton('btnLaneUp', () => this.changeLane(-1));
+                    bindPressButton('btnLaneDown', () => this.changeLane(1));
+                    bindPressButton('btnJump', () => this.jump());
+                    bindPressButton('btnBell', () => this.ringBell());
+                }
+
+                handleKeyDown(e) {
+                    if (this.state === 'MENU' && (e.key === 'Enter' || e.key === ' ')) {
+                        e.preventDefault();
+                        this.startGame();
                         return;
                     }
+
+                    if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
+                        if (this.state === 'PLAYING') this.pauseGame();
+                        else if (this.state === 'PAUSED') this.resumeGame();
+                        return;
+                    }
+
+                    if (this.state !== 'PLAYING') return;
+
+                    if (e.key === 'ArrowUp' || e.key === 'z' || e.key === 'Z') {
+                        e.preventDefault();
+                        this.changeLane(-1);
+                    } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+                        e.preventDefault();
+                        this.changeLane(1);
+                    } else if (e.key === 'ArrowRight' || e.key === 'w' || e.key === 'W') {
+                        e.preventDefault();
+                        this.jump();
+                    } else if (e.key === ' ') {
+                        e.preventDefault();
+                        this.ringBell();
+                    }
                 }
 
-                if (h.x + h.width < -140) {
-                    this.holes.splice(i, 1);
-                }
-            }
+                showToast(msg, duration = 1800) {
+                    const banner = document.getElementById('toastBanner');
+                    const textEl = document.getElementById('toastText');
+                    textEl.textContent = msg;
+                    banner.classList.remove('opacity-0', '-translate-y-2');
+                    banner.classList.add('opacity-100', 'translate-y-0');
 
-            this.obstacleSpawnTimer -= dt;
-            if (this.obstacleSpawnTimer <= 0) {
-                this.spawnObstacle();
-                this.obstacleSpawnTimer = Math.max(0.82, 1.85 - this.speed * 0.0014) + Math.random() * 0.55;
-            }
-
-            for (let i = this.obstacles.length - 1; i >= 0; i--) {
-                const obs = this.obstacles[i];
-                obs.x -= (this.speed + obs.vx) * dt;
-                obs.y += obs.vy * dt;
-                obs.y = Math.max(this.roadTop + 10, Math.min(this.roadBottom - 10, obs.y));
-                obs.animPhase += dt * 10;
-                if (obs.scaredTimer > 0) obs.scaredTimer -= dt;
-
-                if (!obs.passed && obs.x + obs.width * 0.5 < this.player.x) {
-                    obs.passed = true;
-                    this.addScore(25);
+                    if (this.toastTimeout) {
+                        clearTimeout(this.toastTimeout);
+                    }
+                    this.toastTimeout = setTimeout(() => {
+                        banner.classList.remove('opacity-100', 'translate-y-0');
+                        banner.classList.add('opacity-0', '-translate-y-2');
+                    }, duration);
                 }
 
-                const sameLane = Math.abs(obs.y - this.player.y) < 24;
-                const overlapX = Math.abs(obs.x - this.player.x) < (obs.width * 0.42 + 34);
-                const clearJump = this.player.z > 36;
+                updateHud() {
+                    document.getElementById('hudScore').textContent = String(Math.floor(this.score));
+                    document.getElementById('hudDistance').textContent = `${Math.floor(this.distance)} m`;
+                    document.getElementById('hudBasket').textContent = String(this.basket);
 
-                if (sameLane && overlapX && !clearJump && this.player.invulnTimer <= 0) {
-                    this.handleObstacleHit(obs);
-                    this.obstacles.splice(i, 1);
-                    if (this.state !== 'playing') return;
-                    continue;
+                    const livesEl = document.getElementById('hudLives');
+                    const full = Math.max(0, this.lives);
+                    const empty = Math.max(0, 3 - full);
+                    livesEl.innerHTML = '<span>❤️</span>'.repeat(full) + '<span>🖤</span>'.repeat(empty);
                 }
 
-                if (obs.x < -160) {
-                    this.obstacles.splice(i, 1);
-                }
-            }
-
-            this.collectibleSpawnTimer -= dt;
-            if (this.collectibleSpawnTimer <= 0) {
-                this.spawnCollectible();
-                this.collectibleSpawnTimer = 1.4 + Math.random() * 1.2;
-            }
-
-            for (let i = this.collectibles.length - 1; i >= 0; i--) {
-                const col = this.collectibles[i];
-                col.x -= worldStep;
-                col.bobPhase += dt * 5;
-
-                const sameLane = Math.abs(col.y - this.player.y) < 28;
-                const distX = Math.abs(col.x - this.player.x) < 46;
-                const heightMatch = Math.abs(col.z - this.player.z) < 48;
-
-                if (sameLane && distX && heightMatch) {
-                    this.collectItem(col);
-                    this.collectibles.splice(i, 1);
-                    continue;
+                setOverlayVisibility(overlayId, visible) {
+                    const el = document.getElementById(overlayId);
+                    if (visible) el.classList.remove('hidden');
+                    else el.classList.add('hidden');
                 }
 
-                if (col.x < -120) {
-                    this.collectibles.splice(i, 1);
+                goToMenu() {
+                    this.state = 'MENU';
+                    this.setOverlayVisibility('startOverlay', true);
+                    this.setOverlayVisibility('pauseOverlay', false);
+                    this.setOverlayVisibility('gameOverOverlay', false);
+                    document.getElementById('hudTop').classList.add('hidden');
+                    document.getElementById('touchControls').classList.add('hidden');
                 }
-            }
 
-            this.updateParticles(dt);
-            this.updateFloatingTexts(dt);
-            this.updateHud();
-        }
+                startGame() {
+                    this.computeLanes();
 
-        startFallIntoHole(hole) {
-            this.player.fallingIntoHole = hole;
-            this.player.fallProgress = 0;
-            this.player.x = hole.x;
-            this.player.y = this.laneY[hole.lane];
-            this.sound.stopBgm();
-            this.sound.playHoleFall();
-            this.spawnDust(hole.x, this.laneY[hole.lane], 14, 'rgba(120, 95, 65, 0.85)');
-            this.floatingTexts.push({
-                x: hole.x,
-                y: this.laneY[hole.lane] - 50,
-                text: '🕳️ PLOUF DANS LE TROU !',
-                color: '#fda4af',
-                life: 1.1
-            });
-        }
+                    this.score = 0;
+                    this.distance = 0;
+                    this.basket = 0;
+                    this.lives = 3;
+                    this.speed = this.baseSpeed;
 
-        handleObstacleHit(obs) {
-            if (this.player.shieldTimer > 0) {
-                this.player.shieldTimer = 0;
-                this.player.invulnTimer = 1.1;
-                this.sound.playPickup(true);
-                this.spawnDust(obs.x, obs.y, 12, 'rgba(253, 224, 71, 0.9)');
-                this.floatingTexts.push({
-                    x: obs.x,
-                    y: obs.y - 40,
-                    text: '👒 Nón lá a paré le choc !',
-                    color: '#fde047',
-                    life: 1.0
-                });
-                this.showEventBanner('👒 Ton chapeau Nón lá a protégé Ludo !', 1500);
-                return;
-            }
+                    this.player.lane = 1;
+                    this.player.y = this.laneY[1];
+                    this.player.targetY = this.laneY[1];
+                    this.player.z = 0;
+                    this.player.vz = 0;
+                    this.player.jumping = false;
+                    this.player.frameIndex = 0;
+                    this.player.animAccumulator = 0;
+                    this.player.invulnTimer = 1.0;
+                    this.player.bellWave = 0;
+                    this.player.fallingHole = false;
+                    this.player.fallProgress = 0;
 
-            this.lives -= 1;
-            this.combo = 1;
-            this.comboTimer = 0;
-            this.player.invulnTimer = 1.45;
-            this.speed = Math.max(this.baseSpeed * 0.78, this.speed * 0.82);
-            this.sound.playHit();
-            this.spawnDust(this.player.x, this.player.y, 12, 'rgba(248, 113, 113, 0.85)');
+                    this.holes = [];
+                    this.obstacles = [];
+                    this.pickups = [];
+                    this.particles = [];
 
-            this.floatingTexts.push({
-                x: this.player.x,
-                y: this.player.y - this.player.z - 55,
-                text: '💥 Aïe !',
-                color: '#f87171',
-                life: 0.9
-            });
+                    this.holeTimer = 1.3;
+                    this.obstacleTimer = 0.95;
+                    this.pickupTimer = 1.6;
 
-            this.updateHud();
+                    this.state = 'PLAYING';
+                    this.setOverlayVisibility('startOverlay', false);
+                    this.setOverlayVisibility('pauseOverlay', false);
+                    this.setOverlayVisibility('gameOverOverlay', false);
+                    document.getElementById('hudTop').classList.remove('hidden');
+                    document.getElementById('touchControls').classList.remove('hidden');
 
-            if (this.lives <= 0) {
-                this.triggerGameOver(
-                    '💥',
-                    'Fin de la balade !',
-                    'Ludo a heurté trop d’obstacles sur la route du village.'
-                );
-            }
-        }
-
-        collectItem(col) {
-            this.basketCount += 1;
-            this.combo = Math.min(5, this.combo + 0.5);
-            this.comboTimer = 4.0;
-            this.addScore(col.points);
-            this.sound.playPickup(col.kind === 'non_la' || col.kind === 'pho');
-
-            if (col.kind === 'non_la') {
-                this.player.shieldTimer = 12;
-                this.showEventBanner('👒 Bouclier Nón lá activé !', 1600);
-            } else if (col.kind === 'coffee') {
-                this.speed = Math.min(680, this.speed + 45);
-                this.showEventBanner('☕ Cà phê sữa đá : coup de boost !', 1500);
-            }
-
-            this.spawnDust(col.x, col.y - col.z, 8, 'rgba(74, 222, 128, 0.85)');
-            this.floatingTexts.push({
-                x: col.x,
-                y: col.y - col.z - 28,
-                text: col.label,
-                color: '#86efac',
-                life: 0.95
-            });
-            this.updateHud();
-        }
-
-        triggerGameOver(icon, title, reason) {
-            this.state = 'gameover';
-            this.sound.stopBgm();
-
-            document.getElementById('hud').classList.add('hidden');
-            document.getElementById('touch-controls').classList.add('hidden');
-            const goImg = document.getElementById('gameover-bg-img');
-            if (goImg && this.gameOverImageSrc) {
-                goImg.src = this.gameOverImageSrc;
-                goImg.classList.remove('hidden');
-                document.getElementById('gameover-icon').classList.add('hidden');
-            } else {
-                document.getElementById('gameover-icon').classList.remove('hidden');
-                document.getElementById('gameover-icon').textContent = icon;
-            }
-            document.getElementById('gameover-title').textContent = title;
-            document.getElementById('gameover-reason').textContent = reason;
-            document.getElementById('final-score').textContent = Math.floor(this.score).toLocaleString('fr-FR');
-            document.getElementById('final-best').textContent = Math.floor(this.bestScore).toLocaleString('fr-FR');
-            document.getElementById('final-distance').textContent = `${Math.floor(this.distance)} m`;
-            document.getElementById('gameover-screen').classList.remove('hidden');
-        }
-
-        updateParticles(dt) {
-            for (let i = this.particles.length - 1; i >= 0; i--) {
-                const p = this.particles[i];
-                p.x += p.vx * dt;
-                p.y += p.vy * dt;
-                p.vy += 180 * dt;
-                p.life -= dt;
-                if (p.life <= 0) {
-                    this.particles.splice(i, 1);
+                    this.updateHud();
+                    this.showToast('C’est parti ! Saute au-dessus des trous du chemin !');
                 }
-            }
-        }
 
-        updateFloatingTexts(dt) {
-            for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
-                const ft = this.floatingTexts[i];
-                ft.y -= 36 * dt;
-                ft.life -= dt;
-                if (ft.life <= 0) {
-                    this.floatingTexts.splice(i, 1);
+                pauseGame() {
+                    if (this.state !== 'PLAYING') return;
+                    this.state = 'PAUSED';
+                    this.setOverlayVisibility('pauseOverlay', true);
                 }
-            }
-        }
 
-        updateHud() {
-            document.getElementById('hud-score').textContent = Math.floor(this.score).toLocaleString('fr-FR');
-            document.getElementById('hud-distance').textContent = `${Math.floor(this.distance)} m`;
-            document.getElementById('hud-basket').textContent = String(this.basketCount);
-
-            const comboBadge = document.getElementById('hud-combo-badge');
-            if (this.combo > 1) {
-                comboBadge.classList.remove('hidden');
-                comboBadge.classList.add('flex');
-                document.getElementById('hud-combo').textContent = `x${this.combo.toFixed(1).replace('.0', '')}`;
-            } else {
-                comboBadge.classList.add('hidden');
-                comboBadge.classList.remove('flex');
-            }
-
-            const shieldEl = document.getElementById('hud-shield');
-            if (this.player.shieldTimer > 0) {
-                shieldEl.classList.remove('hidden');
-            } else {
-                shieldEl.classList.add('hidden');
-            }
-
-            const livesContainer = document.getElementById('hud-lives');
-            livesContainer.innerHTML = '';
-            for (let i = 0; i < 3; i++) {
-                const span = document.createElement('span');
-                span.textContent = i < this.lives ? '❤️' : '🖤';
-                livesContainer.appendChild(span);
-            }
-        }
-
-        draw() {
-            const ctx = this.ctx;
-            const w = this.width;
-            const h = this.height;
-
-            ctx.clearRect(0, 0, w, h);
-
-            this.drawVietnameseVillageBackdrop(ctx, w, h);
-            if (!this.bgLoaded) {
-                this.drawRoadAndHoles(ctx, w, h);
-                this.drawForegroundGrass(ctx, w, h);
-            } else {
-                this.drawSubtleDirtLaneGuides(ctx, w);
-            }
-
-            const renderables = [];
-
-            for (const hole of this.holes) {
-                renderables.push({ sortY: this.laneY[hole.lane] - 2, draw: () => this.drawHole(ctx, hole) });
-            }
-
-            for (const col of this.collectibles) {
-                renderables.push({ sortY: col.y, draw: () => this.drawCollectible(ctx, col) });
-            }
-
-            for (const obs of this.obstacles) {
-                renderables.push({ sortY: obs.y, draw: () => this.drawObstacle(ctx, obs) });
-            }
-
-            renderables.push({
-                sortY: this.player.y + 1,
-                draw: () => this.drawPlayerLudo(ctx)
-            });
-
-            renderables.sort((a, b) => a.sortY - b.sortY);
-            for (const item of renderables) {
-                item.draw();
-            }
-
-            for (const p of this.particles) {
-                const alpha = Math.max(0, p.life / p.maxLife);
-                ctx.globalAlpha = alpha;
-                ctx.fillStyle = p.color;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            ctx.globalAlpha = 1;
-
-            for (const ft of this.floatingTexts) {
-                const alpha = Math.min(1, ft.life * 1.4);
-                ctx.globalAlpha = Math.max(0, alpha);
-                ctx.font = '800 16px Fredoka, Nunito, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.lineWidth = 4;
-                ctx.strokeStyle = 'rgba(15, 23, 42, 0.85)';
-                ctx.strokeText(ft.text, ft.x, ft.y);
-                ctx.fillStyle = ft.color;
-                ctx.fillText(ft.text, ft.x, ft.y);
-            }
-            ctx.globalAlpha = 1;
-        }
-
-        drawVietnameseVillageBackdrop(ctx, w, h) {
-            const horizonY = this.roadTop - 6;
-
-            if (this.bgLoaded && this.bgImage) {
-                const imgW = this.bgImage.naturalWidth || this.bgImage.width;
-                const imgH = this.bgImage.naturalHeight || this.bgImage.height;
-                const scale = h / imgH;
-                const tileW = Math.max(320, Math.round(imgW * scale));
-                const revealRatio = this.state === 'playing' ? this.bgRevealProgress : 1;
-                const visibleWidth = Math.max(w * 0.2, w * revealRatio);
-                const offset = ((this.bgScrollX % tileW) + tileW) % tileW;
-
-                ctx.save();
-                ctx.beginPath();
-                ctx.rect(0, 0, visibleWidth, h);
-                ctx.clip();
-
-                for (let x = -offset - tileW; x < visibleWidth + tileW; x += tileW) {
-                    ctx.drawImage(this.bgImage, x, 0, tileW + 1, h);
+                resumeGame() {
+                    if (this.state !== 'PAUSED') return;
+                    this.state = 'PLAYING';
+                    this.lastTime = performance.now();
+                    this.setOverlayVisibility('pauseOverlay', false);
                 }
-                ctx.restore();
-                return;
-            }
 
-            const skyGrad = ctx.createLinearGradient(0, 0, 0, horizonY);
-            skyGrad.addColorStop(0, '#5ba4e5');
-            skyGrad.addColorStop(0.62, '#b8ddf2');
-            skyGrad.addColorStop(1, '#e8e2c8');
-            ctx.fillStyle = skyGrad;
-            ctx.fillRect(0, 0, w, horizonY);
+                triggerGameOver(title, reason) {
+                    if (this.state === 'GAMEOVER') return;
+                    this.state = 'GAMEOVER';
+                    this.sound.playCrash();
 
-            const sunX = w * 0.82;
-            const sunY = horizonY * 0.22;
-            const sunGlow = ctx.createRadialGradient(sunX, sunY, 8, sunX, sunY, 110);
-            sunGlow.addColorStop(0, 'rgba(255, 248, 220, 0.95)');
-            sunGlow.addColorStop(0.35, 'rgba(254, 224, 138, 0.35)');
-            sunGlow.addColorStop(1, 'rgba(254, 224, 138, 0)');
-            ctx.fillStyle = sunGlow;
-            ctx.beginPath();
-            ctx.arc(sunX, sunY, 110, 0, Math.PI * 2);
-            ctx.fill();
+                    if (this.score > this.bestScore) {
+                        this.bestScore = Math.floor(this.score);
+                        this.saveBestScore(this.bestScore);
+                    }
 
-            ctx.fillStyle = '#fffbeb';
-            ctx.beginPath();
-            ctx.arc(sunX, sunY, 24, 0, Math.PI * 2);
-            ctx.fill();
+                    document.getElementById('gameOverTitle').textContent = title || 'Fin de la balade !';
+                    document.getElementById('gameOverReason').textContent = reason || 'Ludo a perdu l’équilibre.';
+                    document.getElementById('finalScore').textContent = String(Math.floor(this.score));
+                    document.getElementById('finalBest').textContent = String(Math.floor(this.bestScore));
+                    document.getElementById('finalDistance').textContent = `${Math.floor(this.distance)} m`;
 
-            const drawKarstLayer = (parallax, baseColor, peakColor, heightScale, alpha) => {
-                ctx.save();
-                ctx.globalAlpha = alpha;
-                const span = 340;
-                const shift = ((this.bgScrollX * parallax) % span + span) % span;
-                const grad = ctx.createLinearGradient(0, horizonY - heightScale, 0, horizonY);
-                grad.addColorStop(0, peakColor);
-                grad.addColorStop(1, baseColor);
-                ctx.fillStyle = grad;
+                    document.getElementById('hudTop').classList.add('hidden');
+                    document.getElementById('touchControls').classList.add('hidden');
+                    this.setOverlayVisibility('pauseOverlay', false);
+                    this.setOverlayVisibility('gameOverOverlay', true);
+                }
 
-                ctx.beginPath();
-                ctx.moveTo(-span, horizonY);
-                for (let x = -span * 2 - shift; x < w + span * 2; x += span) {
-                    const h1 = heightScale * (0.68 + 0.25 * Math.sin(x * 0.013));
-                    const h2 = heightScale * (0.88 + 0.12 * Math.cos(x * 0.021));
-                    ctx.lineTo(x + span * 0.18, horizonY - h1 * 0.45);
-                    ctx.bezierCurveTo(
-                        x + span * 0.28, horizonY - h1,
-                        x + span * 0.48, horizonY - h1,
-                        x + span * 0.56, horizonY - h1 * 0.35
+                changeLane(delta) {
+                    if (this.state !== 'PLAYING' || this.player.fallingHole) return;
+                    const nextLane = Math.max(0, Math.min(this.laneCount - 1, this.player.lane + delta));
+                    if (nextLane !== this.player.lane) {
+                        this.player.lane = nextLane;
+                        this.player.targetY = this.laneY[nextLane];
+                        this.sound.playLaneChange();
+                    }
+                }
+
+                jump() {
+                    if (this.state !== 'PLAYING' || this.player.fallingHole) return;
+                    if (!this.player.jumping && this.player.z <= 1) {
+                        this.player.jumping = true;
+                        this.player.vz = 470;
+                        this.sound.playJump();
+                        this.spawnBurst(this.player.x, this.player.y + 8, '#fde68a', 8);
+                    }
+                }
+
+                ringBell() {
+                    if (this.state !== 'PLAYING') return;
+                    this.player.bellWave = 1.0;
+                    this.sound.playBell();
+                    this.spawnBurst(this.player.x + 24, this.player.y - this.player.z - 28, '#fef08a', 10);
+
+                    let frightenedCount = 0;
+                    for (const obs of this.obstacles) {
+                        const dx = obs.x - this.player.x;
+                        if (dx > -40 && dx < 280 && Math.abs(obs.lane - this.player.lane) <= 1) {
+                            obs.alerted = true;
+                            obs.scaredTimer = 1.3;
+                            frightenedCount++;
+                        }
+                    }
+
+                    if (frightenedCount > 0) {
+                        this.score += 15 * frightenedCount;
+                        this.showToast(`Dring ! +${15 * frightenedCount} pts`);
+                    }
+                }
+
+                spawnBurst(x, y, color, count) {
+                    for (let i = 0; i < count; i++) {
+                        const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.4;
+                        const spd = 45 + Math.random() * 95;
+                        this.particles.push({
+                            x,
+                            y,
+                            vx: Math.cos(angle) * spd,
+                            vy: Math.sin(angle) * spd - 30,
+                            life: 0.42 + Math.random() * 0.2,
+                            maxLife: 0.6,
+                            size: 3 + Math.random() * 3.5,
+                            color
+                        });
+                    }
+                }
+
+                spawnHole() {
+                    const isWideTrench = Math.random() < 0.34;
+                    const width = isWideTrench ? 88 : 58;
+                    const lane = Math.floor(Math.random() * this.laneCount);
+
+                    this.holes.push({
+                        x: this.width + 90,
+                        width,
+                        lane,
+                        isWideTrench,
+                        warned: false
+                    });
+                }
+
+                spawnObstacle() {
+                    const lane = Math.floor(Math.random() * this.laneCount);
+                    const y = this.laneY[lane];
+                    const roll = Math.random();
+
+                    let kind = 'chicken';
+                    let width = 32;
+                    let height = 24;
+                    let extraSpeed = 30;
+
+                    if (roll < 0.28) {
+                        kind = 'chicken';
+                        width = 32;
+                        height = 24;
+                        extraSpeed = 30;
+                    } else if (roll < 0.55) {
+                        kind = 'scooter';
+                        width = 66;
+                        height = 42;
+                        extraSpeed = 95;
+                    } else if (roll < 0.80) {
+                        kind = 'vendor';
+                        width = 60;
+                        height = 42;
+                        extraSpeed = 20;
+                    } else {
+                        kind = 'dog';
+                        width = 40;
+                        height = 28;
+                        extraSpeed = 50;
+                    }
+
+                    const tooCloseToHole = this.holes.some(
+                        (h) => h.lane === lane && Math.abs(h.x - (this.width + 80)) < 170
                     );
-                    ctx.lineTo(x + span * 0.66, horizonY - h2 * 0.5);
-                    ctx.bezierCurveTo(
-                        x + span * 0.76, horizonY - h2,
-                        x + span * 0.92, horizonY - h2 * 0.95,
-                        x + span, horizonY - h2 * 0.2
-                    );
-                }
-                ctx.lineTo(w + span, horizonY);
-                ctx.closePath();
-                ctx.fill();
-                ctx.restore();
-            };
+                    if (tooCloseToHole) return;
 
-            drawKarstLayer(0.14, '#7ea89b', '#5d8a82', horizonY * 0.44, 0.65);
-            drawKarstLayer(0.28, '#4f7c58', '#396144', horizonY * 0.34, 0.85);
-
-            const paddyTop = horizonY - Math.max(48, horizonY * 0.18);
-            const paddyGrad = ctx.createLinearGradient(0, paddyTop, 0, horizonY);
-            paddyGrad.addColorStop(0, '#6b9b47');
-            paddyGrad.addColorStop(1, '#4e7a34');
-            ctx.fillStyle = paddyGrad;
-            ctx.fillRect(0, paddyTop, w, horizonY - paddyTop + 4);
-
-            ctx.strokeStyle = 'rgba(220, 245, 200, 0.22)';
-            ctx.lineWidth = 1.2;
-            const bundShift = ((this.bgScrollX * 0.45) % 180 + 180) % 180;
-            for (let bx = -180 - bundShift; bx < w + 180; bx += 180) {
-                ctx.beginPath();
-                ctx.moveTo(bx, paddyTop + 4);
-                ctx.lineTo(bx - 35, horizonY);
-                ctx.stroke();
-            }
-
-            for (const prop of this.sceneryProps) {
-                this.drawSceneryProp(ctx, prop, horizonY);
-            }
-        }
-
-        drawSceneryProp(ctx, prop, horizonY) {
-            const x = prop.x;
-            const y = horizonY;
-
-            if (prop.type === 'house') {
-                const hw = 86;
-                const hh = 46;
-                ctx.fillStyle = 'rgba(15, 23, 42, 0.18)';
-                ctx.beginPath();
-                ctx.ellipse(x + hw * 0.5, y + 2, hw * 0.55, 5, 0, 0, Math.PI * 2);
-                ctx.fill();
-
-                ctx.fillStyle = prop.variant === 0 ? '#d8b467' : (prop.variant === 1 ? '#cbb892' : '#bfa67a');
-                ctx.fillRect(x, y - hh, hw, hh);
-
-                ctx.fillStyle = '#5c4632';
-                ctx.fillRect(x + 12, y - 24, 14, 24);
-                ctx.fillStyle = '#475569';
-                ctx.fillRect(x + 36, y - 32, 16, 13);
-                ctx.fillRect(x + 58, y - 32, 16, 13);
-
-                ctx.fillStyle = '#9e472a';
-                ctx.beginPath();
-                ctx.moveTo(x - 7, y - hh);
-                ctx.lineTo(x + 12, y - hh - 18);
-                ctx.lineTo(x + hw - 12, y - hh - 18);
-                ctx.lineTo(x + hw + 7, y - hh);
-                ctx.closePath();
-                ctx.fill();
-
-                ctx.strokeStyle = 'rgba(65, 25, 12, 0.35)';
-                ctx.lineWidth = 1;
-                for (let rx = x - 2; rx < x + hw + 4; rx += 7) {
-                    ctx.beginPath();
-                    ctx.moveTo(rx, y - hh);
-                    ctx.lineTo(rx + 6, y - hh - 17);
-                    ctx.stroke();
-                }
-            } else if (prop.type === 'banana' || prop.type === 'coconut') {
-                ctx.strokeStyle = prop.type === 'coconut' ? '#6b533c' : '#567834';
-                ctx.lineWidth = prop.type === 'coconut' ? 5 : 6;
-                ctx.beginPath();
-                ctx.moveTo(x, y);
-                ctx.quadraticCurveTo(x - 6, y - 34, x + 3, y - 62);
-                ctx.stroke();
-
-                const crownX = x + 3;
-                const crownY = y - 62;
-                ctx.fillStyle = '#4c7c32';
-                for (let a = -2.5; a <= 0.6; a += 0.52) {
-                    ctx.beginPath();
-                    ctx.ellipse(
-                        crownX + Math.cos(a) * 18,
-                        crownY + Math.sin(a) * 11,
-                        19,
-                        5.5,
-                        a,
-                        0,
-                        Math.PI * 2
-                    );
-                    ctx.fill();
+                    this.obstacles.push({
+                        x: this.width + 80,
+                        y,
+                        lane,
+                        width,
+                        height,
+                        kind,
+                        vx: extraSpeed,
+                        vy: 0,
+                        animPhase: Math.random() * Math.PI * 2,
+                        alerted: false,
+                        scaredTimer: 0,
+                        passed: false
+                    });
                 }
 
-                if (prop.type === 'banana') {
-                    ctx.fillStyle = '#eab308';
-                    ctx.beginPath();
-                    ctx.arc(crownX + 4, crownY + 8, 5, 0, Math.PI * 2);
-                    ctx.fill();
+                spawnPickup() {
+                    const lane = Math.floor(Math.random() * this.laneCount);
+                    const y = this.laneY[lane];
+                    const items = [
+                        { icon: '🥖', label: 'Bánh mì', pts: 25 },
+                        { icon: '🍜', label: 'Phở', pts: 40 },
+                        { icon: '🥭', label: 'Mangue', pts: 20 },
+                        { icon: '🥥', label: 'Noix de coco', pts: 30 }
+                    ];
+                    const pick = items[Math.floor(Math.random() * items.length)];
+
+                    this.pickups.push({
+                        x: this.width + 70,
+                        y,
+                        lane,
+                        icon: pick.icon,
+                        label: pick.label,
+                        pts: pick.pts,
+                        bobPhase: Math.random() * Math.PI * 2
+                    });
                 }
-            } else if (prop.type === 'lantern_post') {
-                ctx.strokeStyle = '#3b424c';
-                ctx.lineWidth = 3.5;
-                ctx.beginPath();
-                ctx.moveTo(x, y);
-                ctx.lineTo(x, y - 66);
-                ctx.lineTo(x + 16, y - 62);
-                ctx.stroke();
 
-                ctx.fillStyle = '#c93b2b';
-                ctx.beginPath();
-                ctx.ellipse(x + 16, y - 54, 6.5, 8.5, 0, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = '#f6c445';
-                ctx.beginPath();
-                ctx.arc(x + 16, y - 54, 2.5, 0, Math.PI * 2);
-                ctx.fill();
-            } else if (prop.type === 'stall') {
-                ctx.fillStyle = '#7c5836';
-                ctx.fillRect(x, y - 24, 54, 24);
-                ctx.fillStyle = '#8d6e3f';
-                ctx.beginPath();
-                ctx.moveTo(x - 5, y - 24);
-                ctx.lineTo(x + 27, y - 38);
-                ctx.lineTo(x + 59, y - 24);
-                ctx.closePath();
-                ctx.fill();
-                ctx.fillStyle = '#e2e8f0';
-                ctx.fillRect(x + 8, y - 18, 12, 9);
-                ctx.fillStyle = '#f59e0b';
-                ctx.fillRect(x + 25, y - 18, 14, 9);
-            }
-        }
+                update(dt) {
+                    this.elapsed += dt;
 
-        drawRoadAndHoles(ctx, w, h) {
-            const top = this.roadTop;
-            const bot = this.roadBottom;
-            const roadH = bot - top;
+                    // Animation continue de Ludo sur l'accueil
+                    if (this.state === 'MENU') {
+                        this.player.animAccumulator += dt * 7;
+                        this.player.frameIndex = Math.floor(this.player.animAccumulator) % 8;
+                        return;
+                    }
 
-            ctx.fillStyle = '#5c7a38';
-            ctx.fillRect(0, top - 8, w, 10);
+                    if (this.state !== 'PLAYING') return;
 
-            ctx.save();
-            ctx.beginPath();
-            ctx.rect(0, top, w, roadH);
-            ctx.clip();
+                    // Progression douce de la vitesse et du score
+                    this.speed = Math.min(480, this.baseSpeed + this.distance * 0.28);
+                    const stepDist = (this.speed * dt) * 0.045;
+                    this.distance += stepDist;
+                    this.score += stepDist * 1.4;
 
-            if (this.roadPatternCanvas) {
-                const pat = ctx.createPattern(this.roadPatternCanvas, 'repeat');
-                if (pat) {
+                    if (this.player.invulnTimer > 0) {
+                        this.player.invulnTimer = Math.max(0, this.player.invulnTimer - dt);
+                    }
+                    if (this.player.bellWave > 0) {
+                        this.player.bellWave = Math.max(0, this.player.bellWave - dt * 2.4);
+                    }
+
+                    // Interpolation verticale vers la file sélectionnée
+                    const laneDiff = this.player.targetY - this.player.y;
+                    this.player.y += laneDiff * Math.min(1, dt * 16);
+
+                    // Physique du saut
+                    if (this.player.jumping || this.player.z > 0) {
+                        this.player.z += this.player.vz * dt;
+                        this.player.vz -= 1280 * dt;
+                        if (this.player.z <= 0) {
+                            this.player.z = 0;
+                            this.player.vz = 0;
+                            this.player.jumping = false;
+                        }
+                    }
+
+                    // Chute dans un trou si le saut est raté
+                    if (this.player.fallingHole) {
+                        this.player.fallProgress += dt * 2.6;
+                        if (this.player.fallProgress >= 1) {
+                            this.triggerGameOver(
+                                'Dans le trou !',
+                                'Ludo a glissé dans un trou du chemin. Essaie de sauter un peu plus tôt !'
+                            );
+                        }
+                        return;
+                    }
+
+                    // Animation des 8 frames synchronisée avec la vitesse
+                    const cadence = this.player.jumping ? 3 : 11 * (this.speed / this.baseSpeed);
+                    this.player.animAccumulator += dt * cadence;
+                    this.player.frameIndex = Math.floor(this.player.animAccumulator) % 8;
+
+                    // Génération des trous, obstacles et spécialités
+                    this.holeTimer -= dt;
+                    if (this.holeTimer <= 0) {
+                        this.spawnHole();
+                        this.holeTimer = 1.65 + Math.random() * 1.35;
+                    }
+
+                    this.obstacleTimer -= dt;
+                    if (this.obstacleTimer <= 0) {
+                        this.spawnObstacle();
+                        this.obstacleTimer = 1.2 + Math.random() * 1.05;
+                    }
+
+                    this.pickupTimer -= dt;
+                    if (this.pickupTimer <= 0) {
+                        this.spawnPickup();
+                        this.pickupTimer = 1.9 + Math.random() * 1.4;
+                    }
+
+                    // Mise à jour des trous et détection de chute
+                    for (let i = this.holes.length - 1; i >= 0; i--) {
+                        const h = this.holes[i];
+                        h.x -= this.speed * dt;
+
+                        if (h.x + h.width < -80) {
+                            this.holes.splice(i, 1);
+                            continue;
+                        }
+
+                        const sameLane = h.lane === this.player.lane && Math.abs(this.laneY[h.lane] - this.player.y) < 16;
+                        const halfW = h.width * 0.42;
+                        const insideHoleX = Math.abs(h.x - this.player.x) < halfW;
+                        const isAirborneHighEnough = this.player.z > 20;
+
+                        if (sameLane && insideHoleX && !isAirborneHighEnough) {
+                            this.player.fallingHole = true;
+                            this.player.fallProgress = 0;
+                            this.sound.playCrash();
+                            this.spawnBurst(this.player.x, this.laneY[h.lane], '#78716c', 14);
+                            return;
+                        }
+                    }
+
+                    // Mise à jour des obstacles
+                    for (let i = this.obstacles.length - 1; i >= 0; i--) {
+                        const obs = this.obstacles[i];
+                        obs.animPhase += dt * 7;
+
+                        if (obs.scaredTimer > 0) {
+                            obs.scaredTimer = Math.max(0, obs.scaredTimer - dt);
+                            obs.x += (this.speed * 0.55) * dt;
+                            obs.y -= 35 * dt;
+                        } else {
+                            obs.x -= (this.speed + obs.vx * 0.35) * dt;
+                        }
+
+                        if (obs.x < -110 || obs.y < -80) {
+                            this.obstacles.splice(i, 1);
+                            continue;
+                        }
+
+                        if (!obs.passed && obs.x < this.player.x - 20) {
+                            obs.passed = true;
+                            this.score += 10;
+                        }
+
+                        if (this.player.invulnTimer <= 0 && obs.scaredTimer <= 0) {
+                            const sameLane = Math.abs(obs.y - this.player.y) < 20;
+                            const overlapX = Math.abs(obs.x - this.player.x) < (obs.width * 0.38 + 28);
+                            const clearJump = this.player.z > 32;
+
+                            if (sameLane && overlapX && !clearJump) {
+                                this.lives -= 1;
+                                this.player.invulnTimer = 1.4;
+                                this.sound.playCrash();
+                                this.spawnBurst(obs.x, obs.y - this.player.z, '#f87171', 12);
+                                this.obstacles.splice(i, 1);
+
+                                if (this.lives <= 0) {
+                                    this.updateHud();
+                                    this.triggerGameOver(
+                                        'Plus de cœurs !',
+                                        'Ludo a heurté trop d’obstacles sur le chemin du village.'
+                                    );
+                                    return;
+                                } else {
+                                    this.showToast('Aïe ! Attention sur le chemin !');
+                                }
+                            }
+                        }
+                    }
+
+                    // Mise à jour des spécialités à collecter
+                    for (let i = this.pickups.length - 1; i >= 0; i--) {
+                        const pk = this.pickups[i];
+                        pk.x -= this.speed * dt;
+                        pk.bobPhase += dt * 5;
+
+                        if (pk.x < -80) {
+                            this.pickups.splice(i, 1);
+                            continue;
+                        }
+
+                        const sameLane = Math.abs(pk.y - this.player.y) < 22;
+                        const nearX = Math.abs(pk.x - this.player.x) < 38;
+                        const reachableZ = this.player.z < 55;
+
+                        if (sameLane && nearX && reachableZ) {
+                            this.basket += 1;
+                            this.score += pk.pts;
+                            this.sound.playPickup();
+                            this.spawnBurst(pk.x, pk.y - 10, '#fbbf24', 10);
+                            this.showToast(`${pk.icon} ${pk.label} (+${pk.pts} pts)`);
+                            this.pickups.splice(i, 1);
+                        }
+                    }
+
+                    // Mise à jour des particules
+                    for (let i = this.particles.length - 1; i >= 0; i--) {
+                        const pt = this.particles[i];
+                        pt.life -= dt;
+                        pt.x += pt.vx * dt;
+                        pt.y += pt.vy * dt;
+                        pt.vy += 220 * dt;
+                        if (pt.life <= 0) {
+                            this.particles.splice(i, 1);
+                        }
+                    }
+
+                    this.updateHud();
+                }
+
+                drawGroundTrack(ctx) {
+                    // Lorsque fond.jpeg / fond.png est chargé, l'image affiche le chemin naturel :
+                    // on trace uniquement un repère très discret de la voie active sans bitume gris.
+                    if (this.assets.bgLoaded) {
+                        const activeY = this.laneY[this.player.lane];
+                        ctx.save();
+                        ctx.strokeStyle = 'rgba(254, 240, 138, 0.24)';
+                        ctx.lineWidth = 2;
+                        ctx.setLineDash([14, 16]);
+                        ctx.lineDashOffset = -(this.distance * 22) % 30;
+                        ctx.beginPath();
+                        ctx.moveTo(24, activeY + 8);
+                        ctx.lineTo(this.width - 24, activeY + 8);
+                        ctx.stroke();
+                        ctx.restore();
+                        return;
+                    }
+
+                    // Secours si aucune image de fond n'est présente
                     ctx.save();
-                    ctx.translate(-this.scrollX, top);
-                    ctx.fillStyle = pat;
-                    ctx.fillRect(0, 0, w + this.scrollX + 160, roadH);
+                    const grad = ctx.createLinearGradient(0, this.roadTop, 0, this.roadTop + this.roadHeight);
+                    grad.addColorStop(0, '#d6b485');
+                    grad.addColorStop(1, '#b68d5c');
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(0, this.roadTop, this.width, this.roadHeight);
+
+                    ctx.strokeStyle = 'rgba(255, 251, 235, 0.35)';
+                    ctx.setLineDash([16, 18]);
+                    ctx.lineDashOffset = -(this.distance * 22) % 34;
+                    for (let i = 0; i < this.laneCount; i++) {
+                        ctx.beginPath();
+                        ctx.moveTo(0, this.laneY[i] + 6);
+                        ctx.lineTo(this.width, this.laneY[i] + 6);
+                        ctx.stroke();
+                    }
                     ctx.restore();
                 }
-            } else {
-                ctx.fillStyle = '#3b4149';
-                ctx.fillRect(0, top, w, roadH);
-            }
 
-            const lightingGrad = ctx.createLinearGradient(0, top, 0, bot);
-            lightingGrad.addColorStop(0, 'rgba(15, 23, 42, 0.28)');
-            lightingGrad.addColorStop(0.5, 'rgba(255, 250, 235, 0.04)');
-            lightingGrad.addColorStop(1, 'rgba(15, 23, 42, 0.34)');
-            ctx.fillStyle = lightingGrad;
-            ctx.fillRect(0, top, w, roadH);
+                drawHole(ctx, hole) {
+                    const y = this.laneY[hole.lane];
+                    const rx = hole.width * 0.5;
+                    const ry = hole.isWideTrench ? 9 : 6.5;
 
-            ctx.strokeStyle = 'rgba(226, 232, 240, 0.45)';
-            ctx.lineWidth = 2.5;
-            ctx.beginPath();
-            ctx.moveTo(0, top + 2);
-            ctx.lineTo(w, top + 2);
-            ctx.moveTo(0, bot - 2);
-            ctx.lineTo(w, bot - 2);
-            ctx.stroke();
+                    ctx.save();
 
-            ctx.strokeStyle = 'rgba(248, 250, 252, 0.34)';
-            ctx.lineWidth = 2.5;
-            ctx.setLineDash([34, 34]);
-            ctx.lineDashOffset = this.scrollX;
-
-            for (let l = 0; l < this.laneCount - 1; l++) {
-                const ly = (this.laneY[l] + this.laneY[l + 1]) * 0.5;
-                ctx.beginPath();
-                ctx.moveTo(0, ly);
-                ctx.lineTo(w, ly);
-                ctx.stroke();
-            }
-            ctx.setLineDash([]);
-
-            ctx.restore();
-        }
-
-        drawForegroundGrass(ctx, w, h) {
-            const bot = this.roadBottom;
-            const fgH = h - bot;
-            if (fgH <= 0) return;
-
-            const curbGrad = ctx.createLinearGradient(0, bot, 0, bot + 12);
-            curbGrad.addColorStop(0, '#9aa3ad');
-            curbGrad.addColorStop(1, '#5d6670');
-            ctx.fillStyle = curbGrad;
-            ctx.fillRect(0, bot, w, 12);
-
-            const grassGrad = ctx.createLinearGradient(0, bot + 10, 0, h);
-            grassGrad.addColorStop(0, '#4f772d');
-            grassGrad.addColorStop(1, '#2d4719');
-            ctx.fillStyle = grassGrad;
-            ctx.fillRect(0, bot + 10, w, fgH);
-
-            const step = 28;
-            const shift = ((this.scrollX * 1.15) % step + step) % step;
-            ctx.strokeStyle = 'rgba(132, 184, 72, 0.38)';
-            ctx.lineWidth = 2;
-            for (let x = -step - shift; x < w + step; x += step) {
-                ctx.beginPath();
-                ctx.moveTo(x, bot + 12);
-                ctx.lineTo(x - 6, bot + 2);
-                ctx.moveTo(x + 7, bot + 12);
-                ctx.lineTo(x + 12, bot + 3);
-                ctx.stroke();
-            }
-        }
-
-        drawSubtleDirtLaneGuides(ctx, w) {
-            ctx.save();
-            for (let l = 0; l < this.laneCount; l++) {
-                const ly = this.laneY[l];
-                const isCurrent = l === this.player.lane;
-
-                if (isCurrent) {
-                    const activeGrad = ctx.createLinearGradient(0, ly - 10, 0, ly + 10);
-                    activeGrad.addColorStop(0, 'rgba(254, 240, 138, 0)');
-                    activeGrad.addColorStop(0.5, 'rgba(254, 240, 138, 0.22)');
-                    activeGrad.addColorStop(1, 'rgba(254, 240, 138, 0)');
-                    ctx.fillStyle = activeGrad;
-                    ctx.fillRect(0, ly - 10, w, 20);
-                }
-
-                if (l < this.laneCount - 1) {
-                    const sepY = (this.laneY[l] + this.laneY[l + 1]) * 0.5;
-                    ctx.strokeStyle = 'rgba(255, 251, 235, 0.22)';
+                    // Liseré d'alerte discret aplati sur la terre
+                    ctx.strokeStyle = 'rgba(250, 204, 21, 0.45)';
                     ctx.lineWidth = 1.5;
-                    ctx.setLineDash([16, 22]);
-                    ctx.lineDashOffset = this.scrollX;
+                    ctx.setLineDash([5, 5]);
                     ctx.beginPath();
-                    ctx.moveTo(0, sepY);
-                    ctx.lineTo(w, sepY);
+                    ctx.ellipse(hole.x, y, rx + 3, ry + 2.5, 0, 0, Math.PI * 2);
                     ctx.stroke();
+                    ctx.setLineDash([]);
+
+                    // Bord de terre soulevé
+                    ctx.fillStyle = 'rgba(87, 83, 78, 0.72)';
+                    ctx.beginPath();
+                    ctx.ellipse(hole.x, y + 0.5, rx + 1.5, ry + 1, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Cavité sombre aplatie
+                    const abyssGrad = ctx.createRadialGradient(hole.x, y + 1, 2, hole.x, y + 1, rx);
+                    abyssGrad.addColorStop(0, '#090d16');
+                    abyssGrad.addColorStop(0.75, '#1e1b18');
+                    abyssGrad.addColorStop(1, '#3f3a34');
+                    ctx.fillStyle = abyssGrad;
+                    ctx.beginPath();
+                    ctx.ellipse(hole.x, y + 1, rx, ry, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Ombre portée intérieure
+                    ctx.strokeStyle = 'rgba(24, 24, 27, 0.75)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.ellipse(hole.x, y + 1, rx - 0.5, ry - 0.5, 0, Math.PI * 0.1, Math.PI * 1.15);
+                    ctx.stroke();
+
+                    // Petit badge « ! » lorsque le trou approche
+                    if (hole.x - rx > this.player.x && hole.x - rx < this.player.x + 240) {
+                        ctx.fillStyle = '#e11d48';
+                        ctx.beginPath();
+                        ctx.roundRect(hole.x - rx - 8, y - ry - 20, 16, 15, 3);
+                        ctx.fill();
+                        ctx.fillStyle = '#ffffff';
+                        ctx.font = '900 11px Nunito, sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('!', hole.x - rx, y - ry - 9);
+                    }
+
+                    ctx.restore();
+                }
+
+                drawObstacle(ctx, obs) {
+                    ctx.save();
+                    const hop = (obs.kind === 'chicken' || obs.kind === 'dog')
+                        ? Math.abs(Math.sin(obs.animPhase * 1.4)) * 5
+                        : Math.sin(obs.animPhase) * 1.2;
+
+                    // Ombre au sol
+                    ctx.fillStyle = 'rgba(15, 23, 42, 0.28)';
+                    ctx.beginPath();
+                    ctx.ellipse(obs.x, obs.y + 12, obs.width * 0.42, 5.5, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    const scale = obs.kind === 'scooter' || obs.kind === 'vendor' ? 0.78 : 0.82;
+                    ctx.translate(obs.x, obs.y + 10 - hop);
+                    ctx.scale(scale, scale);
+
+                    if (obs.kind === 'chicken') {
+                        ctx.fillStyle = '#fffbeb';
+                        ctx.beginPath();
+                        ctx.ellipse(0, -10, 13, 10, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.beginPath();
+                        ctx.arc(10, -18, 7, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.fillStyle = '#ef4444';
+                        ctx.beginPath();
+                        ctx.arc(10, -25, 3.5, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.fillStyle = '#f59e0b';
+                        ctx.beginPath();
+                        ctx.moveTo(16, -19);
+                        ctx.lineTo(22, -17);
+                        ctx.lineTo(16, -15);
+                        ctx.closePath();
+                        ctx.fill();
+                    } else if (obs.kind === 'dog') {
+                        ctx.fillStyle = '#b45309';
+                        ctx.beginPath();
+                        ctx.roundRect(-16, -18, 30, 13, 6);
+                        ctx.fill();
+                        ctx.beginPath();
+                        ctx.arc(12, -21, 8, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.fillStyle = '#78350f';
+                        ctx.fillRect(8, -28, 5, 8);
+                    } else if (obs.kind === 'scooter') {
+                        ctx.fillStyle = '#1e293b';
+                        ctx.beginPath();
+                        ctx.arc(-18, -6, 7, 0, Math.PI * 2);
+                        ctx.arc(18, -6, 7, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.fillStyle = '#dc2626';
+                        ctx.beginPath();
+                        ctx.roundRect(-22, -22, 42, 13, 6);
+                        ctx.fill();
+                        ctx.fillStyle = '#fef08a';
+                        ctx.beginPath();
+                        ctx.arc(8, -34, 7, Math.PI, 0);
+                        ctx.fill();
+                        ctx.fillRect(2, -34, 12, 12);
+                    } else {
+                        // Marchande avec chapeau conique nón lá
+                        ctx.fillStyle = '#ec4899';
+                        ctx.beginPath();
+                        ctx.roundRect(-12, -24, 24, 18, 5);
+                        ctx.fill();
+                        ctx.fillStyle = '#fde68a';
+                        ctx.beginPath();
+                        ctx.arc(0, -30, 6.5, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.fillStyle = '#eab308';
+                        ctx.beginPath();
+                        ctx.moveTo(-16, -34);
+                        ctx.lineTo(0, -45);
+                        ctx.lineTo(16, -34);
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+
+                    ctx.restore();
+                }
+
+                drawPickup(ctx, pk) {
+                    const bob = Math.sin(pk.bobPhase) * 4.5;
+                    ctx.save();
+
+                    ctx.fillStyle = 'rgba(250, 204, 21, 0.25)';
+                    ctx.beginPath();
+                    ctx.ellipse(pk.x, pk.y + 11, 14, 4.5, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.font = '24px "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(pk.icon, pk.x, pk.y - 8 + bob);
+
+                    ctx.restore();
+                }
+
+                drawPlayer(ctx) {
+                    if (this.player.invulnTimer > 0 && Math.floor(this.player.invulnTimer * 16) % 2 === 0) {
+                        return;
+                    }
+
+                    const yGround = this.player.y;
+                    const z = this.player.z;
+                    const drawY = yGround - z + this.player.fallProgress * 26;
+
+                    ctx.save();
+
+                    // Ombre au sol qui rétrécit pendant le saut
+                    const shadowScale = Math.max(0.35, 1 - z / 140);
+                    ctx.fillStyle = 'rgba(15, 23, 42, 0.34)';
+                    ctx.beginPath();
+                    ctx.ellipse(this.player.x, yGround + 11, 30 * shadowScale, 7 * shadowScale, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Onde visuelle de la sonnette
+                    if (this.player.bellWave > 0) {
+                        const r = (1 - this.player.bellWave) * 78 + 14;
+                        ctx.strokeStyle = `rgba(250, 204, 21, ${this.player.bellWave * 0.85})`;
+                        ctx.lineWidth = 3;
+                        ctx.beginPath();
+                        ctx.arc(this.player.x + 22, drawY - 34, r, 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
+
+                    ctx.translate(this.player.x, drawY + 10);
+
+                    if (this.player.fallingHole) {
+                        ctx.rotate(this.player.fallProgress * 0.65);
+                    } else if (this.player.jumping) {
+                        const tilt = Math.max(-0.22, Math.min(0.22, -this.player.vz * 0.00042));
+                        ctx.rotate(tilt);
+                    } else {
+                        const pedalBob = Math.sin(this.player.animAccumulator * Math.PI * 0.5) * 2.2;
+                        ctx.translate(0, pedalBob);
+                    }
+
+                    const frame = this.assets.frames[this.player.frameIndex];
+                    if (frame) {
+                        const targetH = Math.max(76, Math.min(104, this.height * 0.145));
+                        const natW = frame.naturalWidth || frame.width || 120;
+                        const natH = frame.naturalHeight || frame.height || 120;
+                        const targetW = targetH * (natW / natH);
+
+                        ctx.drawImage(frame, -targetW * 0.5, -targetH + 4, targetW, targetH);
+                    } else {
+                        // Dessin de secours propre si aucune frame n'est chargée
+                        ctx.strokeStyle = '#2563eb';
+                        ctx.lineWidth = 3.5;
+                        ctx.beginPath();
+                        ctx.arc(-18, -12, 11, 0, Math.PI * 2);
+                        ctx.arc(18, -12, 11, 0, Math.PI * 2);
+                        ctx.stroke();
+
+                        ctx.beginPath();
+                        ctx.moveTo(-18, -12);
+                        ctx.lineTo(-2, -24);
+                        ctx.lineTo(14, -24);
+                        ctx.lineTo(18, -12);
+                        ctx.moveTo(-2, -24);
+                        ctx.lineTo(2, -12);
+                        ctx.stroke();
+
+                        ctx.fillStyle = '#ffffff';
+                        ctx.beginPath();
+                        ctx.arc(4, -38, 7, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+
+                    ctx.restore();
+                }
+
+                drawParticles(ctx) {
+                    for (const pt of this.particles) {
+                        const alpha = Math.max(0, pt.life / pt.maxLife);
+                        ctx.save();
+                        ctx.globalAlpha = alpha;
+                        ctx.fillStyle = pt.color;
+                        ctx.beginPath();
+                        ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.restore();
+                    }
+                }
+
+                render() {
+                    const ctx = this.ctx;
+                    ctx.clearRect(0, 0, this.width, this.height);
+
+                    this.drawGroundTrack(ctx);
+
+                    // Tri des éléments par profondeur Y pour un rendu naturel sur les 3 voies
+                    const renderables = [];
+
+                    for (const h of this.holes) {
+                        renderables.push({
+                            y: this.laneY[h.lane] - 2,
+                            draw: () => this.drawHole(ctx, h)
+                        });
+                    }
+
+                    for (const pk of this.pickups) {
+                        renderables.push({
+                            y: pk.y,
+                            draw: () => this.drawPickup(ctx, pk)
+                        });
+                    }
+
+                    for (const obs of this.obstacles) {
+                        renderables.push({
+                            y: obs.y,
+                            draw: () => this.drawObstacle(ctx, obs)
+                        });
+                    }
+
+                    renderables.push({
+                        y: this.player.y,
+                        draw: () => this.drawPlayer(ctx)
+                    });
+
+                    renderables.sort((a, b) => a.y - b.y);
+                    for (const item of renderables) {
+                        item.draw();
+                    }
+
+                    this.drawParticles(ctx);
+                }
+
+                loop(timestamp) {
+                    if (!this.lastTime) {
+                        this.lastTime = timestamp;
+                    }
+                    const dt = Math.min(0.05, Math.max(0.001, (timestamp - this.lastTime) / 1000));
+                    this.lastTime = timestamp;
+
+                    this.update(dt);
+                    this.render();
+
+                    requestAnimationFrame((ts) => this.loop(ts));
                 }
             }
-            ctx.setLineDash([]);
-            ctx.restore();
-        }
 
-        drawHole(ctx, hole) {
-            const y = this.laneY[hole.lane];
-            const rx = hole.width * 0.5;
-            const ry = hole.isWideTrench ? 22 : 16;
-
-            ctx.save();
-
-            ctx.strokeStyle = 'rgba(250, 204, 21, 0.65)';
-            ctx.lineWidth = 2;
-            ctx.setLineDash([6, 5]);
-            ctx.beginPath();
-            ctx.ellipse(hole.x, y, rx + 6, ry + 5, 0, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.setLineDash([]);
-
-            ctx.fillStyle = '#57534e';
-            ctx.beginPath();
-            ctx.ellipse(hole.x, y + 1, rx + 3, ry + 2, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            const abyssGrad = ctx.createRadialGradient(hole.x, y + 3, 4, hole.x, y + 2, rx);
-            abyssGrad.addColorStop(0, '#030712');
-            abyssGrad.addColorStop(0.7, '#090d16');
-            abyssGrad.addColorStop(1, '#27272a');
-            ctx.fillStyle = abyssGrad;
-            ctx.beginPath();
-            ctx.ellipse(hole.x, y + 2, rx, ry, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.strokeStyle = 'rgba(24, 24, 27, 0.9)';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.ellipse(hole.x, y + 2, rx - 1, ry - 1, 0, Math.PI * 0.1, Math.PI * 1.15);
-            ctx.stroke();
-
-            if (hole.x - rx > this.player.x && hole.x - rx < this.player.x + 260) {
-                ctx.fillStyle = '#e11d48';
-                ctx.beginPath();
-                ctx.roundRect(hole.x - rx - 10, y - ry - 26, 20, 18, 4);
-                ctx.fill();
-                ctx.fillStyle = '#ffffff';
-                ctx.font = '900 12px Nunito, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText('!', hole.x - rx, y - ry - 13);
-            }
-
-            ctx.restore();
-        }
-
-        drawPlayerLudo(ctx) {
-            const p = this.player;
-            const activeFrame = this.ludoSprite.getFrame(this.ludoSprite.frameIndex);
-
-            if (p.invulnTimer > 0 && Math.floor(p.invulnTimer * 16) % 2 === 0 && !p.fallingIntoHole) {
-                ctx.globalAlpha = 0.45;
-            }
-
-            const shadowScale = p.fallingIntoHole
-                ? Math.max(0.15, 1 - p.fallProgress)
-                : Math.max(0.35, 1 - p.z / 170);
-            ctx.fillStyle = 'rgba(15, 23, 42, 0.36)';
-            ctx.beginPath();
-            ctx.ellipse(p.x, p.y + 16, 44 * shadowScale, 11 * shadowScale, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            if (p.bellTimer > 0) {
-                const waveR = 26 + (0.45 - p.bellTimer) * 160;
-                ctx.strokeStyle = `rgba(250, 204, 21, ${p.bellTimer * 1.8})`;
-                ctx.lineWidth = 3.5;
-                ctx.beginPath();
-                ctx.arc(p.x + 28, p.y - p.z - 42, waveR, -0.9, 0.9);
-                ctx.stroke();
-            }
-
-            ctx.save();
-            const drawY = p.y - p.z;
-            ctx.translate(p.x, drawY + 14);
-
-            if (p.fallingIntoHole) {
-                const clipTop = -120 + p.fallProgress * 138;
-                ctx.beginPath();
-                ctx.rect(-110, clipTop, 220, 160);
-                ctx.clip();
-            }
-
-            ctx.rotate(p.pitch);
-
-            if (activeFrame) {
-                const targetH = 108;
-                const aspect = activeFrame.width / Math.max(1, activeFrame.height);
-                const targetW = targetH * aspect;
-                ctx.drawImage(activeFrame, -targetW * 0.5, -targetH + 6, targetW, targetH);
-            }
-
-            if (p.shieldTimer > 0) {
-                ctx.strokeStyle = 'rgba(250, 204, 21, 0.85)';
-                ctx.lineWidth = 3;
-                ctx.setLineDash([7, 5]);
-                ctx.beginPath();
-                ctx.ellipse(2, -46, 52, 54, 0, 0, Math.PI * 2);
-                ctx.stroke();
-                ctx.setLineDash([]);
-            }
-
-            ctx.restore();
-            ctx.globalAlpha = 1;
-        }
-
-        drawObstacle(ctx, obs) {
-            ctx.save();
-            const hop = (obs.kind === 'chicken' || obs.kind === 'dog')
-                ? Math.abs(Math.sin(obs.animPhase * 1.4)) * 7
-                : Math.sin(obs.animPhase) * 1.5;
-
-            ctx.fillStyle = 'rgba(15, 23, 42, 0.3)';
-            ctx.beginPath();
-            ctx.ellipse(obs.x, obs.y + 14, obs.width * 0.45, 7, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.translate(obs.x, obs.y + 12 - hop);
-
-            if (obs.kind === 'chicken') {
-                ctx.fillStyle = '#fef9c3';
-                ctx.beginPath();
-                ctx.ellipse(0, -12, 14, 10, 0, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(11, -21, 7, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = '#ef4444';
-                ctx.beginPath();
-                ctx.arc(11, -28, 3.5, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = '#f59e0b';
-                ctx.beginPath();
-                ctx.moveTo(17, -21);
-                ctx.lineTo(23, -19);
-                ctx.lineTo(17, -17);
-                ctx.closePath();
-                ctx.fill();
-            } else if (obs.kind === 'dog') {
-                ctx.fillStyle = '#b45309';
-                ctx.beginPath();
-                ctx.roundRect(-18, -22, 30, 14, 6);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(12, -26, 8.5, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = '#78350f';
-                ctx.beginPath();
-                ctx.ellipse(10, -31, 4, 7, -0.4, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = '#92400e';
-                ctx.fillRect(-14, -9, 4, 9);
-                ctx.fillRect(5, -9, 4, 9);
-            } else if (obs.kind === 'scooter') {
-                ctx.fillStyle = '#1e293b';
-                ctx.beginPath();
-                ctx.arc(-22, -8, 9, 0, Math.PI * 2);
-                ctx.arc(22, -8, 9, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = '#dc2626';
-                ctx.beginPath();
-                ctx.roundRect(-26, -26, 52, 16, 6);
-                ctx.fill();
-                ctx.fillStyle = '#f59e0b';
-                ctx.beginPath();
-                ctx.roundRect(-22, -38, 24, 13, 4);
-                ctx.fill();
-                ctx.fillStyle = '#f1c29b';
-                ctx.beginPath();
-                ctx.arc(8, -42, 8, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = '#fde047';
-                ctx.beginPath();
-                ctx.moveTo(0, -45);
-                ctx.lineTo(18, -45);
-                ctx.lineTo(9, -54);
-                ctx.closePath();
-                ctx.fill();
-            } else if (obs.kind === 'vendor') {
-                ctx.fillStyle = '#38bdf8';
-                ctx.beginPath();
-                ctx.roundRect(-12, -34, 22, 22, 5);
-                ctx.fill();
-                ctx.fillStyle = '#f1c29b';
-                ctx.beginPath();
-                ctx.arc(-1, -42, 7.5, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = '#eab308';
-                ctx.beginPath();
-                ctx.moveTo(-16, -46);
-                ctx.lineTo(14, -46);
-                ctx.lineTo(-1, -55);
-                ctx.closePath();
-                ctx.fill();
-                ctx.strokeStyle = '#92400e';
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                ctx.moveTo(-28, -28);
-                ctx.lineTo(26, -28);
-                ctx.stroke();
-                ctx.fillStyle = '#a16207';
-                ctx.fillRect(-33, -24, 12, 11);
-                ctx.fillRect(20, -24, 12, 11);
-            } else {
-                ctx.fillStyle = '#b45309';
-                ctx.strokeStyle = '#78350f';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.roundRect(-22, -28, 44, 26, 5);
-                ctx.fill();
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(-20, -15);
-                ctx.lineTo(20, -15);
-                ctx.moveTo(0, -28);
-                ctx.moveTo(0, -2);
-                ctx.stroke();
-            }
-
-            if (obs.scaredTimer > 0) {
-                ctx.fillStyle = '#fef08a';
-                ctx.font = '900 13px Nunito, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText('!', 0, -58);
-            }
-
-            ctx.restore();
-        }
-
-        drawCollectible(ctx, col) {
-            const bobY = col.y - col.z + Math.sin(col.bobPhase) * 6 + 6;
-
-            ctx.save();
-            ctx.fillStyle = 'rgba(250, 204, 21, 0.24)';
-            ctx.beginPath();
-            ctx.arc(col.x, bobY, 22, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.font = '26px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-
-            const emojiMap = {
-                banh_mi: '🥖',
-                pho: '🍜',
-                coffee: '☕',
-                non_la: '👒'
-            };
-            ctx.fillText(emojiMap[col.kind] || '🥖', col.x, bobY);
-            ctx.restore();
-        }
-
-        loop(timestamp) {
-            if (!this.lastTimestamp) this.lastTimestamp = timestamp;
-            const dt = Math.min(0.05, Math.max(0.001, (timestamp - this.lastTimestamp) / 1000));
-            this.lastTimestamp = timestamp;
-
-            this.update(dt);
-            this.draw();
-
-            requestAnimationFrame((ts) => this.loop(ts));
-        }
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-        window.gameInstance = new LudoSideScrollerGame();
-    });
+            window.addEventListener('DOMContentLoaded', () => {
+                new LudoBikeGame();
+            });
+        })();
     </script>
 </body>
 </html>
