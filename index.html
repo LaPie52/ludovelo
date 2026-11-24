@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet" />
     <style>
+        /* Réinitialisation tactile et mise en page plein écran mobile-first */
         * {
             -webkit-tap-highlight-color: transparent;
             user-select: none;
@@ -96,6 +97,7 @@
             animation: popIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
 
+        /* Bandeau défilant des règles simples sur l'écran d'accueil */
         @keyframes marqueeScroll {
             0% { transform: translateX(0%); }
             100% { transform: translateX(-50%); }
@@ -115,9 +117,11 @@
 </head>
 <body>
     <div id="app" class="game-shell">
+        <!-- Décor de secours affiché si le canvas n'a pas encore chargé le fond -->
         <img id="bgImage" class="bg-layer" alt="Décor du village vietnamien" />
         <canvas id="gameCanvas"></canvas>
 
+        <!-- HUD supérieur en jeu -->
         <div id="hudTop" class="hidden fixed top-2.5 left-2.5 right-2.5 z-20 flex items-start justify-between gap-2 pointer-events-none">
             <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 pointer-events-auto">
                 <div class="hud-pill rounded-2xl px-3 py-1.5 flex items-center gap-2">
@@ -160,6 +164,7 @@
             </div>
         </div>
 
+        <!-- Notification temporaire en jeu -->
         <div id="toastBanner" class="toast-banner opacity-0 -translate-y-2 fixed top-16 left-1/2 -translate-x-1/2 z-20 max-w-[92vw]">
             <div class="px-4 py-1.5 rounded-full bg-slate-900/90 text-amber-300 border-2 border-amber-400/80 shadow-xl flex items-center gap-2 text-xs sm:text-sm font-extrabold whitespace-nowrap">
                 <span class="px-1.5 py-0.5 rounded bg-amber-400 text-slate-950 text-[10px] font-black">VN</span>
@@ -167,6 +172,7 @@
             </div>
         </div>
 
+        <!-- Commandes dédiées : Haut / Bas à gauche, Sauter et Dring à droite -->
         <div id="touchControls" class="hidden fixed bottom-3 left-3 right-3 z-20 flex items-end justify-between pointer-events-none">
             <div class="flex flex-col gap-2 pointer-events-auto">
                 <button id="btnLaneUp" type="button" aria-label="Voie du haut" class="control-btn w-16 h-14 sm:w-20 sm:h-16 rounded-2xl bg-white/95 hover:bg-white border-2 border-sky-200 flex flex-col items-center justify-center text-slate-800">
@@ -192,6 +198,7 @@
             </div>
         </div>
 
+        <!-- Écran d'accueil -->
         <div id="startOverlay" class="fixed inset-0 z-30 flex flex-col items-center justify-between p-3 sm:p-5 bg-slate-950/65 backdrop-blur-[2px]">
             <div class="w-full max-w-2xl flex items-center justify-start gap-2 z-10">
                 <div class="px-3.5 py-1.5 rounded-full bg-red-600/95 text-amber-200 border border-amber-300/60 shadow-lg flex items-center gap-2 text-xs sm:text-sm font-extrabold">
@@ -235,6 +242,7 @@
             </div>
         </div>
 
+        <!-- Écran de pause -->
         <div id="pauseOverlay" class="hidden fixed inset-0 z-30 flex items-center justify-center p-4 bg-slate-950/65 backdrop-blur-sm">
             <div class="w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-2xl border-4 border-amber-300 animate-pop-in">
                 <div class="text-4xl mb-2">⏸️</div>
@@ -254,6 +262,7 @@
             </div>
         </div>
 
+        <!-- Écran de fin de partie -->
         <div id="gameOverOverlay" class="hidden fixed inset-0 z-30 flex items-center justify-center p-2.5 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
             <div class="w-full max-w-md my-auto rounded-3xl bg-gradient-to-b from-amber-50 via-orange-50 to-amber-100 p-3 sm:p-4 text-center shadow-2xl border-4 border-amber-400 animate-pop-in flex flex-col gap-2.5">
                 <div class="relative w-full aspect-square max-h-[54dvh] sm:max-h-[58dvh] mx-auto rounded-2xl overflow-hidden border-2 border-amber-300 bg-sky-100 shadow-inner flex items-center justify-center">
@@ -305,6 +314,9 @@
         (() => {
             'use strict';
 
+            /**
+             * Gestionnaire audio Web Audio + synthèse vocale pour la salutation vietnamienne.
+             */
             class SoundManager {
                 constructor() {
                     this.ctx = null;
@@ -508,6 +520,9 @@
                 }
             }
 
+            /**
+             * Chargeur d'assets avec détourage automatique de fond uni sur les sprites.
+             */
             class AssetLoader {
                 constructor() {
                     this.frames = [];
@@ -566,7 +581,7 @@
                             const b = data[p + 2];
                             const maxC = Math.max(r, g, b);
                             const minC = Math.min(r, g, b);
-                            return maxC > 205 && (maxC - minC) < 42;
+                            return maxC > 228 && (maxC - minC) < 24;
                         });
 
                         if (!isCornerLightOrUniform) {
@@ -589,7 +604,7 @@
                             const b = data[p + 2];
                             const dist = Math.abs(r - bgR) + Math.abs(g - bgG) + Math.abs(b - bgB);
                             const brightness = (r + g + b) / 3;
-                            return dist < 68 || brightness > 236;
+                            return dist < 42 && brightness > 235;
                         };
 
                         const pushIfBg = (x, y) => {
@@ -670,28 +685,36 @@
                     }
 
                     // Chargement exclusif des obstacles présents sous assets/obstacles/
-                    const obstacleFiles = [
-                        'canard.jpg',
-                        'poule.jpg',
-                        'canard.png',
-                        'poule.png',
-                        'chien.jpg',
-                        'chien.png',
-                        'scooter.jpg',
-                        'scooter.png',
-                        'marchande.jpg',
-                        'marchande.png',
-                        'charrette.jpg',
-                        'charrette.png',
-                        'obstacle1.jpg',
-                        'obstacle2.jpg',
-                        'obstacle3.jpg',
-                        'obstacle4.jpg',
-                        'obstacle1.png',
-                        'obstacle2.png',
-                        'obstacle3.png',
-                        'obstacle4.png'
+                    const obstacleBaseNames = [
+                        'canard',
+                        'poule',
+                        'chien',
+                        'scooter',
+                        'marchande',
+                        'charrette',
+                        'velo',
+                        'buffles',
+                        'buffle',
+                        'vache',
+                        'cochon',
+                        'panier',
+                        'caisse',
+                        'barriere',
+                        'rocher',
+                        'obstacle1',
+                        'obstacle2',
+                        'obstacle3',
+                        'obstacle4',
+                        'obstacle5',
+                        'obstacle6'
                     ];
+                    const obstacleExtensions = ['jpg', 'jpeg', 'png', 'webp', 'JPG', 'JPEG', 'PNG', 'WEBP'];
+                    const obstacleFiles = [];
+                    obstacleBaseNames.forEach((base) => {
+                        obstacleExtensions.forEach((ext) => {
+                            obstacleFiles.push(`${base}.${ext}`);
+                        });
+                    });
 
                     const obstaclePromises = obstacleFiles.map((fileName) =>
                         this.loadImageWithFallback([
@@ -761,6 +784,9 @@
                 }
             }
 
+            /**
+             * Moteur de jeu principal : 3 voies, physique de saut/chute, collisions et rendu.
+             */
             class GameEngine {
                 constructor(canvas, assets, sound) {
                     this.canvas = canvas;
@@ -851,9 +877,11 @@
                     this.canvas.height = Math.floor(this.height * this.dpr);
                     this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
 
+                    // Abaissement d'environ 2 cm (~76 px) des 3 voies sur la piste
                     const isCompact = this.width < 640;
-                    this.roadTop = this.height * (isCompact ? 0.50 : 0.48);
-                    this.roadBottom = this.height * (isCompact ? 0.67 : 0.72);
+                    const lowerOffsetPx = 76;
+                    this.roadTop = this.height * (isCompact ? 0.50 : 0.48) + lowerOffsetPx;
+                    this.roadBottom = this.height * (isCompact ? 0.67 : 0.72) + lowerOffsetPx;
 
                     const usableRoadH = Math.max(66, this.roadBottom - this.roadTop);
                     this.laneY = [];
@@ -862,7 +890,7 @@
                         this.laneY.push(this.roadTop + usableRoadH * ratio);
                     }
 
-                    this.player.x = Math.max(76, Math.min(this.width * 0.24, 155));
+                    this.player.x = Math.max(82, Math.min(this.width * 0.24, 160));
                     if (this.laneY.length > 0) {
                         const clampedLane = Math.max(0, Math.min(this.laneCount - 1, this.player.lane));
                         this.player.y = this.laneY[clampedLane];
@@ -1010,16 +1038,6 @@
                     }, 1800);
                 }
 
-                goToMenu() {
-                    this.state = 'MENU';
-                    this.ui.hudTop.classList.add('hidden');
-                    this.ui.touchControls.classList.add('hidden');
-                    this.ui.pauseOverlay.classList.add('hidden');
-                    this.ui.gameOverOverlay.classList.add('hidden');
-                    this.ui.startOverlay.classList.remove('hidden');
-                    this.sound.speakVietnameseGreeting(false);
-                }
-
                 startGame() {
                     this.state = 'PLAYING';
                     this.speed = this.baseSpeed;
@@ -1053,11 +1071,24 @@
                     this.ui.startOverlay.classList.add('hidden');
                     this.ui.pauseOverlay.classList.add('hidden');
                     this.ui.gameOverOverlay.classList.add('hidden');
+                    this.ui.gameOverOverlay.style.display = 'none';
                     this.ui.hudTop.classList.remove('hidden');
                     this.ui.touchControls.classList.remove('hidden');
 
+                    this.lastTimestamp = performance.now();
                     this.updateHud();
-                    this.showToast('En route ! Écrase canard.jpg et poule.jpg, évite le reste !');
+                    this.showToast('Xin chào ! C’est parti !');
+                }
+
+                goToMenu() {
+                    this.state = 'MENU';
+                    this.ui.hudTop.classList.add('hidden');
+                    this.ui.touchControls.classList.add('hidden');
+                    this.ui.pauseOverlay.classList.add('hidden');
+                    this.ui.gameOverOverlay.classList.add('hidden');
+                    this.ui.gameOverOverlay.style.display = 'none';
+                    this.ui.startOverlay.classList.remove('hidden');
+                    this.sound.speakVietnameseGreeting(false);
                 }
 
                 pauseGame() {
@@ -1180,11 +1211,11 @@
                     const isCrushable = Boolean(chosen.crushable);
 
                     this.obstacles.push({
-                        x: this.width + 80,
+                        x: this.width + 85,
                         y,
                         lane,
-                        width: isCrushable ? 38 : 54,
-                        height: isCrushable ? 30 : 42,
+                        width: isCrushable ? 46 : 64,
+                        height: isCrushable ? 38 : 52,
                         sprite: chosen.img,
                         fileName: chosen.fileName,
                         crushable: isCrushable,
@@ -1390,11 +1421,12 @@
                         }
 
                         if (this.player.invulnTimer <= 0 && obs.scaredTimer <= 0) {
-                            const sameLane = Math.abs(obs.y - this.player.y) < 20;
-                            const overlapX = Math.abs(obs.x - this.player.x) < (obs.width * 0.38 + 28);
-                            const clearJump = this.player.z > 32;
+                            const sameLane = Math.abs(obs.y - this.player.y) < 22;
+                            const overlapX = Math.abs(obs.x - this.player.x) < (obs.width * 0.4 + 32);
+                            const clearJump = this.player.z > 34;
 
                             if (sameLane && overlapX && !clearJump) {
+                                // Seuls canard.jpg et poule.jpg peuvent être écrasés
                                 if (obs.crushable) {
                                     this.score += 20;
                                     this.sound.playPickup();
@@ -1571,12 +1603,13 @@
                         ? Math.abs(Math.sin(obs.animPhase * 1.4)) * 3.5
                         : Math.sin(obs.animPhase) * 1;
 
-                    const depthFactor = 0.74 + (obs.lane / Math.max(1, this.laneCount - 1)) * 0.22;
-                    const baseScale = (obs.crushable ? 0.76 : 0.72) * depthFactor;
+                    // Obstacles un peu plus grands sur les voies
+                    const depthFactor = 0.84 + (obs.lane / Math.max(1, this.laneCount - 1)) * 0.24;
+                    const baseScale = (obs.crushable ? 0.90 : 0.86) * depthFactor;
 
                     ctx.fillStyle = 'rgba(15, 23, 42, 0.26)';
                     ctx.beginPath();
-                    ctx.ellipse(obs.x, obs.y + 8, obs.width * 0.36 * depthFactor, 4.2 * depthFactor, 0, 0, Math.PI * 2);
+                    ctx.ellipse(obs.x, obs.y + 8, obs.width * 0.38 * depthFactor, 4.5 * depthFactor, 0, 0, Math.PI * 2);
                     ctx.fill();
 
                     ctx.translate(obs.x, obs.y + 8 - hop);
@@ -1584,7 +1617,7 @@
                     ctx.scale(-baseScale, baseScale);
 
                     if (obs.sprite) {
-                        const targetH = obs.crushable ? 40 : 56;
+                        const targetH = obs.crushable ? 48 : 66;
                         const natW = obs.sprite.naturalWidth || obs.sprite.width || 64;
                         const natH = obs.sprite.naturalHeight || obs.sprite.height || 64;
                         const targetW = targetH * (natW / natH);
@@ -1592,19 +1625,18 @@
                     } else {
                         ctx.fillStyle = obs.crushable ? '#f59e0b' : '#ef4444';
                         ctx.beginPath();
-                        ctx.arc(0, -14, 14, 0, Math.PI * 2);
+                        ctx.arc(0, -16, 16, 0, Math.PI * 2);
                         ctx.fill();
                     }
 
                     if (obs.alerted || obs.scaredTimer > 0) {
                         ctx.save();
-                        // Contre-miroir pour garder l'indicateur '!' et le texte lisibles à l'endroit
                         ctx.scale(-1, 1);
                         ctx.fillStyle = '#fef08a';
                         ctx.strokeStyle = '#92400e';
                         ctx.lineWidth = 2;
                         ctx.beginPath();
-                        ctx.arc(0, -44, 10, 0, Math.PI * 2);
+                        ctx.arc(0, -52, 10, 0, Math.PI * 2);
                         ctx.fill();
                         ctx.stroke();
 
@@ -1612,7 +1644,8 @@
                         ctx.font = '900 12px Nunito, sans-serif';
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'middle';
-                        ctx.fillText('!', 0, -43.5);
+                        ctx.fillText('!', 0, -51.5);
+                        ctx.restore();
                     }
 
                     ctx.restore();
@@ -1621,7 +1654,7 @@
                 drawPickup(ctx, pk) {
                     ctx.save();
                     const bob = Math.sin(pk.bobPhase) * 4.5;
-                    const depthFactor = 0.76 + (pk.lane / Math.max(1, this.laneCount - 1)) * 0.22;
+                    const depthFactor = 0.78 + (pk.lane / Math.max(1, this.laneCount - 1)) * 0.22;
 
                     ctx.fillStyle = 'rgba(15, 23, 42, 0.22)';
                     ctx.beginPath();
@@ -1651,12 +1684,13 @@
                     const p = this.player;
                     ctx.save();
 
-                    const depthFactor = 0.76 + (p.lane / Math.max(1, this.laneCount - 1)) * 0.22;
+                    // Cycliste un peu plus grand et lisible sur les 3 voies
+                    const depthFactor = 0.88 + (p.lane / Math.max(1, this.laneCount - 1)) * 0.24;
 
                     const shadowScale = Math.max(0.35, 1 - p.z / 130) * depthFactor;
                     ctx.fillStyle = 'rgba(15, 23, 42, 0.34)';
                     ctx.beginPath();
-                    ctx.ellipse(p.x, p.y + 9, 28 * shadowScale, 6.5 * shadowScale, 0, 0, Math.PI * 2);
+                    ctx.ellipse(p.x, p.y + 9, 32 * shadowScale, 7 * shadowScale, 0, 0, Math.PI * 2);
                     ctx.fill();
 
                     if (p.invulnTimer > 0 && Math.floor(p.invulnTimer * 16) % 2 === 0) {
@@ -1664,7 +1698,7 @@
                     }
 
                     const pedalBob = p.z <= 1 && !p.fallingHole
-                        ? Math.sin(p.animFrame * 2) * 2.2
+                        ? Math.sin(p.animFrame * 2) * 2.4
                         : 0;
 
                     ctx.translate(p.x, p.y + 9 - p.z + pedalBob);
@@ -1673,7 +1707,7 @@
 
                     if (p.fallingHole) {
                         ctx.beginPath();
-                        ctx.rect(-70, -110, 140, 108);
+                        ctx.rect(-80, -125, 160, 123);
                         ctx.clip();
                     }
 
@@ -1681,7 +1715,7 @@
                     const frameImg = this.assets.frames[frameIndex];
 
                     if (frameImg) {
-                        const targetH = 74;
+                        const targetH = 88;
                         const natW = frameImg.naturalWidth || frameImg.width || 64;
                         const natH = frameImg.naturalHeight || frameImg.height || 64;
                         const targetW = targetH * (natW / natH);
@@ -1692,7 +1726,7 @@
 
                     if (p.bellAnimTimer > 0) {
                         ctx.save();
-                        ctx.translate(16, -54);
+                        ctx.translate(18, -64);
                         ctx.rotate(Math.sin(this.worldTime * 45) * 0.35);
                         ctx.font = '18px "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
                         ctx.textAlign = 'center';
@@ -1707,39 +1741,39 @@
                 drawFallbackCyclist(ctx, frameIndex) {
                     const wheelSpin = (frameIndex / 8) * Math.PI * 2;
                     ctx.strokeStyle = '#1e293b';
-                    ctx.lineWidth = 3;
+                    ctx.lineWidth = 3.5;
 
-                    [-18, 18].forEach((wx) => {
+                    [-20, 20].forEach((wx) => {
                         ctx.beginPath();
-                        ctx.arc(wx, -11, 10, 0, Math.PI * 2);
+                        ctx.arc(wx, -13, 12, 0, Math.PI * 2);
                         ctx.stroke();
 
                         ctx.beginPath();
-                        ctx.moveTo(wx - Math.cos(wheelSpin) * 8, -11 - Math.sin(wheelSpin) * 8);
-                        ctx.lineTo(wx + Math.cos(wheelSpin) * 8, -11 + Math.sin(wheelSpin) * 8);
+                        ctx.moveTo(wx - Math.cos(wheelSpin) * 9, -13 - Math.sin(wheelSpin) * 9);
+                        ctx.lineTo(wx + Math.cos(wheelSpin) * 9, -13 + Math.sin(wheelSpin) * 9);
                         ctx.stroke();
                     });
 
                     ctx.strokeStyle = '#0284c7';
                     ctx.beginPath();
-                    ctx.moveTo(-18, -11);
-                    ctx.lineTo(-4, -22);
-                    ctx.lineTo(12, -22);
-                    ctx.lineTo(18, -11);
-                    ctx.moveTo(-4, -22);
-                    ctx.lineTo(2, -11);
+                    ctx.moveTo(-20, -13);
+                    ctx.lineTo(-4, -26);
+                    ctx.lineTo(14, -26);
+                    ctx.lineTo(20, -13);
+                    ctx.moveTo(-4, -26);
+                    ctx.lineTo(2, -13);
                     ctx.stroke();
 
                     ctx.fillStyle = '#f97316';
                     ctx.beginPath();
-                    ctx.arc(2, -36, 8, 0, Math.PI * 2);
+                    ctx.arc(2, -42, 9, 0, Math.PI * 2);
                     ctx.fill();
 
                     ctx.fillStyle = '#eab308';
                     ctx.beginPath();
-                    ctx.moveTo(-10, -41);
-                    ctx.lineTo(14, -41);
-                    ctx.lineTo(2, -50);
+                    ctx.moveTo(-12, -48);
+                    ctx.lineTo(16, -48);
+                    ctx.lineTo(2, -58);
                     ctx.closePath();
                     ctx.fill();
                 }
