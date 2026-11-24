@@ -3,273 +3,317 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Ludo-Vélo Vietnam — Jeu d'Aventure à Vélo</title>
+    <title>Ludo-Vélo Vietnam</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        /* Réinitialisation tactile et mise en page plein écran mobile-first */
+        :root {
+            --font-display: 'Fredoka', system-ui, sans-serif;
+            --font-body: 'Nunito', system-ui, sans-serif;
+        }
+
         * {
+            box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
             user-select: none;
-            -webkit-user-select: none;
-            box-sizing: border-box;
         }
 
         html, body {
             margin: 0;
             padding: 0;
             width: 100%;
-            height: 100dvh;
-            overflow: hidden;
-            background-color: #0b1320;
-            font-family: 'Nunito', sans-serif;
-        }
-
-        .font-display {
-            font-family: 'Fredoka', sans-serif;
-        }
-
-        .game-shell {
-            position: relative;
-            width: 100vw;
-            height: 100dvh;
-            overflow: hidden;
-            background: linear-gradient(180deg, #38bdf8 0%, #bae6fd 52%, #86efac 52%, #4ade80 100%);
-        }
-
-        .bg-layer {
-            position: absolute;
-            inset: 0;
-            width: 100%;
             height: 100%;
-            object-fit: cover;
-            object-position: center center;
-            pointer-events: none;
-            z-index: 1;
-            transition: opacity 0.25s ease;
-        }
-
-        #gameCanvas {
-            position: relative;
-            z-index: 2;
-            width: 100%;
-            height: 100%;
-            display: block;
+            overflow: hidden;
+            font-family: var(--font-body);
+            background: #1b2832;
             touch-action: manipulation;
         }
 
-        .hud-pill {
-            background: rgba(255, 255, 255, 0.92);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.95);
-            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.16);
+        .font-display {
+            font-family: var(--font-display);
         }
 
-        .control-btn {
-            backdrop-filter: blur(10px);
-            transition: transform 0.08s ease, box-shadow 0.12s ease, background-color 0.15s ease;
-            box-shadow: 0 7px 0 rgba(15, 23, 42, 0.24), 0 12px 20px rgba(15, 23, 42, 0.22);
-        }
-
-        .control-btn:active,
-        .control-btn.is-pressed {
-            transform: translateY(5px);
-            box-shadow: 0 2px 0 rgba(15, 23, 42, 0.24), 0 5px 10px rgba(15, 23, 42, 0.2);
-        }
-
-        @keyframes floatSlow {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-4px); }
-        }
-
-        .animate-float-slow {
-            animation: floatSlow 2.6s ease-in-out infinite;
-        }
-
-        @keyframes popIn {
-            0% { opacity: 0; transform: scale(0.94) translateY(8px); }
-            100% { opacity: 1; transform: scale(1) translateY(0); }
-        }
-
-        .animate-pop-in {
-            animation: popIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-        }
-
-        /* Bandeau défilant des règles simples sur l'écran d'accueil */
+        /* Animations du bandeau d'accueil */
         @keyframes marqueeScroll {
-            0% { transform: translateX(0%); }
-            100% { transform: translateX(-50%); }
+            0% {
+                transform: translateX(0%);
+            }
+            100% {
+                transform: translateX(-50%);
+            }
         }
 
         .marquee-track {
             display: flex;
             width: max-content;
-            animation: marqueeScroll 18s linear infinite;
+            animation: marqueeScroll 20s linear infinite;
         }
 
-        .toast-banner {
-            pointer-events: none;
-            transition: opacity 0.22s ease, transform 0.22s ease;
+        .marquee-track:hover {
+            animation-play-state: paused;
+        }
+
+        /* Effet tactile sur les boutons */
+        .control-btn {
+            transition: transform 0.08s ease, box-shadow 0.12s ease, background-color 0.15s ease;
+            box-shadow: 0 4px 0 rgba(15, 23, 42, 0.28);
+        }
+
+        .control-btn:active,
+        .control-btn.is-pressed {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 rgba(15, 23, 42, 0.28);
+        }
+
+        /* Canvas plein écran fluide */
+        #gameCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Petite animation flottante sur le titre d'accueil */
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-4px); }
+        }
+
+        .float-slow {
+            animation: floatSlow 2.8s ease-in-out infinite;
         }
     </style>
 </head>
-<body>
-    <div id="app" class="game-shell">
-        <!-- Décor de secours affiché si le canvas n'a pas encore chargé le fond -->
-        <img id="bgImage" class="bg-layer" alt="Décor du village vietnamien" />
-        <canvas id="gameCanvas"></canvas>
+<body class="relative w-screen h-screen overflow-hidden bg-slate-900">
 
-        <!-- HUD supérieur en jeu -->
-        <div id="hudTop" class="hidden fixed top-2.5 left-2.5 right-2.5 z-20 flex items-start justify-between gap-2 pointer-events-none">
-            <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 pointer-events-auto">
-                <div class="hud-pill rounded-2xl px-3 py-1.5 flex items-center gap-2">
-                    <span class="text-lg leading-none">🏆</span>
-                    <div>
-                        <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 leading-none">Score</div>
-                        <div id="hudScore" class="font-display text-base sm:text-lg font-bold text-slate-900 leading-tight">0</div>
-                    </div>
+    <!-- Arrière-plan d'ambiance flouté / illustré si présent -->
+    <div id="bgLayer" class="fixed inset-0 z-0 pointer-events-none">
+        <img id="bgImage" src="" alt="" class="w-full h-full object-cover opacity-0 transition-opacity duration-500" />
+        <div class="absolute inset-0 bg-gradient-to-b from-sky-900/25 via-transparent to-amber-950/35"></div>
+    </div>
+
+    <!-- Canvas principal du jeu -->
+    <canvas id="gameCanvas" class="fixed inset-0 z-10"></canvas>
+
+    <!-- HUD supérieur (visible pendant la partie et la pause) -->
+    <header id="hudBar" class="fixed top-0 left-0 right-0 z-20 px-3 pt-3 sm:px-5 sm:pt-4 pointer-events-none hidden">
+        <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2">
+            <!-- Groupe gauche : Cœurs + Panier -->
+            <div class="flex items-center gap-2 sm:gap-3 pointer-events-auto">
+                <!-- Cœurs -->
+                <div id="livesBox" class="flex items-center gap-1 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-2xl shadow-lg border-2 border-rose-200" title="Vies restantes">
+                    <span class="text-xs font-extrabold uppercase tracking-wider text-rose-700 mr-1 hidden sm:inline">Vies</span>
+                    <div id="livesContainer" class="flex items-center gap-0.5 text-lg sm:text-xl leading-none"></div>
                 </div>
 
-                <div class="hud-pill rounded-2xl px-3 py-1.5 flex items-center gap-2">
-                    <span class="text-lg leading-none">🛣️</span>
-                    <div>
-                        <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 leading-none">Distance</div>
-                        <div id="hudDistance" class="font-display text-base sm:text-lg font-bold text-emerald-700 leading-tight">0 m</div>
-                    </div>
-                </div>
-
-                <div class="hud-pill rounded-2xl px-3 py-1.5 flex items-center gap-2">
-                    <span class="text-lg leading-none">🧺</span>
-                    <div>
-                        <div class="text-[10px] font-extrabold uppercase tracking-wider text-amber-600 leading-none">Panier</div>
-                        <div id="hudBasket" class="font-display text-base sm:text-lg font-bold text-amber-700 leading-tight">0</div>
+                <!-- Panier -->
+                <div class="flex items-center gap-1.5 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-2xl shadow-lg border-2 border-amber-200" title="Bonus collectés dans le panier">
+                    <span class="text-lg sm:text-xl leading-none">🧺</span>
+                    <div class="leading-tight">
+                        <div class="text-[10px] font-extrabold uppercase tracking-wider text-amber-700">Panier</div>
+                        <div id="basketCount" class="font-display text-sm sm:text-base font-bold text-slate-800">0</div>
                     </div>
                 </div>
             </div>
 
-            <div class="flex items-center gap-1.5 sm:gap-2 pointer-events-auto">
-                <div id="hudLives" class="hud-pill rounded-2xl px-2.5 py-1.5 flex items-center gap-1 text-base sm:text-lg">
-                    <span>❤️</span><span>❤️</span><span>❤️</span>
+            <!-- Groupe centre : Score / Distance / Record -->
+            <div class="flex items-center gap-2 sm:gap-3 bg-white/90 backdrop-blur-md px-3.5 py-1.5 rounded-2xl shadow-lg border-2 border-emerald-200 pointer-events-auto">
+                <div class="text-center px-1">
+                    <div class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700">Score</div>
+                    <div id="scoreValue" class="font-display text-sm sm:text-lg font-bold text-slate-900 leading-tight">0</div>
                 </div>
+                <div class="h-6 w-px bg-slate-200"></div>
+                <div class="text-center px-1">
+                    <div class="text-[10px] font-extrabold uppercase tracking-wider text-sky-700">Distance</div>
+                    <div id="distanceValue" class="font-display text-sm sm:text-lg font-bold text-slate-900 leading-tight">0 m</div>
+                </div>
+                <div class="h-6 w-px bg-slate-200 hidden xs:block sm:block"></div>
+                <div class="text-center px-1 hidden xs:block sm:block">
+                    <div class="text-[10px] font-extrabold uppercase tracking-wider text-amber-700">Record</div>
+                    <div id="bestScoreValue" class="font-display text-sm sm:text-lg font-bold text-amber-600 leading-tight">0</div>
+                </div>
+            </div>
 
-                <button id="btnMute" type="button" aria-label="Son" class="hud-pill control-btn w-10 h-10 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center text-lg text-slate-800">
-                    🔊
+            <!-- Groupe droite : Audio & Pause -->
+            <div class="flex items-center gap-2 pointer-events-auto">
+                <button id="btnMute" type="button" class="control-btn bg-white/90 hover:bg-white text-slate-800 font-extrabold px-3 py-2 rounded-2xl border-2 border-slate-200 text-sm flex items-center gap-1.5" title="Activer ou couper le son">
+                    <span id="muteIcon">🔊</span>
+                    <span id="muteLabel" class="hidden md:inline text-xs">Son</span>
                 </button>
-
-                <button id="btnPause" type="button" aria-label="Pause" class="hud-pill control-btn w-10 h-10 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center text-lg font-black text-slate-800">
-                    ⏸
+                <button id="btnPause" type="button" class="control-btn bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold px-3.5 py-2 rounded-2xl border-2 border-amber-500 text-sm flex items-center gap-1.5" title="Mettre en pause (Échap / P)">
+                    <span id="pauseIcon">⏸️</span>
+                    <span id="pauseLabel" class="hidden sm:inline text-xs">Pause</span>
                 </button>
             </div>
         </div>
+    </header>
 
-        <!-- Notification temporaire en jeu -->
-        <div id="toastBanner" class="toast-banner opacity-0 -translate-y-2 fixed top-16 left-1/2 -translate-x-1/2 z-20 max-w-[92vw]">
-            <div class="px-4 py-1.5 rounded-full bg-slate-900/90 text-amber-300 border-2 border-amber-400/80 shadow-xl flex items-center gap-2 text-xs sm:text-sm font-extrabold whitespace-nowrap">
-                <span class="px-1.5 py-0.5 rounded bg-amber-400 text-slate-950 text-[10px] font-black">VN</span>
-                <span id="toastText">Xin chào ! En route avec Ludo !</span>
-            </div>
+    <!-- Notification discrète en jeu (toast) -->
+    <div id="toastBanner" class="fixed top-20 left-1/2 -translate-x-1/2 z-30 pointer-events-none opacity-0 transition-all duration-300 -translate-y-2">
+        <div class="bg-slate-900/90 text-amber-200 border border-amber-400/50 px-4 py-1.5 rounded-full shadow-xl text-xs sm:text-sm font-extrabold tracking-wide flex items-center gap-2">
+            <span id="toastIcon">🔔</span>
+            <span id="toastText">Dring ! Les obstacles réagissent !</span>
         </div>
+    </div>
 
-        <!-- Commandes dédiées : Haut / Bas à gauche, Sauter et Dring à droite -->
-        <div id="touchControls" class="hidden fixed bottom-3 left-3 right-3 z-20 flex items-end justify-between pointer-events-none">
+    <!-- Contrôles tactiles / souris en bas de l'écran pendant la partie -->
+    <footer id="touchControls" class="fixed bottom-0 left-0 right-0 z-20 px-3 pb-3 sm:px-6 sm:pb-5 pointer-events-none hidden">
+        <div class="max-w-5xl mx-auto flex items-end justify-between gap-3">
+            <!-- Gauche : Haut / Bas (changer de voie) -->
             <div class="flex flex-col gap-2 pointer-events-auto">
-                <button id="btnLaneUp" type="button" aria-label="Voie du haut" class="control-btn w-16 h-14 sm:w-20 sm:h-16 rounded-2xl bg-white/95 hover:bg-white border-2 border-sky-200 flex flex-col items-center justify-center text-slate-800">
-                    <span class="text-xl leading-none font-black text-sky-600">⬆️</span>
-                    <span class="text-[10px] font-extrabold uppercase tracking-wide text-slate-600 mt-0.5">Haut</span>
+                <button id="btnUp" type="button" class="control-btn w-14 h-12 sm:w-16 sm:h-14 rounded-2xl bg-white/90 hover:bg-white active:bg-sky-100 text-slate-900 border-2 border-sky-300 flex flex-col items-center justify-center font-extrabold" aria-label="Monter d'une voie">
+                    <span class="text-lg sm:text-xl leading-none">⬆️</span>
+                    <span class="text-[10px] uppercase tracking-wider text-sky-800">Haut</span>
                 </button>
-                <button id="btnLaneDown" type="button" aria-label="Voie du bas" class="control-btn w-16 h-14 sm:w-20 sm:h-16 rounded-2xl bg-white/95 hover:bg-white border-2 border-sky-200 flex flex-col items-center justify-center text-slate-800">
-                    <span class="text-xl leading-none font-black text-sky-600">⬇️</span>
-                    <span class="text-[10px] font-extrabold uppercase tracking-wide text-slate-600 mt-0.5">Bas</span>
+                <button id="btnDown" type="button" class="control-btn w-14 h-12 sm:w-16 sm:h-14 rounded-2xl bg-white/90 hover:bg-white active:bg-sky-100 text-slate-900 border-2 border-sky-300 flex flex-col items-center justify-center font-extrabold" aria-label="Descendre d'une voie">
+                    <span class="text-lg sm:text-xl leading-none">⬇️</span>
+                    <span class="text-[10px] uppercase tracking-wider text-sky-800">Bas</span>
                 </button>
             </div>
 
-            <div class="flex items-end gap-2.5 pointer-events-auto">
-                <button id="btnJump" type="button" aria-label="Sauter" class="control-btn px-4 h-16 sm:h-18 rounded-3xl bg-gradient-to-b from-sky-400 to-blue-600 border-2 border-sky-200 flex items-center gap-2 text-white">
-                    <span class="text-2xl leading-none">🦘</span>
-                    <span class="font-display text-sm sm:text-base font-bold tracking-wide uppercase">Sauter</span>
+            <!-- Droite : Sonnette Dring + Sauter -->
+            <div class="flex items-center gap-2.5 sm:gap-3 pointer-events-auto">
+                <button id="btnBell" type="button" class="control-btn px-4 h-14 sm:h-16 rounded-2xl bg-amber-300 hover:bg-amber-200 text-amber-950 border-2 border-amber-500 flex flex-col items-center justify-center font-extrabold" aria-label="Sonner la clochette">
+                    <span class="text-xl sm:text-2xl leading-none">🔔</span>
+                    <span class="text-[10px] sm:text-xs uppercase tracking-wider">Dring</span>
                 </button>
-
-                <button id="btnBell" type="button" aria-label="Sonnette" class="control-btn w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-gradient-to-b from-amber-300 to-amber-500 border-2 border-amber-100 flex flex-col items-center justify-center text-slate-950">
-                    <span class="text-xl leading-none">🔔</span>
-                    <span class="text-[10px] font-black uppercase tracking-tight mt-0.5">Dring</span>
+                <button id="btnJump" type="button" class="control-btn px-5 sm:px-7 h-14 sm:h-16 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-white border-2 border-emerald-200 flex flex-col items-center justify-center font-extrabold" aria-label="Sauter">
+                    <span class="text-xl sm:text-2xl leading-none">⤴️</span>
+                    <span class="text-[10px] sm:text-xs uppercase tracking-wider">Sauter</span>
                 </button>
             </div>
         </div>
+    </footer>
 
-        <!-- Écran d'accueil -->
-        <div id="startOverlay" class="fixed inset-0 z-30 flex flex-col items-center justify-between p-3 sm:p-5 bg-slate-950/65 backdrop-blur-[2px]">
-            <div class="w-full max-w-2xl flex items-center justify-start gap-2 z-10">
-                <div class="px-3.5 py-1.5 rounded-full bg-red-600/95 text-amber-200 border border-amber-300/60 shadow-lg flex items-center gap-2 text-xs sm:text-sm font-extrabold">
-                    <span>🏮</span>
-                    <span>Xin chào mọi người !</span>
-                </div>
+    <!-- ÉCRAN D'ACCUEIL -->
+    <section id="startScreen" class="fixed inset-0 z-30 flex flex-col justify-between p-3 sm:p-6 bg-gradient-to-b from-sky-950/55 via-slate-900/35 to-amber-950/65 backdrop-blur-[2px]">
+        <!-- Bandeau défilant des règles en haut -->
+        <div class="w-full max-w-6xl mx-auto overflow-hidden rounded-2xl bg-amber-400/95 text-slate-950 border-2 border-amber-200 shadow-xl py-2">
+            <div class="marquee-track font-extrabold text-xs sm:text-sm tracking-wide">
+                <div class="flex items-center gap-8 px-4 whitespace-nowrap">
+                    <span>🚴 Evitez les obstacles - Ecrasez la bouffes et les bonus</span>
+                    <span>•</span>
+                    <span>🚴 Evitez les obstacles - Ecrasez la bouffes et les bonus</span>
+            <!-- Carte centrale d'accueil -->
+        <div class="my-auto max-w-xl w-full mx-auto bg-white/92 backdrop-blur-md rounded-3xl shadow-2xl border-4 border-amber-300 p-5 sm:p-7 text-center">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-extrabold uppercase tracking-wider mb-3">
+                <span>🇻🇳</span>
+                <span>Aventure à vélo • Chemin de campagne</span>
             </div>
 
-            <div class="relative w-full max-w-md sm:max-w-lg flex-1 my-2.5 flex items-center justify-center overflow-hidden rounded-3xl border-2 border-amber-300/70 shadow-2xl bg-amber-950/50 animate-pop-in">
-                <img id="welcomeImg" alt="Accueil Ludo-Vélo Vietnam" class="w-full h-full object-contain sm:object-cover transition-opacity duration-300" />
-                <div id="welcomeFallback" class="hidden w-full h-full flex flex-col items-center justify-center p-5 text-center bg-gradient-to-b from-amber-100 via-orange-50 to-emerald-100 text-slate-900">
-                    <div class="text-5xl mb-2">🏮🚴🏮</div>
-                    <div class="font-display text-2xl sm:text-3xl font-bold text-red-700">LUDO-VÉLO VIETNAM</div>
-                    <p class="text-xs sm:text-sm font-bold text-slate-700 mt-1">Xin chào mọi người ! Prêt à pédaler dans le village ?</p>
-                </div>
-
-                <div class="absolute top-2.5 left-1/2 -translate-x-1/2 px-3.5 py-1 rounded-full bg-slate-950/75 backdrop-blur-sm border border-amber-300/50 text-amber-200 font-display text-xs sm:text-sm font-bold tracking-wide whitespace-nowrap shadow">
-                    🚴 LUDO-VÉLO VIETNAM
-                </div>
-            </div>
-
-            <div class="w-full max-w-md flex flex-col items-center gap-2 z-10">
-                <div class="w-full overflow-hidden rounded-full bg-slate-950/85 border border-amber-300/60 py-1.5 shadow-lg">
-                    <div class="marquee-track text-[11px] sm:text-xs font-extrabold text-amber-100 whitespace-nowrap">
-                        <span class="mx-4">Evitez les obstacles - Ecrasez la bouffes et les bonus</span>
-                        <span class="mx-4">Evitez les obstacles - Ecrasez la bouffes et les bonus</span>
-                        <span class="mx-4">Evitez les obstacles - Ecrasez la bouffes et les bonus</span>
-                        <span class="mx-4">Evitez les obstacles - Ecrasez la bouffes et les bonus</span>
+            <!-- Logo illustré amusant d'accueil -->
+            <div class="float-slow max-w-md mx-auto">
+                <div class="inline-flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-3.5 px-4 py-3 rounded-3xl bg-gradient-to-br from-amber-100 via-orange-50 to-rose-100 border-3 border-amber-400 shadow-lg -rotate-1">
+                    <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-rose-500 via-amber-400 to-yellow-300 border-2 border-white shadow-md flex items-center justify-center text-2xl sm:text-3xl shrink-0">
+                        🚴🔥
+                    </div>
+                    <div class="text-center sm:text-left leading-none">
+                        <div class="font-display text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+                            Ludo en Vélo ?
+                        </div>
+                        <div class="mt-1 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-orange-500 to-red-500 text-white font-display text-base sm:text-lg font-bold shadow-sm rotate-1">
+                            <span>🔥</span>
+                            <span>C'est chaud</span>
+                            <span>🌶️</span>
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                <button id="btnStartGame" type="button" class="control-btn animate-float-slow w-full max-w-xs sm:max-w-sm py-3 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-500 border-2 border-emerald-200/90 text-white font-display text-lg sm:text-xl font-bold tracking-wide flex items-center justify-center gap-2.5">
-                    <span>🚴</span>
-                    <span>JOUER</span>
+            <p class="mt-3 text-slate-600 text-xs sm:text-sm font-bold max-w-md mx-auto">
+                File à toute allure sur le chemin de terre, esquive les trous et les obstacles, fais tinter ta sonnette et remplis ton panier de saveurs locales !
+            </p>
+
+            <!-- Aperçu visuel rapide des commandes -->
+            <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 text-left">
+                <div class="bg-sky-50 border border-sky-200 rounded-2xl p-2.5">
+                    <div class="text-base">⬆️⬇️</div>
+                    <div class="text-xs font-extrabold text-slate-800 mt-0.5">3 Voies</div>
+                    <div class="text-[11px] text-slate-600 font-semibold">Flèches / W-S</div>
+                </div>
+                <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-2.5">
+                    <div class="text-base">⤴️</div>
+                    <div class="text-xs font-extrabold text-slate-800 mt-0.5">Sauter</div>
+                    <div class="text-[11px] text-slate-600 font-semibold">Espace / Flèche Haut</div>
+                </div>
+                <div class="bg-amber-50 border border-amber-200 rounded-2xl p-2.5">
+                    <div class="text-base">🔔</div>
+                    <div class="text-xs font-extrabold text-slate-800 mt-0.5">Dring</div>
+                    <div class="text-[11px] text-slate-600 font-semibold">Touche B / Shift</div>
+                </div>
+                <div class="bg-rose-50 border border-rose-200 rounded-2xl p-2.5">
+                    <div class="text-base">❤️🧺</div>
+                    <div class="text-xs font-extrabold text-slate-800 mt-0.5">3 Vies & Bonus</div>
+                    <div class="text-[11px] text-slate-600 font-semibold">Mangue, Phở, Bánh mì</div>
+                </div>
+            </div>
+
+            <!-- Meilleur score si déjà joué -->
+            <div id="startBestBadge" class="mt-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-100 border border-amber-300 text-amber-900 text-xs font-extrabold">
+                <span>🏆</span>
+                <span>Meilleur score :</span>
+                <span id="startBestScore" class="font-display text-sm text-amber-700">0</span>
+            </div>
+
+            <!-- Bouton Démarrer -->
+            <div class="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">
+                <button id="btnStart" type="button" class="control-btn w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-display text-xl sm:text-2xl font-bold tracking-wide border-2 border-emerald-200 flex items-center justify-center gap-2.5 cursor-pointer">
+                    <span>🚴‍♂️</span>
+                    <span>Démarrer la course</span>
                 </button>
-                <div class="px-3 py-0.5 rounded-full bg-slate-950/70 text-[11px] font-bold text-amber-100/90">
-                    Boutons Haut / Bas • Sauter • Dring
-                </div>
+                <button id="btnStartMute" type="button" class="control-btn w-full sm:w-auto px-4 py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-sm border-2 border-slate-300 flex items-center justify-center gap-2 cursor-pointer">
+                    <span id="startMuteIcon">🔊</span>
+                    <span id="startMuteText">Sons actifs</span>
+                </button>
+            </div>
+
+            <!-- Statut discret des assets -->
+            <div id="assetsStatus" class="mt-3 text-[11px] font-bold text-slate-500">
+                Préparation des sprites et décors...
             </div>
         </div>
 
-        <!-- Écran de pause -->
-        <div id="pauseOverlay" class="hidden fixed inset-0 z-30 flex items-center justify-center p-4 bg-slate-950/65 backdrop-blur-sm">
-            <div class="w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-2xl border-4 border-amber-300 animate-pop-in">
-                <div class="text-4xl mb-2">⏸️</div>
-                <h2 class="font-display text-2xl font-bold text-slate-900">Partie en pause</h2>
-                <p class="text-sm font-semibold text-slate-600 mt-1 mb-5">Ludo reprend son souffle au bord du chemin.</p>
-                <div class="flex flex-col gap-2.5">
-                    <button id="btnResume" type="button" class="control-btn w-full py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-white font-display text-lg font-bold">
-                        ▶️ Reprendre
-                    </button>
-                    <button id="btnPauseRestart" type="button" class="control-btn w-full py-2.5 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-display text-base font-bold">
-                        🔄 Recommencer
-                    </button>
-                    <button id="btnPauseHome" type="button" class="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-sm">
-                        🏠 Accueil
-                    </button>
-                </div>
+        <!-- Pied de page discret -->
+        <div class="text-center text-[11px] sm:text-xs font-bold text-white/80 drop-shadow">
+            Astuce : La sonnette <span class="text-amber-300">Dring</span> alerte les obstacles proches et rapporte des points bonus !
+        </div>
+    </section>
+
+    <!-- ÉCRAN DE PAUSE -->
+    <div id="pauseModal" class="fixed inset-0 z-30 hidden items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+        <div class="max-w-sm w-full bg-white rounded-3xl shadow-2xl border-4 border-amber-300 p-6 text-center">
+            <div class="text-4xl mb-2">⏸️</div>
+            <h2 class="font-display text-3xl font-bold text-slate-900">Partie en pause</h2>
+            <p class="text-slate-600 text-sm font-bold mt-1">Reprends ton souffle au bord du chemin.</p>
+
+            <div class="mt-6 flex flex-col gap-2.5">
+                <button id="btnResume" type="button" class="control-btn w-full py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-white font-display text-lg font-bold border-2 border-emerald-200">
+                    ▶️ Reprendre
+                </button>
+                <button id="btnRestartPause" type="button" class="control-btn w-full py-2.5 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-display text-base font-bold border-2 border-amber-500">
+                    🔄 Recommencer
+                </button>
+                <button id="btnQuitToMenu" type="button" class="control-btn w-full py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-sm border-2 border-slate-300">
+                    🏠 Retour à l'accueil
+                </button>
             </div>
         </div>
+    </div>
 
-        <!-- Écran de fin de partie -->
-        <div id="gameOverOverlay" class="hidden fixed inset-0 z-30 flex items-center justify-center p-2.5 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
-            <div class="w-full max-w-md my-auto rounded-3xl bg-gradient-to-b from-amber-50 via-orange-50 to-amber-100 p-3 sm:p-4 text-center shadow-2xl border-4 border-amber-400 animate-pop-in flex flex-col gap-2.5">
-                <div class="relative w-full aspect-square max-h-[54dvh] sm:max-h-[58dvh] mx-auto rounded-2xl overflow-hidden border-2 border-amber-300 bg-sky-100 shadow-inner flex items-center justify-center">
-                    <img id="gameOverImg" alt="Fin de partie Ludo" class="w-full h-full object-contain" />
-                    <div id="gameOverFallback" class="hidden flex-col items-center justify-center p-4 text-slate-800">
-                        <div class="text-4xl mb-1">🚲💫</div>
-                        <div class="font-display text-lg font-bold">Ludo a calé en chemin !</div>
+    <!-- ÉCRAN GAME OVER -->
+    <div id="gameOverModal" class="fixed inset-0 z-30 hidden items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-sm overflow-y-auto">
+        <div class="max-w-md w-full my-auto bg-amber-50/95 rounded-3xl shadow-2xl border-4 border-amber-400 p-3.5 sm:p-5 text-center relative overflow-hidden">
+            <div class="relative z-10 flex flex-col items-center gap-2.5">
+                <!-- Image gameover.jpg encadrée avec score, boutons et Top 10 -->
+                <div id="gameOverVisualBox" class="w-full rounded-2xl overflow-hidden border-2 border-amber-300 bg-slate-900 shadow-md relative min-h-[190px] sm:min-h-[215px] flex items-center justify-center">
+                    <img id="gameOverImg" src="" alt="Game Over" class="w-full h-48 sm:h-56 object-cover hidden" />
+                    <div id="gameOverFallbackBadge" class="py-8 px-4 flex flex-col items-center justify-center text-white">
+                        <div class="text-5xl mb-1">💥🚲</div>
+                        <div id="gameOverTitle" class="font-display text-2xl sm:text-3xl font-bold text-amber-300">Fin de course !</div>
                     </div>
 
+                    <!-- Score et statistiques affichés directement sur gameover.jpg -->
                     <div class="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-2 pointer-events-none">
                         <div class="px-3 py-1.5 rounded-2xl bg-slate-950/80 backdrop-blur-sm border border-amber-300/80 text-white shadow-lg flex items-center gap-2">
                             <span class="text-base leading-none">🏆</span>
@@ -287,11 +331,25 @@
                     </div>
 
                     <div class="absolute bottom-3 left-3 right-3 flex items-center justify-center gap-2">
-                        <button id="btnRetry" type="button" class="control-btn py-2.5 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-display text-base sm:text-lg font-bold border-2 border-emerald-200 flex items-center justify-center gap-1.5">
+                        <button id="btnRetry" type="button" class="control-btn py-2.5 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-display text-base sm:text-lg font-bold border-2 border-emerald-200 flex items-center justify-center gap-1.5 cursor-pointer">
                             <span>🔄</span>
                             <span>Rejouer</span>
                         </button>
                     </div>
+                </div>
+
+                <!-- Classement Top 10 des scores -->
+                <div class="w-full rounded-2xl bg-white/90 border-2 border-amber-300/80 p-2.5 text-left shadow-inner">
+                    <div class="flex items-center justify-between mb-1.5 px-1">
+                        <span class="font-display text-xs sm:text-sm font-bold text-amber-900 flex items-center gap-1.5">
+                            <span>🏅</span>
+                            <span>Top 10 des scores</span>
+                        </span>
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-amber-700">Record local</span>
+                    </div>
+                    <ol id="top10List" class="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] font-extrabold text-slate-800 max-h-28 overflow-y-auto px-1">
+                        <li class="text-slate-500">1. —</li>
+                    </ol>
                 </div>
 
                 <p id="gameOverReason" class="text-xs font-bold text-slate-700 px-2 leading-snug">
@@ -299,7 +357,7 @@
                 </p>
 
                 <div class="pt-0.5">
-                    <button id="btnGameOverHome" type="button" class="w-full py-2 px-4 rounded-2xl bg-white hover:bg-amber-50 text-slate-800 font-display text-sm sm:text-base font-bold border-2 border-amber-300 flex items-center justify-center gap-1.5">
+                    <button id="btnGameOverHome" type="button" class="w-full py-2 px-4 rounded-2xl bg-white hover:bg-amber-50 text-slate-800 font-display text-sm sm:text-base font-bold border-2 border-amber-300 flex items-center justify-center gap-1.5 cursor-pointer">
                         <span>🏠</span>
                         <span>Accueil</span>
                     </button>
@@ -309,71 +367,80 @@
     </div>
 
     <script>
+        /**
+         * Ludo-Vélo Vietnam
+         * Jeu d'arcade HTML5 Canvas en 3 voies latérales avec gestion souple des assets locaux
+         * et génération procédurale de secours si un fichier image est absent.
+         */
         (() => {
             'use strict';
 
-            /**
-             * Gestionnaire audio Web Audio + musique de fond + synthèse vocale.
-             */
+            // =========================================================================
+            // 1. SYNTHÉTISEUR AUDIO WEB AUDIO + MUSIQUE DE FOND EN BOUCLE
+            // =========================================================================
             class SoundManager {
                 constructor() {
                     this.ctx = null;
                     this.muted = false;
-                    this.hasSpokenWelcome = false;
+                    this.gameActive = false;
                     this.bgMusic = null;
-                    this.bgMusicShouldPlay = false;
+                    this.bgMusicReady = false;
                     this.initBackgroundMusic();
                 }
 
                 initBackgroundMusic() {
                     try {
-                        // Fichier musical prioritaire : assets/audio/fond-musical.mp3
-                        const candidates = [
-                            'assets/audio/fond-musical.mp3',
-                            'assets/audio/musique-jeu.mp3',
-                            'assets/audio/fond-musical.ogg',
-                            'assets/audio/fond-musical.wav'
-                        ];
                         const audio = new Audio();
                         audio.loop = true;
-                        audio.volume = 0.28;
                         audio.preload = 'auto';
+                        audio.volume = 0.34;
+                        audio.src = 'assets/audio/fond-musical.mp3';
 
-                        let idx = 0;
-                        const tryNextSource = () => {
-                            if (idx >= candidates.length) {
-                                this.bgMusic = null;
-                                return;
+                        audio.addEventListener('canplaythrough', () => {
+                            this.bgMusicReady = true;
+                            if (!this.muted && this.gameActive) {
+                                this.playBackgroundMusic();
                             }
-                            audio.src = candidates[idx++];
-                            audio.load();
-                        };
+                        });
 
-                        audio.addEventListener('error', tryNextSource);
+                        audio.addEventListener('error', () => {
+                            this.bgMusicReady = false;
+                        });
+
                         this.bgMusic = audio;
-                        tryNextSource();
                     } catch (err) {
                         this.bgMusic = null;
                     }
                 }
 
-                setBackgroundMusicActive(active) {
-                    this.bgMusicShouldPlay = Boolean(active);
-                    if (!this.bgMusic) return;
-
+                playBackgroundMusic() {
+                    if (!this.bgMusic || this.muted || !this.gameActive) return;
                     try {
-                        if (this.bgMusicShouldPlay && !this.muted) {
-                            const playPromise = this.bgMusic.play();
-                            if (playPromise && typeof playPromise.catch === 'function') {
-                                playPromise.catch(() => {});
-                            }
-                        } else {
-                            this.bgMusic.pause();
+                        const playPromise = this.bgMusic.play();
+                        if (playPromise && typeof playPromise.catch === 'function') {
+                            playPromise.catch(() => {});
                         }
                     } catch (err) {}
                 }
 
+                pauseBackgroundMusic() {
+                    if (!this.bgMusic) return;
+                    try {
+                        this.bgMusic.pause();
+                    } catch (err) {}
+                }
+
+                setBackgroundMusicActive(active) {
+                    this.gameActive = Boolean(active);
+                    if (this.gameActive && !this.muted) {
+                        this.playBackgroundMusic();
+                    } else {
+                        this.pauseBackgroundMusic();
+                    }
+                }
+
                 ensureContext() {
+                    if (this.muted) return null;
                     try {
                         if (!this.ctx) {
                             const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -384,240 +451,131 @@
                         if (this.ctx && this.ctx.state === 'suspended') {
                             this.ctx.resume().catch(() => {});
                         }
-                    } catch (err) {}
+                        return this.ctx;
+                    } catch (err) {
+                        return null;
+                    }
                 }
 
-                setMuted(mute) {
-                    this.muted = Boolean(mute);
+                setMuted(muted) {
+                    this.muted = Boolean(muted);
                     if (this.bgMusic) {
                         this.bgMusic.muted = this.muted;
                     }
-                    if (this.muted) {
-                        if (this.bgMusic) {
-                            try { this.bgMusic.pause(); } catch (err) {}
+                    if (!this.muted) {
+                        this.ensureContext();
+                        if (this.gameActive) {
+                            this.playBackgroundMusic();
                         }
-                        if ('speechSynthesis' in window) {
-                            try {
-                                window.speechSynthesis.cancel();
-                            } catch (err) {}
-                        }
-                    } else if (this.bgMusicShouldPlay && this.bgMusic) {
-                        try {
-                            const playPromise = this.bgMusic.play();
-                            if (playPromise && typeof playPromise.catch === 'function') {
-                                playPromise.catch(() => {});
-                            }
-                        } catch (err) {}
+                    } else {
+                        this.pauseBackgroundMusic();
                     }
                 }
 
-                playBell() {
-                    if (this.muted) return;
-                    this.ensureContext();
-                    if (!this.ctx) return;
+                playTone({ freq = 440, endFreq = null, duration = 0.12, type = 'sine', gainPeak = 0.14, delay = 0 }) {
+                    const ctx = this.ensureContext();
+                    if (!ctx) return;
 
                     try {
-                        const now = this.ctx.currentTime;
-                        [1318.5, 1760, 2217.5].forEach((freq, idx) => {
-                            const osc = this.ctx.createOscillator();
-                            const gain = this.ctx.createGain();
-                            osc.type = idx === 0 ? 'triangle' : 'sine';
-                            osc.frequency.setValueAtTime(freq, now);
-                            osc.frequency.exponentialRampToValueAtTime(freq * 0.985, now + 0.35);
+                        const now = ctx.currentTime + delay;
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
 
-                            gain.gain.setValueAtTime(0.0001, now);
-                            gain.gain.exponentialRampToValueAtTime(0.14 / (idx + 1), now + 0.012);
-                            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.36);
+                        osc.type = type;
+                        osc.frequency.setValueAtTime(freq, now);
+                        if (endFreq !== null) {
+                            osc.frequency.exponentialRampToValueAtTime(Math.max(40, endFreq), now + duration);
+                        }
 
-                            osc.connect(gain);
-                            gain.connect(this.ctx.destination);
-                            osc.start(now);
-                            osc.stop(now + 0.38);
-                        });
+                        gain.gain.setValueAtTime(0.0001, now);
+                        gain.gain.linearRampToValueAtTime(gainPeak, now + 0.015);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+
+                        osc.start(now);
+                        osc.stop(now + duration + 0.02);
                     } catch (err) {}
+                }
+
+                playLaneSwitch() {
+                    this.playTone({ freq: 290, endFreq: 380, duration: 0.08, type: 'triangle', gainPeak: 0.1 });
                 }
 
                 playJump() {
-                    if (this.muted) return;
-                    this.ensureContext();
-                    if (!this.ctx) return;
-
-                    try {
-                        const now = this.ctx.currentTime;
-                        const osc = this.ctx.createOscillator();
-                        const gain = this.ctx.createGain();
-                        osc.type = 'sine';
-                        osc.frequency.setValueAtTime(240, now);
-                        osc.frequency.exponentialRampToValueAtTime(560, now + 0.18);
-
-                        gain.gain.setValueAtTime(0.12, now);
-                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-
-                        osc.connect(gain);
-                        gain.connect(this.ctx.destination);
-                        osc.start(now);
-                        osc.stop(now + 0.21);
-                    } catch (err) {}
+                    this.playTone({ freq: 240, endFreq: 560, duration: 0.18, type: 'sine', gainPeak: 0.14 });
                 }
 
-                playLaneChange() {
-                    if (this.muted) return;
-                    this.ensureContext();
-                    if (!this.ctx) return;
-
-                    try {
-                        const now = this.ctx.currentTime;
-                        const osc = this.ctx.createOscillator();
-                        const gain = this.ctx.createGain();
-                        osc.type = 'triangle';
-                        osc.frequency.setValueAtTime(340, now);
-                        osc.frequency.exponentialRampToValueAtTime(460, now + 0.08);
-
-                        gain.gain.setValueAtTime(0.07, now);
-                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
-
-                        osc.connect(gain);
-                        gain.connect(this.ctx.destination);
-                        osc.start(now);
-                        osc.stop(now + 0.1);
-                    } catch (err) {}
+                playBell() {
+                    // Double tintement clair de sonnette de vélo ("Dring-dring")
+                    this.playTone({ freq: 1320, endFreq: 1380, duration: 0.11, type: 'sine', gainPeak: 0.16, delay: 0 });
+                    this.playTone({ freq: 1560, endFreq: 1620, duration: 0.14, type: 'sine', gainPeak: 0.15, delay: 0.09 });
                 }
 
                 playPickup() {
-                    if (this.muted) return;
-                    this.ensureContext();
-                    if (!this.ctx) return;
-
-                    try {
-                        const now = this.ctx.currentTime;
-                        [587.33, 880].forEach((freq, i) => {
-                            const osc = this.ctx.createOscillator();
-                            const gain = this.ctx.createGain();
-                            osc.type = 'triangle';
-                            osc.frequency.setValueAtTime(freq, now + i * 0.07);
-
-                            gain.gain.setValueAtTime(0.11, now + i * 0.07);
-                            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.07 + 0.16);
-
-                            osc.connect(gain);
-                            gain.connect(this.ctx.destination);
-                            osc.start(now + i * 0.07);
-                            osc.stop(now + i * 0.07 + 0.17);
-                        });
-                    } catch (err) {}
+                    this.playTone({ freq: 587.33, endFreq: 880, duration: 0.11, type: 'triangle', gainPeak: 0.14, delay: 0 });
+                    this.playTone({ freq: 880, endFreq: 1174.66, duration: 0.14, type: 'sine', gainPeak: 0.13, delay: 0.07 });
                 }
 
-                playCrash() {
-                    if (this.muted) return;
-                    this.ensureContext();
-                    if (!this.ctx) return;
-
-                    try {
-                        const now = this.ctx.currentTime;
-                        const osc = this.ctx.createOscillator();
-                        const gain = this.ctx.createGain();
-                        osc.type = 'sawtooth';
-                        osc.frequency.setValueAtTime(190, now);
-                        osc.frequency.exponentialRampToValueAtTime(52, now + 0.36);
-
-                        gain.gain.setValueAtTime(0.16, now);
-                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
-
-                        osc.connect(gain);
-                        gain.connect(this.ctx.destination);
-                        osc.start(now);
-                        osc.stop(now + 0.4);
-                    } catch (err) {}
+                playCrush() {
+                    this.playTone({ freq: 340, endFreq: 140, duration: 0.14, type: 'square', gainPeak: 0.11, delay: 0 });
+                    this.playTone({ freq: 520, endFreq: 760, duration: 0.1, type: 'triangle', gainPeak: 0.11, delay: 0.06 });
                 }
 
-                pickFemaleVoice(langPrefix) {
-                    if (!('speechSynthesis' in window)) return null;
-                    const voices = window.speechSynthesis.getVoices() || [];
-                    if (!voices.length) return null;
-
-                    const matchingLang = voices.filter((v) =>
-                        (v.lang || '').toLowerCase().startsWith(langPrefix.toLowerCase())
-                    );
-                    const pool = matchingLang.length ? matchingLang : voices;
-
-                    const femaleKeywords = [
-                        'female', 'woman', 'girl', 'zira', 'samantha', 'victoria',
-                        'amelie', 'aurélie', 'julie', 'claire', 'celine', 'céline',
-                        'hortense', 'linh', 'mai', 'huong', 'hương', 'thao', 'thảo', 'google'
-                    ];
-
-                    const femaleMatch = pool.find((v) => {
-                        const hay = `${v.name} ${v.lang}`.toLowerCase();
-                        return femaleKeywords.some((kw) => hay.includes(kw));
-                    });
-
-                    return femaleMatch || pool[0] || null;
+                playHit() {
+                    this.playTone({ freq: 190, endFreq: 72, duration: 0.24, type: 'sawtooth', gainPeak: 0.16, delay: 0 });
                 }
 
-                speakVietnameseGreeting(force = false) {
-                    if (this.muted) return;
-                    if (!('speechSynthesis' in window)) return;
-                    if (this.hasSpokenWelcome && !force) return;
-
-                    try {
-                        window.speechSynthesis.cancel();
-                        const utter = new SpeechSynthesisUtterance('Xin chào mọi người !');
-                        utter.lang = 'vi-VN';
-                        utter.rate = 1.16;
-                        utter.pitch = 1.26;
-                        utter.volume = 1;
-
-                        const voice = this.pickFemaleVoice('vi') || this.pickFemaleVoice('fr');
-                        if (voice) {
-                            utter.voice = voice;
-                        }
-
-                        utter.onstart = () => {
-                            this.hasSpokenWelcome = true;
-                        };
-                        utter.onend = () => {
-                            this.hasSpokenWelcome = true;
-                        };
-
-                        window.speechSynthesis.speak(utter);
-                    } catch (err) {}
+                playGameOver() {
+                    this.playTone({ freq: 392, endFreq: 349.23, duration: 0.18, type: 'triangle', gainPeak: 0.14, delay: 0 });
+                    this.playTone({ freq: 329.63, endFreq: 261.63, duration: 0.28, type: 'triangle', gainPeak: 0.14, delay: 0.16 });
                 }
             }
 
-            /**
-             * Chargeur d'assets avec détourage automatique de fond uni sur les sprites.
-             */
+            // =========================================================================
+            // 2. CHARGEUR D'ASSETS & GÉNÉRATEUR DE SPRITES DE SECOURS
+            // =========================================================================
             class AssetLoader {
                 constructor() {
-                    this.frames = [];
-                    this.framesLoadedCount = 0;
-                    this.obstacleSprites = [];
-                    this.holeSprite = null;
-                    this.bgImage = null;
-                    this.bgLoaded = false;
-                    this.welcomeUrl = null;
-                    this.gameOverUrl = null;
+                    this.images = {
+                        background: null,
+                        gameOver: null,
+                        hole: null,
+                        cyclistFrames: [],
+                        obstacles: [],
+                        pickups: []
+                    };
+                    this.loadedCount = 0;
+                    this.totalAttempted = 0;
                 }
 
-                loadImageWithFallback(urls) {
+                tryLoadImage(candidates, { removeWhiteBg = false } = {}) {
                     return new Promise((resolve) => {
                         let idx = 0;
-                        const tryNext = () => {
-                            if (idx >= urls.length) {
+                        const next = () => {
+                            if (idx >= candidates.length) {
                                 resolve(null);
                                 return;
                             }
-                            const url = urls[idx++];
+                            const url = candidates[idx++];
+                            this.totalAttempted++;
                             const img = new Image();
-                            img.onload = () => resolve({ img, url });
-                            img.onerror = tryNext;
+                            img.onload = () => {
+                                this.loadedCount++;
+                                const finalImg = removeWhiteBg ? this.stripWhiteBackground(img) : img;
+                                resolve(finalImg);
+                            };
+                            img.onerror = () => {
+                                next();
+                            };
                             img.src = url;
                         };
-                        tryNext();
+                        next();
                     });
                 }
 
-                keyOutBackground(img) {
+                stripWhiteBackground(img) {
                     try {
                         const w = img.naturalWidth || img.width;
                         const h = img.naturalHeight || img.height;
@@ -632,13 +590,13 @@
                         const imgData = octx.getImageData(0, 0, w, h);
                         const data = imgData.data;
 
+                        // Vérifie si les coins sont clairs/blancs afin de ne pas altérer les photos/fonds pleins
                         const corners = [
                             [0, 0],
                             [w - 1, 0],
                             [0, h - 1],
                             [w - 1, h - 1]
                         ];
-
                         const isCornerLightOrUniform = corners.every(([cx, cy]) => {
                             const p = (cy * w + cx) * 4;
                             const r = data[p];
@@ -646,62 +604,86 @@
                             const b = data[p + 2];
                             const maxC = Math.max(r, g, b);
                             const minC = Math.min(r, g, b);
-                            return maxC > 228 && (maxC - minC) < 24;
+                            return maxC > 224 && (maxC - minC) < 28;
                         });
 
                         if (!isCornerLightOrUniform) {
                             return img;
                         }
 
-                        const bgR = data[0];
-                        const bgG = data[1];
-                        const bgB = data[2];
-
+                        // Détourage multi-passes : supprime le fond extérieur puis les poches blanches
+                        // piégées entre le garçon, le cadre du vélo, les bras et les roues
                         const visited = new Uint8Array(w * h);
                         const queue = new Int32Array(w * h);
-                        let head = 0;
-                        let tail = 0;
 
-                        const matchesBg = (pixelIdx) => {
+                        const isBrightWhiteBg = (pixelIdx) => {
                             const p = pixelIdx * 4;
                             const r = data[p];
                             const g = data[p + 1];
                             const b = data[p + 2];
-                            const dist = Math.abs(r - bgR) + Math.abs(g - bgG) + Math.abs(b - bgB);
-                            const brightness = (r + g + b) / 3;
-                            return dist < 42 && brightness > 235;
+                            const minC = Math.min(r, g, b);
+                            const maxC = Math.max(r, g, b);
+                            const avg = (r + g + b) / 3;
+                            return avg > 236 && minC > 218 && (maxC - minC) < 26;
                         };
 
-                        const pushIfBg = (x, y) => {
-                            if (x < 0 || x >= w || y < 0 || y >= h) return;
-                            const idx = y * w + x;
-                            if (visited[idx]) return;
-                            if (matchesBg(idx)) {
-                                visited[idx] = 1;
-                                queue[tail++] = idx;
+                        const floodFillWhite = (seedPixels) => {
+                            let head = 0;
+                            let tail = 0;
+
+                            for (const sIdx of seedPixels) {
+                                if (sIdx < 0 || sIdx >= w * h || visited[sIdx]) continue;
+                                if (isBrightWhiteBg(sIdx)) {
+                                    visited[sIdx] = 1;
+                                    queue[tail++] = sIdx;
+                                }
+                            }
+
+                            const pushIfMatch = (x, y) => {
+                                if (x < 0 || x >= w || y < 0 || y >= h) return;
+                                const idx = y * w + x;
+                                if (visited[idx]) return;
+                                if (isBrightWhiteBg(idx)) {
+                                    visited[idx] = 1;
+                                    queue[tail++] = idx;
+                                }
+                            };
+
+                            while (head < tail) {
+                                const idx = queue[head++];
+                                const x = idx % w;
+                                const y = (idx - x) / w;
+
+                                pushIfMatch(x + 1, y);
+                                pushIfMatch(x - 1, y);
+                                pushIfMatch(x, y + 1);
+                                pushIfMatch(x, y - 1);
                             }
                         };
 
+                        const borderSeeds = [];
                         for (let x = 0; x < w; x++) {
-                            pushIfBg(x, 0);
-                            pushIfBg(x, h - 1);
+                            borderSeeds.push(x);
+                            borderSeeds.push((h - 1) * w + x);
                         }
                         for (let y = 0; y < h; y++) {
-                            pushIfBg(0, y);
-                            pushIfBg(w - 1, y);
+                            borderSeeds.push(y * w);
+                            borderSeeds.push(y * w + (w - 1));
+                        }
+                        floodFillWhite(borderSeeds);
+
+                        // Deuxième passe : poches blanches internes fermées (cadre du vélo, bras, jambes)
+                        const pocketSeeds = [];
+                        for (let i = 0; i < w * h; i++) {
+                            if (!visited[i] && isBrightWhiteBg(i)) {
+                                pocketSeeds.push(i);
+                            }
+                        }
+                        if (pocketSeeds.length > 0) {
+                            floodFillWhite(pocketSeeds);
                         }
 
-                        while (head < tail) {
-                            const idx = queue[head++];
-                            const x = idx % w;
-                            const y = (idx - x) / w;
-
-                            pushIfBg(x + 1, y);
-                            pushIfBg(x - 1, y);
-                            pushIfBg(x, y + 1);
-                            pushIfBg(x, y - 1);
-                        }
-
+                        // Fondu doux d'anti-aliasing sur les pixels adjacents au fond supprimé
                         for (let i = 0; i < w * h; i++) {
                             if (visited[i]) {
                                 data[i * 4 + 3] = 0;
@@ -710,13 +692,16 @@
                                 const r = data[p];
                                 const g = data[p + 1];
                                 const b = data[p + 2];
+                                const avg = (r + g + b) / 3;
                                 const nearTransparent =
                                     (i % w > 0 && visited[i - 1]) ||
                                     (i % w < w - 1 && visited[i + 1]) ||
                                     (i >= w && visited[i - w]) ||
                                     (i < w * (h - 1) && visited[i + w]);
-                                if (nearTransparent && (r + g + b) / 3 > 215) {
-                                    data[p + 3] = Math.min(data[p + 3], 70);
+
+                                if (nearTransparent && avg > 205) {
+                                    const softness = Math.max(0, Math.min(1, (255 - avg) / 50));
+                                    data[p + 3] = Math.round(data[p + 3] * softness * 0.65);
                                 }
                             }
                         }
@@ -729,204 +714,492 @@
                 }
 
                 async loadAll() {
-                    const framePromises = [];
+                    // Fond et Game Over
+                    this.images.background = await this.tryLoadImage([
+                        'assets/bg-vietnam.png',
+                        'assets/bg-vietnam.jpg',
+                        'assets/background.png',
+                        'assets/background.jpg'
+                    ]);
+
+                    this.images.gameOver = await this.tryLoadImage([
+                        'assets/gameover.jpg',
+                        'assets/gameover.png',
+                        'assets/game-over.jpg',
+                        'assets/game-over.png'
+                    ]);
+
+                    // Trou sur la piste (Trou.jpg en priorité)
+                    this.images.hole = await this.tryLoadImage([
+                        'assets/obstacles/Trou.jpg',
+                        'assets/obstacles/trou.jpg',
+                        'assets/obstacles/Trou.png',
+                        'assets/obstacles/trou.png'
+                    ], { removeWhiteBg: true });
+
+                    // 8 frames d'animation de Ludo à vélo
+                    const cyclistPromises = [];
                     for (let i = 1; i <= 8; i++) {
-                        const candidates = [
-                            `assets/frames/fram${i}.jpg`,
-                            `assets/frames/frame${i}.jpg`,
-                            `assets/frames/fram${i}.png`,
-                            `fram${i}.jpg`
-                        ];
-                        framePromises.push(
-                            this.loadImageWithFallback(candidates).then((res) => {
-                                if (res && res.img) {
-                                    this.frames[i - 1] = this.keyOutBackground(res.img);
-                                    this.framesLoadedCount++;
-                                } else {
-                                    this.frames[i - 1] = null;
-                                }
-                            })
+                        cyclistPromises.push(
+                            this.tryLoadImage([
+                                `assets/cyclist/frame_${i}.png`,
+                                `assets/cyclist/frame-${i}.png`,
+                                `assets/cyclist/cyclist_${i}.png`,
+                                `assets/cyclist/ludo_${i}.png`,
+                                `assets/cyclist/${i}.png`
+                            ], { removeWhiteBg: true }).then((img) => img || this.createCyclistFallbackFrame(i - 1))
                         );
                     }
+                    this.images.cyclistFrames = await Promise.all(cyclistPromises);
 
-                    // Chargement exclusif des obstacles présents sous assets/obstacles/
-                    const obstacleFiles = [
-                        'canard.jpg',
-                        'scooter1.jpg',
-                        'scooter2.jpg',
-                        'scooter3.jpg',
-                        'scooter4.jpg',
-                        'scooter5.jpg',
-                        'scooter6.jpg',
-                        'scooter7.jpg',
-                        'vendeur1.jpg',
-                        'vendeur2.jpg',
-                        'vendeur3.jpg',
-                        'vendeur4.jpg',
-                        'poule.jpg'
+                    // Liste exacte des obstacles fournis dans assets/obstacles/
+                    const customObstacleSpecs = [
+                        { id: 'canard', label: 'Canard', crushable: true, speedFactor: 0.72, file: 'canard.jpg' },
+                        { id: 'scooter1', label: 'Scooter', crushable: false, speedFactor: 1.24, file: 'scooter1.jpg' },
+                        { id: 'scooter2', label: 'Scooter', crushable: false, speedFactor: 1.28, file: 'scooter2.jpg' },
+                        { id: 'scooter3', label: 'Scooter', crushable: false, speedFactor: 1.22, file: 'scooter3.jpg' },
+                        { id: 'scooter4', label: 'Scooter', crushable: false, speedFactor: 1.3, file: 'scooter4.jpg' },
+                        { id: 'scooter5', label: 'Scooter', crushable: false, speedFactor: 1.26, file: 'scooter5.jpg' },
+                        { id: 'scooter6', label: 'Scooter', crushable: false, speedFactor: 1.32, file: 'scooter6.jpg' },
+                        { id: 'scooter7', label: 'Scooter', crushable: false, speedFactor: 1.25, file: 'scooter7.jpg' },
+                        { id: 'vendeur1', label: 'Marchand', crushable: false, speedFactor: 0.52, file: 'vendeur1.jpg' },
+                        { id: 'vendeur2', label: 'Marchand', crushable: false, speedFactor: 0.55, file: 'vendeur2.jpg' },
+                        { id: 'vendeur3', label: 'Marchand', crushable: false, speedFactor: 0.5, file: 'vendeur3.jpg' },
+                        { id: 'vendeur4', label: 'Marchand', crushable: false, speedFactor: 0.54, file: 'vendeur4.jpg' },
+                        { id: 'poule', label: 'Poule', crushable: true, speedFactor: 0.68, file: 'poule.jpg' }
                     ];
 
-                    const seenObstacleFiles = new Set();
-                    const obstaclePromises = obstacleFiles.map((fileName) =>
-                        this.loadImageWithFallback([
-                            `assets/obstacles/${fileName}`
-                        ]).then((res) => {
-                            if (res && res.img) {
-                                const lowerName = fileName.toLowerCase();
-                                if (seenObstacleFiles.has(lowerName)) return;
-                                seenObstacleFiles.add(lowerName);
-
-                                const isCrushable =
-                                    lowerName === 'canard.jpg' ||
-                                    lowerName === 'poule.jpg';
-
-                                this.obstacleSprites.push({
-                                    fileName: lowerName,
-                                    img: this.keyOutBackground(res.img),
-                                    crushable: isCrushable
-                                });
-                            }
-                        })
-                    );
-
-                    const holePromise = this.loadImageWithFallback([
-                        'assets/obstacles/Trou.jpg',
-                        'assets/obstacles/trou.jpg'
-                    ]).then((res) => {
-                        if (res && res.img) {
-                            this.holeSprite = this.keyOutBackground(res.img);
+                    const loadedCustomObstacles = [];
+                    for (const spec of customObstacleSpecs) {
+                        const base = spec.file.replace(/\.(jpg|jpeg|png|webp)$/i, '');
+                        const img = await this.tryLoadImage([
+                            `assets/obstacles/${spec.file}`,
+                            `assets/obstacles/${base}.png`,
+                            `assets/obstacles/${base}.jpeg`,
+                            `assets/obstacles/${base}.webp`
+                        ], { removeWhiteBg: true });
+                        if (img) {
+                            loadedCustomObstacles.push({
+                                id: spec.id,
+                                label: spec.label,
+                                crushable: spec.crushable,
+                                speedFactor: spec.speedFactor,
+                                image: img
+                            });
                         }
-                    });
+                    }
 
-                    const bgPromise = this.loadImageWithFallback([
-                        'assets/backgrounds/fond.png',
-                        'assets/backgrounds/fond.jpeg',
-                        'assets/backgrounds/fond.jpg',
-                        'fond.png',
-                        'fond.jpeg',
-                        'fond.jpg'
-                    ]).then((res) => {
-                        if (res && res.img) {
-                            this.bgImage = res.img;
-                            this.bgLoaded = true;
-                        }
-                    });
+                    // N'utilise que les obstacles trouvés dans assets/obstacles/
+                    this.images.obstacles = loadedCustomObstacles;
 
-                    const welcomePromise = this.loadImageWithFallback([
-                        'assets/backgrounds/accueil.png',
-                        'assets/backgrounds/accueil.jpg',
-                        'accueil.png',
-                        'accueil.jpg'
-                    ]).then((res) => {
-                        if (res && res.url) {
-                            this.welcomeUrl = res.url;
-                        }
-                    });
+                    // Bonus locaux optionnels + fallback illustré gourmand
+                    const pickupSpecs = [
+                        { id: 'mango', label: 'Mangue', points: 20, emoji: '🥭', color: '#f59e0b', files: ['assets/pickups/mango.png', 'assets/pickups/mangue.png', 'assets/bonus/mango.png'] },
+                        { id: 'banhmi', label: 'Bánh mì', points: 25, emoji: '🥖', color: '#eab308', files: ['assets/pickups/banhmi.png', 'assets/pickups/banh_mi.png', 'assets/bonus/banhmi.png'] },
+                        { id: 'coconut', label: 'Noix de coco', points: 30, emoji: '🥥', color: '#0ea5e9', files: ['assets/pickups/coconut.png', 'assets/pickups/coco.png', 'assets/bonus/coconut.png'] },
+                        { id: 'pho', label: 'Phở', points: 40, emoji: '🍜', color: '#ef4444', files: ['assets/pickups/pho.png', 'assets/bonus/pho.png'] }
+                    ];
 
-                    const gameOverPromise = this.loadImageWithFallback([
-                        'assets/backgrounds/gameover.png',
-                        'assets/backgrounds/gameover.jpg',
-                        'gameover.png',
-                        'gameover.jpg'
-                    ]).then((res) => {
-                        if (res && res.url) {
-                            this.gameOverUrl = res.url;
-                        }
-                    });
+                    this.images.pickups = [];
+                    for (const p of pickupSpecs) {
+                        const img = await this.tryLoadImage(p.files, { removeWhiteBg: true });
+                        this.images.pickups.push({
+                            ...p,
+                            image: img || this.createPickupFallback(p)
+                        });
+                    }
 
-                    await Promise.all([
-                        ...framePromises,
-                        ...obstaclePromises,
-                        holePromise,
-                        bgPromise,
-                        welcomePromise,
-                        gameOverPromise
-                    ]);
+                    return this.images;
+                }
+
+                createCyclistFallbackFrame(frameIndex) {
+                    const c = document.createElement('canvas');
+                    c.width = 140;
+                    c.height = 120;
+                    const ctx = c.getContext('2d');
+
+                    const pedalAngle = (frameIndex / 8) * Math.PI * 2;
+                    const bob = Math.sin(pedalAngle * 2) * 2.5;
+
+                    // Ombre sous le vélo
+                    ctx.fillStyle = 'rgba(15, 23, 42, 0.22)';
+                    ctx.beginPath();
+                    ctx.ellipse(70, 108, 44, 7, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Roue arrière
+                    const rearX = 38;
+                    const frontX = 102;
+                    const wheelY = 86 + bob * 0.4;
+                    const wheelR = 19;
+
+                    ctx.strokeStyle = '#1e293b';
+                    ctx.lineWidth = 4.5;
+                    ctx.beginPath();
+                    ctx.arc(rearX, wheelY, wheelR, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.arc(frontX, wheelY, wheelR, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    // Rayons tournants
+                    ctx.strokeStyle = '#94a3b8';
+                    ctx.lineWidth = 1.5;
+                    for (let s = 0; s < 4; s++) {
+                        const a = pedalAngle + (s * Math.PI) / 4;
+                        ctx.beginPath();
+                        ctx.moveTo(rearX + Math.cos(a) * wheelR, wheelY + Math.sin(a) * wheelR);
+                        ctx.lineTo(rearX - Math.cos(a) * wheelR, wheelY - Math.sin(a) * wheelR);
+                        ctx.stroke();
+
+                        ctx.beginPath();
+                        ctx.moveTo(frontX + Math.cos(a) * wheelR, wheelY + Math.sin(a) * wheelR);
+                        ctx.lineTo(frontX - Math.cos(a) * wheelR, wheelY - Math.sin(a) * wheelR);
+                        ctx.stroke();
+                    }
+
+                    // Cadre du vélo (vert émeraude & jaune)
+                    const crankX = 68;
+                    const crankY = 84 + bob * 0.5;
+                    const seatX = 56;
+                    const seatY = 62 + bob;
+                    const steerX = 92;
+                    const steerY = 58 + bob;
+
+                    ctx.strokeStyle = '#10b981';
+                    ctx.lineWidth = 4;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    ctx.beginPath();
+                    ctx.moveTo(rearX, wheelY);
+                    ctx.lineTo(crankX, crankY);
+                    ctx.lineTo(steerX, steerY);
+                    ctx.lineTo(seatX, seatY);
+                    ctx.closePath();
+                    ctx.stroke();
+
+                    // Fourche avant & guidon
+                    ctx.beginPath();
+                    ctx.moveTo(steerX, steerY - 6);
+                    ctx.lineTo(steerX, steerY);
+                    ctx.lineTo(frontX, wheelY);
+                    ctx.stroke();
+
+                    ctx.strokeStyle = '#334155';
+                    ctx.lineWidth = 4;
+                    ctx.beginPath();
+                    ctx.moveTo(steerX - 4, steerY - 6);
+                    ctx.lineTo(steerX + 6, steerY - 6);
+                    ctx.stroke();
+
+                    // Selle
+                    ctx.fillStyle = '#78350f';
+                    ctx.beginPath();
+                    ctx.roundRect(seatX - 8, seatY - 5, 16, 6, 3);
+                    ctx.fill();
+
+                    // Jambe arrière / avant selon pédalage
+                    const footX = crankX + Math.cos(pedalAngle) * 9;
+                    const footY = crankY + Math.sin(pedalAngle) * 9;
+                    const foot2X = crankX + Math.cos(pedalAngle + Math.PI) * 9;
+                    const foot2Y = crankY + Math.sin(pedalAngle + Math.PI) * 9;
+
+                    ctx.strokeStyle = '#1d4ed8';
+                    ctx.lineWidth = 5;
+                    ctx.beginPath();
+                    ctx.moveTo(seatX + 2, seatY + 2);
+                    ctx.lineTo(foot2X, foot2Y);
+                    ctx.stroke();
+
+                    // Torse de Ludo
+                    const torsoTopX = 64;
+                    const torsoTopY = 38 + bob;
+                    ctx.strokeStyle = '#f97316';
+                    ctx.lineWidth = 11;
+                    ctx.beginPath();
+                    ctx.moveTo(seatX + 2, seatY);
+                    ctx.lineTo(torsoTopX, torsoTopY);
+                    ctx.stroke();
+
+                    // Jambe avant
+                    ctx.strokeStyle = '#2563eb';
+                    ctx.lineWidth = 5.5;
+                    ctx.beginPath();
+                    ctx.moveTo(seatX + 4, seatY + 2);
+                    ctx.lineTo(footX, footY);
+                    ctx.stroke();
+
+                    // Bras vers le guidon
+                    ctx.strokeStyle = '#fed7aa';
+                    ctx.lineWidth = 4.5;
+                    ctx.beginPath();
+                    ctx.moveTo(torsoTopX + 2, torsoTopY + 3);
+                    ctx.lineTo(steerX + 2, steerY - 5);
+                    ctx.stroke();
+
+                    // Tête de Ludo
+                    const headX = torsoTopX + 4;
+                    const headY = torsoTopY - 11;
+                    ctx.fillStyle = '#fed7aa';
+                    ctx.beginPath();
+                    ctx.arc(headX, headY, 9.5, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Œil & sourire
+                    ctx.fillStyle = '#0f172a';
+                    ctx.beginPath();
+                    ctx.arc(headX + 3.5, headY - 1, 1.8, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Casquette / chapeau conique stylisé
+                    ctx.fillStyle = '#facc15';
+                    ctx.beginPath();
+                    ctx.moveTo(headX - 15, headY - 4);
+                    ctx.lineTo(headX + 1, headY - 17);
+                    ctx.lineTo(headX + 16, headY - 4);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.strokeStyle = '#ca8a04';
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+
+                    return c;
+                }
+
+                createPickupFallback(pickup) {
+                    const c = document.createElement('canvas');
+                    c.width = 64;
+                    c.height = 64;
+                    const ctx = c.getContext('2d');
+
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+                    ctx.beginPath();
+                    ctx.arc(32, 32, 26, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.strokeStyle = pickup.color || '#f59e0b';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+
+                    ctx.font = '30px "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(pickup.emoji || '🥭', 32, 34);
+
+                    return c;
                 }
             }
 
-            /**
-             * Moteur de jeu principal : 3 voies, physique de saut/chute, collisions et rendu.
-             */
-            class GameEngine {
-                constructor(canvas, assets, sound) {
-                    this.canvas = canvas;
-                    this.ctx = canvas.getContext('2d');
-                    this.assets = assets;
-                    this.sound = sound;
+            // =========================================================================
+            // 3. MOTEUR PRINCIPAL DU JEU (3 VOIES, COLLISIONS, SONNETTE, PARTICULES)
+            // =========================================================================
+            class LudoBikeGame {
+                constructor() {
+                    this.canvas = document.getElementById('gameCanvas');
+                    this.ctx = this.canvas.getContext('2d');
+                    this.sound = new SoundManager();
+                    this.loader = new AssetLoader();
 
-                    this.state = 'MENU';
+                    this.state = 'MENU'; // 'MENU' | 'PLAYING' | 'PAUSED' | 'GAMEOVER'
                     this.width = window.innerWidth;
                     this.height = window.innerHeight;
                     this.dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-                    this.laneCount = 3;
-                    this.laneY = [];
-                    this.roadTop = 0;
-                    this.roadBottom = 0;
-
-                    this.baseSpeed = 235;
+                    // Paramètres de progression
+                    this.baseSpeed = 310;
                     this.speed = this.baseSpeed;
-                    this.maxSpeed = 490;
+                    this.maxSpeed = 760;
                     this.distance = 0;
                     this.score = 0;
-                    this.bestScore = Number(localStorage.getItem('ludo_vietnam_best_score') || '0');
+                    this.bestScore = this.loadBestScore();
+                    this.top10Scores = this.loadTop10Scores();
                     this.basketCount = 0;
                     this.lives = 3;
                     this.maxLives = 3;
 
+                    // Joueur (3 voies : 0 = haute, 1 = milieu, 2 = basse)
+                    this.laneCount = 3;
                     this.player = {
-                        x: 110,
-                        y: 0,
-                        targetY: 0,
                         lane: 1,
-                        z: 0,
-                        vz: 0,
-                        gravity: 1680,
-                        jumpVelocity: 560,
+                        x: 150,
+                        y: 0,
+                        z: 0,          // hauteur de saut au-dessus du sol
+                        vz: 0,         // vitesse verticale de saut
+                        isJumping: false,
                         animFrame: 0,
                         invulnTimer: 0,
-                        bellAnimTimer: 0,
-                        fallingHole: false,
-                        fallProgress: 0,
-                        tiltAngle: 0
+                        bellCooldown: 0,
+                        bellWaveTimer: 0,
+                        bellWaveRadius: 0,
+                        fallingHole: null
                     };
 
+                    // Entités sur le chemin
                     this.obstacles = [];
                     this.holes = [];
                     this.pickups = [];
                     this.particles = [];
-                    this.shockwaves = [];
+                    this.floatingTexts = [];
 
-                    this.obstacleSpawnTimer = 1.2;
+                    // Minuteurs d'apparition
+                    this.obstacleSpawnTimer = 1.1;
                     this.holeSpawnTimer = 2.8;
-                    this.pickupSpawnTimer = 1.5;
-                    this.bgScrollX = 0;
-                    this.worldTime = 0;
+                    this.pickupSpawnTimer = 1.4;
+                    this.sceneryOffset = 0;
                     this.toastTimeout = null;
-                    this.lastTimestamp = 0;
 
+                    // Références DOM
                     this.ui = {
-                        hudTop: document.getElementById('hudTop'),
-                        hudScore: document.getElementById('hudScore'),
-                        hudDistance: document.getElementById('hudDistance'),
-                        hudBasket: document.getElementById('hudBasket'),
-                        hudLives: document.getElementById('hudLives'),
+                        startScreen: document.getElementById('startScreen'),
+                        hudBar: document.getElementById('hudBar'),
                         touchControls: document.getElementById('touchControls'),
-                        startOverlay: document.getElementById('startOverlay'),
-                        pauseOverlay: document.getElementById('pauseOverlay'),
-                        gameOverOverlay: document.getElementById('gameOverOverlay'),
+                        pauseModal: document.getElementById('pauseModal'),
+                        gameOverModal: document.getElementById('gameOverModal'),
+                        livesContainer: document.getElementById('livesContainer'),
+                        basketCount: document.getElementById('basketCount'),
+                        scoreValue: document.getElementById('scoreValue'),
+                        distanceValue: document.getElementById('distanceValue'),
+                        bestScoreValue: document.getElementById('bestScoreValue'),
+                        startBestScore: document.getElementById('startBestScore'),
+                        assetsStatus: document.getElementById('assetsStatus'),
+                        muteIcon: document.getElementById('muteIcon'),
+                        muteLabel: document.getElementById('muteLabel'),
+                        startMuteIcon: document.getElementById('startMuteIcon'),
+                        startMuteText: document.getElementById('startMuteText'),
+                        pauseIcon: document.getElementById('pauseIcon'),
+                        pauseLabel: document.getElementById('pauseLabel'),
                         finalScore: document.getElementById('finalScore'),
                         finalBest: document.getElementById('finalBest'),
                         finalDistance: document.getElementById('finalDistance'),
+                        top10List: document.getElementById('top10List'),
                         gameOverReason: document.getElementById('gameOverReason'),
                         toastBanner: document.getElementById('toastBanner'),
                         toastText: document.getElementById('toastText'),
                         bgImage: document.getElementById('bgImage')
                     };
 
+                    this.renderTop10List();
                     this.resize();
                     this.bindEvents();
+                }
+
+                loadBestScore() {
+                    try {
+                        const val = localStorage.getItem('ludo_vietnam_best_score');
+                        return val ? Math.max(0, parseInt(val, 10) || 0) : 0;
+                    } catch (err) {
+                        return 0;
+                    }
+                }
+
+                saveBestScore() {
+                    try {
+                        localStorage.setItem('ludo_vietnam_best_score', String(this.bestScore));
+                    } catch (err) {}
+                }
+
+                loadTop10Scores() {
+                    try {
+                        const raw = localStorage.getItem('ludo_vietnam_top10_scores');
+                        const parsed = raw ? JSON.parse(raw) : [];
+                        if (!Array.isArray(parsed)) return [];
+                        return parsed
+                            .map((entry) => ({
+                                score: Number(entry.score) || 0,
+                                distance: Number(entry.distance) || 0,
+                                date: entry.date || ''
+                            }))
+                            .filter((entry) => entry.score > 0)
+                            .sort((a, b) => b.score - a.score)
+                            .slice(0, 10);
+                    } catch (err) {
+                        return [];
+                    }
+                }
+
+                recordTop10Score(scoreVal, distanceVal) {
+                    const cleanScore = Math.max(0, Math.floor(scoreVal));
+                    const cleanDist = Math.max(0, Math.floor(distanceVal));
+                    if (cleanScore <= 0) return this.loadTop10Scores();
+
+                    const nowLabel = new Date().toLocaleDateString('fr-FR', {
+                        day: '2-digit',
+                        month: '2-digit'
+                    });
+                    const list = this.loadTop10Scores();
+                    list.push({
+                        score: cleanScore,
+                        distance: cleanDist,
+                        date: nowLabel
+                    });
+                    list.sort((a, b) => b.score - a.score);
+                    const top10 = list.slice(0, 10);
+                    this.top10Scores = top10;
+
+                    try {
+                        localStorage.setItem('ludo_vietnam_top10_scores', JSON.stringify(top10));
+                    } catch (err) {}
+
+                    return top10;
+                }
+
+                renderTop10List(highlightScore = null) {
+                    if (!this.ui.top10List) return;
+                    const scores = this.loadTop10Scores();
+
+                    if (!scores.length) {
+                        this.ui.top10List.innerHTML = '<li class="col-span-2 text-slate-500 py-1">Aucun score enregistré pour le moment.</li>';
+                        return;
+                    }
+
+                    let highlightedUsed = false;
+                    this.ui.top10List.innerHTML = scores
+                        .map((item, idx) => {
+                            const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}.`;
+                            const isCurrent =
+                                highlightScore !== null &&
+                                !highlightedUsed &&
+                                item.score === highlightScore;
+                            if (isCurrent) {
+                                highlightedUsed = true;
+                            }
+                            const rowClass = isCurrent
+                                ? 'bg-amber-200/80 text-amber-950 rounded-lg px-1.5 py-0.5 flex items-center justify-between gap-1 border border-amber-400'
+                                : 'px-1.5 py-0.5 flex items-center justify-between gap-1 text-slate-800';
+
+                            return `<li class="${rowClass}">
+                                <span class="truncate"><span class="mr-1">${medal}</span><strong>${item.score}</strong> pts</span>
+                                <span class="text-[10px] text-slate-500 shrink-0">${item.distance} m</span>
+                            </li>`;
+                        })
+                        .join('');
+                }
+
+                async init() {
+                    await this.loader.loadAll();
+
+                    // Applique l'image de fond si présente
+                    if (this.loader.images.background && this.loader.images.background.src) {
+                        this.ui.bgImage.src = this.loader.images.background.src;
+                        this.ui.bgImage.classList.remove('opacity-0');
+                        this.ui.bgImage.classList.add('opacity-35');
+                    }
+
+                    // Prépare l'image Game Over si présente
+                    const goImg = document.getElementById('gameOverImg');
+                    if (goImg && this.loader.images.gameOver && this.loader.images.gameOver.src) {
+                        goImg.src = this.loader.images.gameOver.src;
+                    }
+
+                    const obsCount = this.loader.images.obstacles.length;
+                    this.ui.assetsStatus.textContent = obsCount > 0
+                        ? `Sprites prêts • ${obsCount} obstacle(s) chargé(s)`
+                        : 'Sprites prêts • Mode arcade actif';
+
+                    this.updateHud();
+                    this.lastTimestamp = performance.now();
+                    requestAnimationFrame((ts) => this.loop(ts));
                 }
 
                 resize() {
@@ -938,1060 +1211,1011 @@
                     this.canvas.height = Math.floor(this.height * this.dpr);
                     this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
 
-                    // Abaissement d'environ 2 cm (~76 px) des 3 voies sur la piste
-                    const isCompact = this.width < 640;
-                    const lowerOffsetPx = 76;
-                    this.roadTop = this.height * (isCompact ? 0.50 : 0.48) + lowerOffsetPx;
-                    this.roadBottom = this.height * (isCompact ? 0.67 : 0.72) + lowerOffsetPx;
+                    // Position horizontale confortable pour Ludo (un peu à gauche du centre)
+                    this.player.x = Math.max(96, Math.min(230, this.width * 0.2));
+                }
 
-                    const usableRoadH = Math.max(66, this.roadBottom - this.roadTop);
-                    this.laneY = [];
-                    for (let i = 0; i < this.laneCount; i++) {
-                        const ratio = 0.14 + (i / (this.laneCount - 1)) * 0.72;
-                        this.laneY.push(this.roadTop + usableRoadH * ratio);
-                    }
-
-                    this.player.x = Math.max(82, Math.min(this.width * 0.24, 160));
-                    if (this.laneY.length > 0) {
-                        const clampedLane = Math.max(0, Math.min(this.laneCount - 1, this.player.lane));
-                        this.player.y = this.laneY[clampedLane];
-                        this.player.targetY = this.laneY[clampedLane];
-                    }
-
-                    this.obstacles.forEach((obs) => {
-                        obs.y = this.laneY[obs.lane] ?? obs.y;
-                    });
-                    this.holes.forEach((hole) => {
-                        hole.y = this.laneY[hole.lane] ?? hole.y;
-                    });
-                    this.pickups.forEach((pk) => {
-                        pk.y = this.laneY[pk.lane] ?? pk.y;
-                    });
+                getRoadMetrics() {
+                    // Chemin de terre occupant la moitié inférieure de l'écran, abaissé d'environ 2 cm (~76 px)
+                    const laneDropOffset = 76;
+                    const roadTop = Math.min(this.height - 150, Math.max(this.height * 0.46 + laneDropOffset, 190));
+                    const roadBottom = Math.min(this.height - 20, Math.max(this.height * 0.84 + laneDropOffset, roadTop + 120));
+                    const roadHeight = roadBottom - roadTop;
+                    const laneHeight = roadHeight / this.laneCount;
+                    const laneCenters = [
+                        roadTop + laneHeight * 0.5,
+                        roadTop + laneHeight * 1.5,
+                        roadTop + laneHeight * 2.5
+                    ];
+                    return { roadTop, roadBottom, roadHeight, laneHeight, laneCenters };
                 }
 
                 bindEvents() {
                     window.addEventListener('resize', () => this.resize());
 
-                    window.addEventListener('keydown', (e) => {
-                        if (e.repeat) return;
-                        this.sound.ensureContext();
-                        this.sound.speakVietnameseGreeting(false);
+                    // Boutons d'écran d'accueil
+                    document.getElementById('btnStart').addEventListener('click', () => this.startGame());
+                    document.getElementById('btnStartMute').addEventListener('click', () => this.toggleMute());
 
-                        if (this.state === 'MENU' && (e.code === 'Space' || e.code === 'Enter')) {
-                            e.preventDefault();
-                            this.startGame();
+                    // Boutons HUD
+                    document.getElementById('btnMute').addEventListener('click', () => this.toggleMute());
+                    document.getElementById('btnPause').addEventListener('click', () => this.togglePause());
+
+                    // Boutons Pause
+                    document.getElementById('btnResume').addEventListener('click', () => this.resumeGame());
+                    document.getElementById('btnRestartPause').addEventListener('click', () => this.startGame());
+                    document.getElementById('btnQuitToMenu').addEventListener('click', () => this.goToMenu());
+
+                    // Boutons Game Over
+                    document.getElementById('btnRetry').addEventListener('click', () => this.startGame());
+                    document.getElementById('btnGameOverHome').addEventListener('click', () => this.goToMenu());
+
+                    // Contrôles tactiles / souris
+                    this.bindHoldButton('btnUp', () => this.changeLane(-1));
+                    this.bindHoldButton('btnDown', () => this.changeLane(1));
+                    this.bindHoldButton('btnJump', () => this.jump());
+                    this.bindHoldButton('btnBell', () => this.ringBell());
+
+                    // Clavier
+                    window.addEventListener('keydown', (e) => {
+                        if (e.repeat && (e.code === 'ArrowUp' || e.code === 'ArrowDown' || e.code === 'Space' || e.code === 'KeyB')) {
                             return;
                         }
 
-                        if (this.state === 'GAMEOVER' && (e.code === 'Space' || e.code === 'Enter')) {
-                            e.preventDefault();
-                            this.startGame();
+                        if (this.state === 'MENU') {
+                            if (e.code === 'Enter' || e.code === 'Space') {
+                                e.preventDefault();
+                                this.startGame();
+                            }
                             return;
                         }
 
                         if (e.code === 'Escape' || e.code === 'KeyP') {
-                            if (this.state === 'PLAYING') this.pauseGame();
-                            else if (this.state === 'PAUSED') this.resumeGame();
+                            if (this.state === 'PLAYING' || this.state === 'PAUSED') {
+                                e.preventDefault();
+                                this.togglePause();
+                            }
                             return;
                         }
 
                         if (this.state !== 'PLAYING') return;
 
-                        if (e.code === 'ArrowUp' || e.code === 'KeyW') {
-                            e.preventDefault();
-                            this.changeLane(-1);
-                            this.pulseButton('btnLaneUp');
-                        } else if (e.code === 'ArrowDown' || e.code === 'KeyS') {
-                            e.preventDefault();
-                            this.changeLane(1);
-                            this.pulseButton('btnLaneDown');
-                        } else if (e.code === 'Space' || e.code === 'ArrowUpJump') {
-                            e.preventDefault();
-                            this.jump();
-                            this.pulseButton('btnJump');
-                        } else if (e.code === 'KeyB' || e.code === 'KeyH' || e.code === 'Enter') {
-                            e.preventDefault();
-                            this.ringBell();
-                            this.pulseButton('btnBell');
+                        switch (e.code) {
+                            case 'ArrowUp':
+                            case 'KeyW':
+                                e.preventDefault();
+                                this.changeLane(-1);
+                                this.flashButton('btnUp');
+                                break;
+                            case 'ArrowDown':
+                            case 'KeyS':
+                                e.preventDefault();
+                                this.changeLane(1);
+                                this.flashButton('btnDown');
+                                break;
+                            case 'Space':
+                                e.preventDefault();
+                                this.jump();
+                                this.flashButton('btnJump');
+                                break;
+                            case 'KeyB':
+                            case 'ShiftLeft':
+                            case 'ShiftRight':
+                                e.preventDefault();
+                                this.ringBell();
+                                this.flashButton('btnBell');
+                                break;
                         }
                     });
+                }
 
-                    const bindControlButton = (id, action) => {
-                        const btn = document.getElementById(id);
-                        if (!btn) return;
-                        const trigger = (ev) => {
-                            ev.preventDefault();
-                            ev.stopPropagation();
-                            this.sound.ensureContext();
-                            this.sound.speakVietnameseGreeting(false);
-                            btn.classList.add('is-pressed');
-                            setTimeout(() => btn.classList.remove('is-pressed'), 120);
-                            if (this.state === 'PLAYING') {
-                                action();
-                            }
-                        };
-                        btn.addEventListener('pointerdown', trigger, { passive: false });
+                bindHoldButton(id, action) {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+
+                    const trigger = (e) => {
+                        e.preventDefault();
+                        el.classList.add('is-pressed');
+                        action();
+                    };
+                    const release = () => {
+                        el.classList.remove('is-pressed');
                     };
 
-                    bindControlButton('btnLaneUp', () => this.changeLane(-1));
-                    bindControlButton('btnLaneDown', () => this.changeLane(1));
-                    bindControlButton('btnJump', () => this.jump());
-                    bindControlButton('btnBell', () => this.ringBell());
-
-                    document.getElementById('btnStartGame').addEventListener('click', () => {
-                        this.sound.ensureContext();
-                        this.startGame();
-                    });
-
-                    document.getElementById('btnRetry').addEventListener('click', () => {
-                        this.sound.ensureContext();
-                        this.startGame();
-                    });
-
-                    document.getElementById('btnGameOverHome').addEventListener('click', () => {
-                        this.goToMenu();
-                    });
-
-                    document.getElementById('btnPause').addEventListener('click', () => {
-                        if (this.state === 'PLAYING') this.pauseGame();
-                    });
-
-                    document.getElementById('btnResume').addEventListener('click', () => {
-                        if (this.state === 'PAUSED') this.resumeGame();
-                    });
-
-                    document.getElementById('btnPauseRestart').addEventListener('click', () => {
-                        this.startGame();
-                    });
-
-                    document.getElementById('btnPauseHome').addEventListener('click', () => {
-                        this.goToMenu();
-                    });
-
-                    const btnMute = document.getElementById('btnMute');
-                    btnMute.addEventListener('click', () => {
-                        this.sound.setMuted(!this.sound.muted);
-                        btnMute.textContent = this.sound.muted ? '🔇' : '🔊';
-                        if (!this.sound.muted) {
-                            this.sound.ensureContext();
-                            this.showToast('Son activé');
-                        }
-                    });
+                    el.addEventListener('pointerdown', trigger);
+                    el.addEventListener('pointerup', release);
+                    el.addEventListener('pointerleave', release);
+                    el.addEventListener('pointercancel', release);
                 }
 
-                pulseButton(id) {
-                    const btn = document.getElementById(id);
-                    if (!btn) return;
-                    btn.classList.add('is-pressed');
-                    setTimeout(() => btn.classList.remove('is-pressed'), 120);
+                flashButton(id) {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    el.classList.add('is-pressed');
+                    setTimeout(() => el.classList.remove('is-pressed'), 120);
                 }
 
-                showToast(message) {
-                    if (!this.ui.toastBanner || !this.ui.toastText) return;
-                    this.ui.toastText.textContent = message;
+                toggleMute() {
+                    this.sound.setMuted(!this.sound.muted);
+                    const isMuted = this.sound.muted;
+
+                    this.ui.muteIcon.textContent = isMuted ? '🔇' : '🔊';
+                    this.ui.muteLabel.textContent = isMuted ? 'Muet' : 'Son';
+                    this.ui.startMuteIcon.textContent = isMuted ? '🔇' : '🔊';
+                    this.ui.startMuteText.textContent = isMuted ? 'Sons coupés' : 'Sons actifs';
+                }
+
+                showToast(text, icon = '🔔') {
+                    this.ui.toastIcon.textContent = icon;
+                    this.ui.toastText.textContent = text;
                     this.ui.toastBanner.classList.remove('opacity-0', '-translate-y-2');
                     this.ui.toastBanner.classList.add('opacity-100', 'translate-y-0');
 
-                    clearTimeout(this.toastTimeout);
+                    if (this.toastTimeout) {
+                        clearTimeout(this.toastTimeout);
+                    }
                     this.toastTimeout = setTimeout(() => {
                         this.ui.toastBanner.classList.remove('opacity-100', 'translate-y-0');
                         this.ui.toastBanner.classList.add('opacity-0', '-translate-y-2');
-                    }, 1800);
+                    }, 1500);
+                }
+
+                hideGameOverModal() {
+                    this.ui.gameOverModal.classList.add('hidden');
+                    this.ui.gameOverModal.classList.remove('flex');
+                    this.ui.gameOverModal.style.display = 'none';
+                }
+
+                showGameOverModal() {
+                    this.ui.gameOverModal.classList.remove('hidden');
+                    this.ui.gameOverModal.classList.add('flex');
+                    this.ui.gameOverModal.style.display = 'flex';
                 }
 
                 startGame() {
-                    this.state = 'PLAYING';
+                    this.sound.ensureContext();
+                    this.sound.setBackgroundMusicActive(true);
+
+                    // Réinitialisation complète de la partie
                     this.speed = this.baseSpeed;
                     this.distance = 0;
                     this.score = 0;
                     this.basketCount = 0;
                     this.lives = this.maxLives;
 
+                    const { laneCenters } = this.getRoadMetrics();
                     this.player.lane = 1;
-                    this.player.y = this.laneY[1] || this.height * 0.58;
-                    this.player.targetY = this.player.y;
+                    this.player.y = laneCenters[1];
                     this.player.z = 0;
                     this.player.vz = 0;
+                    this.player.isJumping = false;
                     this.player.animFrame = 0;
                     this.player.invulnTimer = 0;
-                    this.player.bellAnimTimer = 0;
-                    this.player.fallingHole = false;
-                    this.player.fallProgress = 0;
-                    this.player.tiltAngle = 0;
+                    this.player.bellCooldown = 0;
+                    this.player.bellWaveTimer = 0;
+                    this.player.bellWaveRadius = 0;
+                    this.player.fallingHole = null;
 
                     this.obstacles = [];
                     this.holes = [];
                     this.pickups = [];
                     this.particles = [];
-                    this.shockwaves = [];
+                    this.floatingTexts = [];
 
-                    this.obstacleSpawnTimer = 1.0;
-                    this.holeSpawnTimer = 2.6;
-                    this.pickupSpawnTimer = 1.4;
+                    this.obstacleSpawnTimer = 0.9;
+                    this.holeSpawnTimer = 2.4;
+                    this.pickupSpawnTimer = 1.1;
 
-                    this.ui.startOverlay.classList.add('hidden');
-                    this.ui.pauseOverlay.classList.add('hidden');
-                    this.ui.gameOverOverlay.classList.add('hidden');
-                    this.ui.gameOverOverlay.style.display = 'none';
-                    this.ui.hudTop.classList.remove('hidden');
+                    this.state = 'PLAYING';
+                    this.ui.startScreen.classList.add('hidden');
+                    this.ui.pauseModal.classList.add('hidden');
+                    this.ui.pauseModal.classList.remove('flex');
+                    this.hideGameOverModal();
+
+                    this.ui.hudBar.classList.remove('hidden');
                     this.ui.touchControls.classList.remove('hidden');
+                    this.ui.pauseIcon.textContent = '⏸️';
+                    this.ui.pauseLabel.textContent = 'Pause';
 
-                    this.sound.setBackgroundMusicActive(true);
-                    this.lastTimestamp = performance.now();
                     this.updateHud();
-                    this.showToast('Xin chào ! C’est parti !');
+                    this.showToast('En avant Ludo ! Évite les trous et obstacles !', '🚴‍♂️');
                 }
 
-                goToMenu() {
-                    this.state = 'MENU';
-                    this.sound.setBackgroundMusicActive(false);
-                    this.ui.hudTop.classList.add('hidden');
-                    this.ui.touchControls.classList.add('hidden');
-                    this.ui.pauseOverlay.classList.add('hidden');
-                    this.ui.gameOverOverlay.classList.add('hidden');
-                    this.ui.gameOverOverlay.style.display = 'none';
-                    this.ui.startOverlay.classList.remove('hidden');
-                    this.sound.speakVietnameseGreeting(false);
-                }
-
-                pauseGame() {
-                    if (this.state !== 'PLAYING') return;
-                    this.state = 'PAUSED';
-                    this.sound.setBackgroundMusicActive(false);
-                    this.ui.pauseOverlay.classList.remove('hidden');
+                togglePause() {
+                    if (this.state === 'PLAYING') {
+                        this.state = 'PAUSED';
+                        this.sound.setBackgroundMusicActive(false);
+                        this.ui.pauseModal.classList.remove('hidden');
+                        this.ui.pauseModal.classList.add('flex');
+                        this.ui.pauseIcon.textContent = '▶️';
+                        this.ui.pauseLabel.textContent = 'Reprendre';
+                    } else if (this.state === 'PAUSED') {
+                        this.resumeGame();
+                    }
                 }
 
                 resumeGame() {
                     if (this.state !== 'PAUSED') return;
                     this.state = 'PLAYING';
                     this.sound.setBackgroundMusicActive(true);
+                    this.ui.pauseModal.classList.add('hidden');
+                    this.ui.pauseModal.classList.remove('flex');
+                    this.ui.pauseIcon.textContent = '⏸️';
+                    this.ui.pauseLabel.textContent = 'Pause';
                     this.lastTimestamp = performance.now();
-                    this.ui.pauseOverlay.classList.add('hidden');
+                }
+
+                goToMenu() {
+                    this.state = 'MENU';
+                    this.sound.setBackgroundMusicActive(false);
+                    this.ui.hudBar.classList.add('hidden');
+                    this.ui.touchControls.classList.add('hidden');
+                    this.ui.pauseModal.classList.add('hidden');
+                    this.ui.pauseModal.classList.remove('flex');
+                    this.hideGameOverModal();
+                    this.ui.startScreen.classList.remove('hidden');
+                    this.updateHud();
+                }
+
+                changeLane(delta) {
+                    if (this.state !== 'PLAYING' || this.player.fallingHole) return;
+                    const nextLane = Math.max(0, Math.min(this.laneCount - 1, this.player.lane + delta));
+                    if (nextLane !== this.player.lane) {
+                        this.player.lane = nextLane;
+                        this.sound.playLaneSwitch();
+                        this.spawnDust(this.player.x - 10, this.player.y + 18, 5, '#e2e8f0');
+                    }
+                }
+
+                jump() {
+                    if (this.state !== 'PLAYING' || this.player.fallingHole) return;
+                    if (!this.player.isJumping && this.player.z <= 1) {
+                        this.player.isJumping = true;
+                        this.player.vz = 540;
+                        this.sound.playJump();
+                        this.spawnDust(this.player.x, this.player.y + 20, 8, '#fde68a');
+                    }
+                }
+
+                ringBell() {
+                    if (this.state !== 'PLAYING' || this.player.fallingHole) return;
+                    if (this.player.bellCooldown > 0) return;
+
+                    this.player.bellCooldown = 0.85;
+                    this.player.bellWaveTimer = 0.45;
+                    this.player.bellWaveRadius = 24;
+                    this.sound.playBell();
+
+                    // Effraie / alerte les obstacles proches sur la même voie ou une voie adjacente
+                    let alertedCount = 0;
+                    for (const obs of this.obstacles) {
+                        if (obs.alerted || obs.crushed) continue;
+                        const dx = obs.x - this.player.x;
+                        const laneDiff = Math.abs(obs.lane - this.player.lane);
+                        if (dx > -20 && dx < 320 && laneDiff <= 1) {
+                            obs.alerted = true;
+                            obs.alertTimer = 1.2;
+                            // Les obstacles rapides ralentissent ou s'écartent légèrement
+                            obs.speedOffset = obs.crushable ? 35 : -55;
+                            alertedCount++;
+                            this.addFloatingText(obs.x, obs.y - 36, 'Dring! +15', '#facc15');
+                        }
+                    }
+
+                    if (alertedCount > 0) {
+                        this.score += alertedCount * 15;
+                        this.updateHud();
+                        this.showToast(`Dring ! ${alertedCount} obstacle(s) alerté(s) (+${alertedCount * 15} pts)`, '🔔');
+                    } else {
+                        this.addFloatingText(this.player.x + 12, this.player.y - 48, 'Dring !', '#fef08a');
+                    }
+                }
+
+                spawnObstacle() {
+                    const pool = this.loader.images.obstacles;
+                    if (!pool || !pool.length) return;
+
+                    const template = pool[Math.floor(Math.random() * pool.length)];
+                    const lane = Math.floor(Math.random() * this.laneCount);
+                    const { laneCenters } = this.getRoadMetrics();
+
+                    // Évite de placer un obstacle exactement sur un trou récent de la même voie
+                    const overlapsHole = this.holes.some(
+                        (h) => h.lane === lane && Math.abs(h.x - (this.width + 90)) < 150
+                    );
+                    if (overlapsHole) return;
+
+                    this.obstacles.push({
+                        ...template,
+                        lane,
+                        x: this.width + 80,
+                        y: laneCenters[lane],
+                        speedOffset: 0,
+                        alerted: false,
+                        alertTimer: 0,
+                        crushed: false,
+                        crushTimer: 0,
+                        passed: false,
+                        bobPhase: Math.random() * Math.PI * 2
+                    });
+                }
+
+                spawnHole() {
+                    const lane = Math.floor(Math.random() * this.laneCount);
+                    const { laneCenters } = this.getRoadMetrics();
+                    const isWideTrench = Math.random() < 0.35;
+
+                    // Évite deux trous trop rapprochés sur la même voie
+                    const tooClose = this.holes.some(
+                        (h) => h.lane === lane && Math.abs(h.x - (this.width + 100)) < 230
+                    );
+                    if (tooClose) return;
+
+                    this.holes.push({
+                        lane,
+                        x: this.width + 90,
+                        y: laneCenters[lane],
+                        width: isWideTrench ? 104 : 74,
+                        height: 28,
+                        isWideTrench,
+                        passed: false
+                    });
+                }
+
+                spawnPickup() {
+                    const pool = this.loader.images.pickups;
+                    if (!pool.length) return;
+
+                    const template = pool[Math.floor(Math.random() * pool.length)];
+                    const lane = Math.floor(Math.random() * this.laneCount);
+                    const { laneCenters } = this.getRoadMetrics();
+                    const floatHeight = Math.random() < 0.35 ? 26 : 0;
+
+                    this.pickups.push({
+                        ...template,
+                        lane,
+                        x: this.width + 70,
+                        y: laneCenters[lane],
+                        z: floatHeight,
+                        bobPhase: Math.random() * Math.PI * 2,
+                        collected: false
+                    });
+                }
+
+                spawnDust(x, y, count = 6, color = '#f8fafc') {
+                    for (let i = 0; i < count; i++) {
+                        this.particles.push({
+                            x: x + (Math.random() - 0.5) * 16,
+                            y: y + (Math.random() - 0.5) * 10,
+                            vx: -this.speed * 0.25 - Math.random() * 70,
+                            vy: (Math.random() - 0.5) * 65 - 15,
+                            radius: 3 + Math.random() * 4,
+                            alpha: 0.85,
+                            life: 0.35 + Math.random() * 0.25,
+                            maxLife: 0.6,
+                            color
+                        });
+                    }
+                }
+
+                addFloatingText(x, y, text, color = '#ffffff') {
+                    this.floatingTexts.push({
+                        x,
+                        y,
+                        text,
+                        color,
+                        alpha: 1,
+                        vy: -48,
+                        life: 0.85
+                    });
+                }
+
+                update(dt) {
+                    if (this.state !== 'PLAYING') return;
+
+                    // Progression graduelle de la vitesse et de la distance
+                    this.speed = Math.min(this.maxSpeed, this.baseSpeed + this.distance * 0.32);
+                    const dxStep = this.speed * dt;
+                    this.distance += dxStep * 0.045;
+                    this.score += dxStep * 0.08;
+                    this.sceneryOffset = (this.sceneryOffset + dxStep) % 100000;
+
+                    // Mise à jour du joueur
+                    const { laneCenters } = this.getRoadMetrics();
+                    const targetY = laneCenters[this.player.lane];
+
+                    if (this.player.fallingHole) {
+                        const hole = this.player.fallingHole;
+                        this.player.x += (hole.x - this.player.x) * Math.min(1, dt * 10);
+                        this.player.y += (hole.y - this.player.y) * Math.min(1, dt * 10);
+                        this.player.z -= 260 * dt;
+                        this.player.fallingHole.timer += dt;
+
+                        if (this.player.fallingHole.timer >= 0.55) {
+                            this.triggerGameOver(
+                                'Chute dans un trou !',
+                                'Ludo a glissé dans un trou sur le chemin de terre. Saute ou change de voie à temps !'
+                            );
+                            return;
+                        }
+                    } else {
+                        // Glissement fluide vers la voie sélectionnée
+                        this.player.y += (targetY - this.player.y) * Math.min(1, dt * 16);
+
+                        // Physique de saut
+                        if (this.player.isJumping || this.player.z > 0) {
+                            this.player.z += this.player.vz * dt;
+                            this.player.vz -= 1480 * dt; // gravité
+                            if (this.player.z <= 0) {
+                                this.player.z = 0;
+                                this.player.vz = 0;
+                                this.player.isJumping = false;
+                                this.spawnDust(this.player.x, this.player.y + 18, 6, '#fde68a');
+                            }
+                        }
+
+                        // Animation du pédalage (8 frames)
+                        const pedalCadence = (this.speed / this.baseSpeed) * 13;
+                        this.player.animFrame = (this.player.animFrame + pedalCadence * dt) % 8;
+                    }
+
+                    if (this.player.invulnTimer > 0) {
+                        this.player.invulnTimer = Math.max(0, this.player.invulnTimer - dt);
+                    }
+                    if (this.player.bellCooldown > 0) {
+                        this.player.bellCooldown = Math.max(0, this.player.bellCooldown - dt);
+                    }
+                    if (this.player.bellWaveTimer > 0) {
+                        this.player.bellWaveTimer = Math.max(0, this.player.bellWaveTimer - dt);
+                        this.player.bellWaveRadius += 560 * dt;
+                    }
+
+                    // Apparition périodique des éléments
+                    this.obstacleSpawnTimer -= dt;
+                    if (this.obstacleSpawnTimer <= 0) {
+                        this.spawnObstacle();
+                        const minDelay = Math.max(0.68, 1.45 - (this.speed - this.baseSpeed) / 650);
+                        this.obstacleSpawnTimer = minDelay + Math.random() * 0.65;
+                    }
+
+                    this.holeSpawnTimer -= dt;
+                    if (this.holeSpawnTimer <= 0) {
+                        this.spawnHole();
+                        this.holeSpawnTimer = Math.max(1.85, 3.2 - (this.speed - this.baseSpeed) / 900) + Math.random() * 1.1;
+                    }
+
+                    this.pickupSpawnTimer -= dt;
+                    if (this.pickupSpawnTimer <= 0) {
+                        this.spawnPickup();
+                        this.pickupSpawnTimer = 1.15 + Math.random() * 0.95;
+                    }
+
+                    // Mise à jour des trous et détection de chute
+                    for (let i = this.holes.length - 1; i >= 0; i--) {
+                        const h = this.holes[i];
+                        h.x -= this.speed * dt;
+                        h.y = laneCenters[h.lane];
+
+                        if (!this.player.fallingHole && h.lane === this.player.lane) {
+                            const withinX = Math.abs(h.x - this.player.x) < h.width * 0.42;
+                            const withinY = Math.abs(h.y - this.player.y) < laneCenters[1] - laneCenters[0] * 0.28;
+                            if (withinX && withinY && this.player.z < 20) {
+                                this.player.fallingHole = { x: h.x, y: h.y, timer: 0 };
+                                this.sound.playHit();
+                                this.spawnDust(h.x, h.y, 12, '#78350f');
+                            }
+                        }
+
+                        if (h.x < -160) {
+                            this.holes.splice(i, 1);
+                        }
+                    }
+
+                    // Mise à jour des obstacles et collisions
+                    for (let i = this.obstacles.length - 1; i >= 0; i--) {
+                        const obs = this.obstacles[i];
+                        const relSpeed = this.speed * obs.speedFactor + (obs.speedOffset || 0);
+                        obs.x -= Math.max(80, relSpeed) * dt;
+                        obs.y = laneCenters[obs.lane];
+                        obs.bobPhase += dt * 9;
+
+                        if (obs.alertTimer > 0) {
+                            obs.alertTimer = Math.max(0, obs.alertTimer - dt);
+                        }
+
+                        if (obs.crushed) {
+                            obs.crushTimer -= dt;
+                            if (obs.crushTimer <= 0) {
+                                this.obstacles.splice(i, 1);
+                            }
+                            continue;
+                        }
+
+                        if (!this.player.fallingHole && obs.lane === this.player.lane) {
+                            const dx = Math.abs(obs.x - this.player.x);
+                            const dy = Math.abs(obs.y - this.player.y);
+
+                            if (dx < 44 && dy < 22) {
+                                if (obs.crushable) {
+                                    // Canard ou poule écrasé(e) : +20 pts, pas de perte de vie
+                                    obs.crushed = true;
+                                    obs.crushTimer = 0.28;
+                                    this.score += 20;
+                                    this.sound.playCrush();
+                                    this.spawnDust(obs.x, obs.y, 10, '#fde047');
+                                    this.addFloatingText(obs.x, obs.y - 34, 'Écrasé ! +20', '#fef08a');
+                                    this.updateHud();
+                                } else if (this.player.z < 32 && this.player.invulnTimer <= 0) {
+                                    // Collision avec un autre obstacle : perd 1 cœur
+                                    this.lives = Math.max(0, this.lives - 1);
+                                    this.player.invulnTimer = 1.4;
+                                    obs.crushed = true;
+                                    obs.crushTimer = 0.22;
+                                    this.sound.playHit();
+                                    this.spawnDust(this.player.x, this.player.y, 12, '#fca5a5');
+                                    this.addFloatingText(this.player.x, this.player.y - 42, '-1 ❤️', '#f87171');
+                                    this.updateHud();
+
+                                    if (this.lives <= 0) {
+                                        this.triggerGameOver(
+                                            'Plus de cœurs !',
+                                            `Ludo a percuté ${obs.label.toLowerCase()} et n'a plus de vie. Score final : ${Math.floor(this.score)}.`
+                                        );
+                                        return;
+                                    } else {
+                                        this.showToast(`Aïe ! ${obs.label} percuté (-1 ❤️)`, '💥');
+                                    }
+                                }
+                            }
+                        }
+
+                        if (!obs.passed && obs.x < this.player.x - 45) {
+                            obs.passed = true;
+                            this.score += 10;
+                        }
+
+                        if (obs.x < -160) {
+                            this.obstacles.splice(i, 1);
+                        }
+                    }
+
+                    // Mise à jour des bonus (Panier + Score)
+                    for (let i = this.pickups.length - 1; i >= 0; i--) {
+                        const p = this.pickups[i];
+                        p.x -= this.speed * dt;
+                        p.y = laneCenters[p.lane];
+                        p.bobPhase += dt * 5.5;
+
+                        if (!this.player.fallingHole && !p.collected && p.lane === this.player.lane) {
+                            const dx = Math.abs(p.x - this.player.x);
+                            const dy = Math.abs(p.y - this.player.y);
+                            const dz = Math.abs((this.player.z || 0) - p.z);
+
+                            if (dx < 46 && dy < 26 && dz < 36) {
+                                p.collected = true;
+                                this.basketCount += 1;
+                                this.score += p.points;
+                                this.sound.playPickup();
+                                this.spawnDust(p.x, p.y - p.z, 9, '#86efac');
+                                this.addFloatingText(p.x, p.y - p.z - 28, `${p.label} +${p.points}`, '#4ade80');
+                                this.updateHud();
+                                this.pickups.splice(i, 1);
+                                continue;
+                            }
+                        }
+
+                        if (p.x < -140) {
+                            this.pickups.splice(i, 1);
+                        }
+                    }
+
+                    // Particules & textes flottants
+                    for (let i = this.particles.length - 1; i >= 0; i--) {
+                        const pt = this.particles[i];
+                        pt.x += pt.vx * dt;
+                        pt.y += pt.vy * dt;
+                        pt.life -= dt;
+                        pt.alpha = Math.max(0, (pt.life / pt.maxLife) * 0.85);
+                        if (pt.life <= 0) {
+                            this.particles.splice(i, 1);
+                        }
+                    }
+
+                    for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+                        const ft = this.floatingTexts[i];
+                        ft.y += ft.vy * dt;
+                        ft.life -= dt;
+                        ft.alpha = Math.max(0, ft.life / 0.85);
+                        if (ft.life <= 0) {
+                            this.floatingTexts.splice(i, 1);
+                        }
+                    }
+
+                    // Mise à jour du record en direct
+                    if (Math.floor(this.score) > this.bestScore) {
+                        this.bestScore = Math.floor(this.score);
+                    }
+
+                    this.updateHud();
                 }
 
                 triggerGameOver(title, reason) {
                     if (this.state === 'GAMEOVER') return;
                     this.state = 'GAMEOVER';
                     this.sound.setBackgroundMusicActive(false);
+                    this.sound.playGameOver();
 
                     const finalScoreVal = Math.floor(this.score);
-                    if (finalScoreVal > this.bestScore) {
+                    const finalDistVal = Math.floor(this.distance);
+
+                    if (finalScoreVal >= this.bestScore) {
                         this.bestScore = finalScoreVal;
-                        try {
-                            localStorage.setItem('ludo_vietnam_best_score', String(this.bestScore));
-                        } catch (err) {}
+                        this.saveBestScore();
                     }
+
+                    this.recordTop10Score(finalScoreVal, finalDistVal);
+                    this.renderTop10List(finalScoreVal);
 
                     this.ui.finalScore.textContent = String(finalScoreVal);
                     this.ui.finalBest.textContent = String(this.bestScore);
-                    this.ui.finalDistance.textContent = `${Math.floor(this.distance)} m`;
+                    this.ui.finalDistance.textContent = `${finalDistVal} m`;
                     this.ui.gameOverReason.textContent = reason || title;
 
                     const goImg = document.getElementById('gameOverImg');
-                    const goFallback = document.getElementById('gameOverFallback');
-                    if (goImg && goFallback) {
-                        const targetSrc = this.assets.gameOverUrl || 'assets/backgrounds/gameover.png';
-                        goImg.onerror = () => {
-                            goImg.classList.add('hidden');
-                            goFallback.classList.remove('hidden');
-                            goFallback.classList.add('flex');
-                        };
-                        goImg.onload = () => {
-                            goFallback.classList.add('hidden');
-                            goFallback.classList.remove('flex');
-                            goImg.classList.remove('hidden');
-                        };
+                    const fallbackBadge = document.getElementById('gameOverFallbackBadge');
+                    const titleEl = document.getElementById('gameOverTitle');
+                    if (titleEl) titleEl.textContent = title || 'Fin de course !';
+
+                    if (goImg && this.loader.images.gameOver && this.loader.images.gameOver.src) {
+                        goImg.src = this.loader.images.gameOver.src;
                         goImg.classList.remove('hidden');
-                        goImg.src = targetSrc;
+                        if (fallbackBadge) fallbackBadge.classList.add('hidden');
+                    } else {
+                        if (goImg) goImg.classList.add('hidden');
+                        if (fallbackBadge) fallbackBadge.classList.remove('hidden');
                     }
 
+                    this.ui.hudBar.classList.add('hidden');
                     this.ui.touchControls.classList.add('hidden');
-                    this.ui.pauseOverlay.classList.add('hidden');
-                    this.ui.gameOverOverlay.classList.remove('hidden');
-                    this.ui.gameOverOverlay.style.display = 'flex';
-                }
-
-                changeLane(delta) {
-                    if (this.player.fallingHole) return;
-                    const nextLane = Math.max(0, Math.min(this.laneCount - 1, this.player.lane + delta));
-                    if (nextLane !== this.player.lane) {
-                        this.player.lane = nextLane;
-                        this.player.targetY = this.laneY[nextLane];
-                        this.sound.playLaneChange();
-                    }
-                }
-
-                jump() {
-                    if (this.player.fallingHole) return;
-                    if (this.player.z <= 2) {
-                        this.player.vz = this.player.jumpVelocity;
-                        this.player.z = 3;
-                        this.sound.playJump();
-                        this.spawnBurst(this.player.x - 10, this.player.y + 6, '#fef08a', 7);
-                    }
-                }
-
-                ringBell() {
-                    this.player.bellAnimTimer = 0.45;
-                    this.sound.playBell();
-
-                    this.shockwaves.push({
-                        x: this.player.x + 18,
-                        y: this.player.y - this.player.z * 0.4,
-                        radius: 14,
-                        maxRadius: 135,
-                        alpha: 0.9
-                    });
-
-                    let alertedCount = 0;
-                    for (const obs of this.obstacles) {
-                        const dx = obs.x - this.player.x;
-                        const laneDiff = Math.abs(obs.lane - this.player.lane);
-                        if (dx > -20 && dx < 220 && laneDiff <= 1 && !obs.alerted) {
-                            obs.alerted = true;
-                            obs.scaredTimer = 1.4;
-                            alertedCount++;
-                        }
-                    }
-
-                    if (alertedCount > 0) {
-                        this.score += alertedCount * 15;
-                        this.showToast(`Dring ! +${alertedCount * 15} pts`);
-                        this.updateHud();
-                    }
-                }
-
-                spawnObstacle() {
-                    const sprites = this.assets.obstacleSprites;
-                    // Ne fait apparaître que les obstacles chargés depuis assets/obstacles/
-                    if (!sprites || sprites.length === 0) return;
-
-                    const lane = Math.floor(Math.random() * this.laneCount);
-                    const y = this.laneY[lane];
-
-                    const tooCloseToHole = this.holes.some(
-                        (h) => h.lane === lane && Math.abs(h.x - (this.width + 80)) < 170
-                    );
-                    if (tooCloseToHole) return;
-
-                    const chosen = sprites[Math.floor(Math.random() * sprites.length)];
-                    const isCrushable = Boolean(chosen.crushable);
-                    const isScooter = chosen.fileName.startsWith('scooter');
-                    const isVendor = chosen.fileName.startsWith('vendeur');
-
-                    this.obstacles.push({
-                        x: this.width + 85,
-                        y,
-                        lane,
-                        width: isCrushable ? 46 : (isScooter ? 68 : 60),
-                        height: isCrushable ? 38 : (isScooter ? 52 : 56),
-                        sprite: chosen.img,
-                        fileName: chosen.fileName,
-                        crushable: isCrushable,
-                        vx: isCrushable ? 36 : (isScooter ? 64 : (isVendor ? 22 : 45)),
-                        vy: 0,
-                        animPhase: Math.random() * Math.PI * 2,
-                        alerted: false,
-                        scaredTimer: 0,
-                        passed: false
-                    });
-                }
-
-                spawnHole() {
-                    const lane = Math.floor(Math.random() * this.laneCount);
-                    const y = this.laneY[lane];
-
-                    const tooCloseToObstacle = this.obstacles.some(
-                        (o) => o.lane === lane && Math.abs(o.x - (this.width + 90)) < 175
-                    );
-                    if (tooCloseToObstacle) return;
-
-                    const isWideTrench = Math.random() < 0.28;
-                    this.holes.push({
-                        x: this.width + 90,
-                        y,
-                        lane,
-                        rx: isWideTrench ? 34 : 24,
-                        ry: isWideTrench ? 4.2 : 3.2,
-                        passed: false
-                    });
-                }
-
-                spawnPickup() {
-                    const lane = Math.floor(Math.random() * this.laneCount);
-                    const y = this.laneY[lane];
-
-                    const items = [
-                        { name: 'Phở', emoji: '🍜', points: 40 },
-                        { name: 'Bánh mì', emoji: '🥖', points: 25 },
-                        { name: 'Noix de coco', emoji: '🥥', points: 30 },
-                        { name: 'Mangue', emoji: '🥭', points: 20 }
-                    ];
-                    const item = items[Math.floor(Math.random() * items.length)];
-
-                    this.pickups.push({
-                        x: this.width + 70,
-                        y,
-                        lane,
-                        radius: 18,
-                        name: item.name,
-                        emoji: item.emoji,
-                        points: item.points,
-                        bobPhase: Math.random() * Math.PI * 2
-                    });
-                }
-
-                spawnBurst(x, y, color, count = 10) {
-                    for (let i = 0; i < count; i++) {
-                        const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.4;
-                        const spd = 55 + Math.random() * 130;
-                        this.particles.push({
-                            x,
-                            y,
-                            vx: Math.cos(angle) * spd,
-                            vy: Math.sin(angle) * spd - 30,
-                            size: 3 + Math.random() * 4,
-                            color,
-                            life: 0.45 + Math.random() * 0.25,
-                            maxLife: 0.7
-                        });
-                    }
+                    this.showGameOverModal();
                 }
 
                 updateHud() {
-                    this.ui.hudScore.textContent = String(Math.floor(this.score));
-                    this.ui.hudDistance.textContent = `${Math.floor(this.distance)} m`;
-                    this.ui.hudBasket.textContent = String(this.basketCount);
-
+                    // Cœurs
                     let heartsHtml = '';
                     for (let i = 0; i < this.maxLives; i++) {
-                        heartsHtml += i < this.lives ? '<span>❤️</span>' : '<span class="opacity-30 grayscale">🖤</span>';
+                        heartsHtml += i < this.lives
+                            ? '<span class="drop-shadow-sm">❤️</span>'
+                            : '<span class="opacity-30 grayscale">🖤</span>';
                     }
-                    this.ui.hudLives.innerHTML = heartsHtml;
+                    this.ui.livesContainer.innerHTML = heartsHtml;
+
+                    this.ui.basketCount.textContent = String(this.basketCount);
+                    this.ui.scoreValue.textContent = String(Math.floor(this.score));
+                    this.ui.distanceValue.textContent = `${Math.floor(this.distance)} m`;
+                    this.ui.bestScoreValue.textContent = String(this.bestScore);
+                    this.ui.startBestScore.textContent = String(this.bestScore);
                 }
 
-                update(dt) {
-                    this.worldTime += dt;
+                drawBackgroundAndRoad() {
+                    const ctx = this.ctx;
+                    const { roadTop, roadBottom, roadHeight, laneCenters } = this.getRoadMetrics();
 
-                    if (this.state !== 'PLAYING') {
-                        return;
-                    }
+                    // Ciel dégradé tropical
+                    const skyGrad = ctx.createLinearGradient(0, 0, 0, roadTop);
+                    skyGrad.addColorStop(0, '#38bdf8');
+                    skyGrad.addColorStop(0.65, '#bae6fd');
+                    skyGrad.addColorStop(1, '#fef9c3');
+                    ctx.fillStyle = skyGrad;
+                    ctx.fillRect(0, 0, this.width, roadTop + 8);
 
-                    if (this.player.fallingHole) {
-                        this.player.fallProgress += dt * 2.1;
-                        this.player.tiltAngle = Math.min(1.15, this.player.fallProgress * 1.3);
-                        this.player.z = Math.max(-26, -this.player.fallProgress * 28);
-                        this.updateParticles(dt);
+                    // Soleil doux
+                    ctx.fillStyle = 'rgba(254, 240, 138, 0.85)';
+                    ctx.beginPath();
+                    ctx.arc(this.width * 0.82, Math.max(70, roadTop * 0.34), 38, 0, Math.PI * 2);
+                    ctx.fill();
 
-                        if (this.player.fallProgress >= 1) {
-                            this.triggerGameOver(
-                                'Dans le trou !',
-                                'Ludo a glissé dans un trou sur le chemin. Saute ou change de voie !'
-                            );
-                        }
-                        return;
-                    }
-
-                    this.speed = Math.min(this.maxSpeed, this.baseSpeed + this.distance * 0.45);
-                    const dx = this.speed * dt;
-                    this.distance += dx * 0.045;
-                    this.score += dt * 8;
-                    this.bgScrollX += dx * 0.55;
-
-                    const laneDiffY = this.player.targetY - this.player.y;
-                    this.player.y += laneDiffY * Math.min(1, dt * 16);
-
-                    if (this.player.z > 0 || this.player.vz !== 0) {
-                        this.player.z += this.player.vz * dt;
-                        this.player.vz -= this.player.gravity * dt;
-                        if (this.player.z <= 0) {
-                            this.player.z = 0;
-                            this.player.vz = 0;
-                        }
-                    }
-
-                    if (this.player.z > 2) {
-                        this.player.tiltAngle = Math.max(-0.24, Math.min(0.24, -this.player.vz / 1800));
-                    } else {
-                        this.player.tiltAngle += (0 - this.player.tiltAngle) * Math.min(1, dt * 14);
-                    }
-
-                    const pedalCadence = 14 * (this.speed / this.baseSpeed);
-                    this.player.animFrame += dt * (this.player.z > 4 ? pedalCadence * 0.45 : pedalCadence);
-
-                    if (this.player.invulnTimer > 0) {
-                        this.player.invulnTimer = Math.max(0, this.player.invulnTimer - dt);
-                    }
-                    if (this.player.bellAnimTimer > 0) {
-                        this.player.bellAnimTimer = Math.max(0, this.player.bellAnimTimer - dt);
-                    }
-
-                    this.obstacleSpawnTimer -= dt;
-                    if (this.obstacleSpawnTimer <= 0) {
-                        this.spawnObstacle();
-                        const minGap = Math.max(0.95, 1.85 - (this.speed - this.baseSpeed) * 0.0025);
-                        this.obstacleSpawnTimer = minGap + Math.random() * 0.85;
-                    }
-
-                    this.holeSpawnTimer -= dt;
-                    if (this.holeSpawnTimer <= 0) {
-                        this.spawnHole();
-                        this.holeSpawnTimer = 2.4 + Math.random() * 1.7;
-                    }
-
-                    this.pickupSpawnTimer -= dt;
-                    if (this.pickupSpawnTimer <= 0) {
-                        this.spawnPickup();
-                        this.pickupSpawnTimer = 1.6 + Math.random() * 1.3;
-                    }
-
-                    for (let i = this.holes.length - 1; i >= 0; i--) {
-                        const hole = this.holes[i];
-                        hole.x -= dx;
-
-                        if (!hole.passed && hole.x + hole.rx < this.player.x - 20) {
-                            hole.passed = true;
-                            this.score += 12;
-                        }
-
-                        const sameLane = Math.abs(hole.y - this.player.y) < 12;
-                        const insideHoleX = Math.abs(hole.x - this.player.x) < hole.rx * 0.72;
-                        const isAirborne = this.player.z > 20;
-
-                        if (sameLane && insideHoleX && !isAirborne && this.player.invulnTimer <= 0) {
-                            this.player.fallingHole = true;
-                            this.player.fallProgress = 0;
-                            this.sound.playCrash();
-                            this.spawnBurst(this.player.x, hole.y, '#78350f', 14);
-                            this.updateHud();
-                            return;
-                        }
-
-                        if (hole.x < -120) {
-                            this.holes.splice(i, 1);
-                        }
-                    }
-
-                    for (let i = this.obstacles.length - 1; i >= 0; i--) {
-                        const obs = this.obstacles[i];
-                        obs.animPhase += dt * 9;
-
-                        if (obs.scaredTimer > 0) {
-                            obs.scaredTimer = Math.max(0, obs.scaredTimer - dt);
-                            obs.x += dx * 0.45;
-                            obs.y += (obs.lane === 0 ? -28 : 28) * dt;
-                        } else {
-                            obs.x -= (dx + obs.vx * dt);
-                        }
-
-                        if (!obs.passed && obs.x + obs.width * 0.5 < this.player.x - 24) {
-                            obs.passed = true;
-                            this.score += 10;
-                        }
-
-                        if (this.player.invulnTimer <= 0 && obs.scaredTimer <= 0) {
-                            const sameLane = Math.abs(obs.y - this.player.y) < 22;
-                            const overlapX = Math.abs(obs.x - this.player.x) < (obs.width * 0.4 + 32);
-                            const clearJump = this.player.z > 34;
-
-                            if (sameLane && overlapX && !clearJump) {
-                                // Seuls canard.jpg et poule.jpg peuvent être écrasés
-                                if (obs.crushable) {
-                                    this.score += 20;
-                                    this.sound.playPickup();
-                                    this.spawnBurst(obs.x, obs.y - 4, '#fde047', 12);
-                                    this.showToast(`💥 ${obs.fileName} écrasé ! +20 pts`);
-                                    this.obstacles.splice(i, 1);
-                                } else {
-                                    this.lives -= 1;
-                                    this.player.invulnTimer = 1.4;
-                                    this.sound.playCrash();
-                                    this.spawnBurst(obs.x, obs.y - this.player.z, '#f87171', 12);
-                                    this.obstacles.splice(i, 1);
-
-                                    if (this.lives <= 0) {
-                                        this.updateHud();
-                                        this.triggerGameOver(
-                                            'Plus de cœurs !',
-                                            `Ludo a heurté ${obs.fileName} au lieu de l'éviter.`
-                                        );
-                                        return;
-                                    } else {
-                                        this.showToast(`Aïe ! ${obs.fileName} est à éviter (-1 ❤️)`);
-                                    }
-                                }
-                            }
-                        }
-
-                        if (obs.x < -140 || obs.y < -80 || obs.y > this.height + 80) {
-                            this.obstacles.splice(i, 1);
-                        }
-                    }
-
-                    for (let i = this.pickups.length - 1; i >= 0; i--) {
-                        const pk = this.pickups[i];
-                        pk.x -= dx;
-                        pk.bobPhase += dt * 5;
-
-                        const sameLane = Math.abs(pk.y - this.player.y) < 22;
-                        const overlapX = Math.abs(pk.x - this.player.x) < 38;
-                        const reachableZ = Math.abs(this.player.z - 12) < 42;
-
-                        if (sameLane && overlapX && reachableZ) {
-                            this.basketCount += 1;
-                            this.score += pk.points;
-                            this.sound.playPickup();
-                            this.spawnBurst(pk.x, pk.y - this.player.z - 10, '#4ade80', 10);
-                            this.showToast(`${pk.emoji} ${pk.name} +${pk.points} pts`);
-                            this.pickups.splice(i, 1);
-                            continue;
-                        }
-
-                        if (pk.x < -100) {
-                            this.pickups.splice(i, 1);
-                        }
-                    }
-
-                    for (let i = this.shockwaves.length - 1; i >= 0; i--) {
-                        const sw = this.shockwaves[i];
-                        sw.radius += dt * 340;
-                        sw.alpha -= dt * 2.1;
-                        if (sw.alpha <= 0 || sw.radius >= sw.maxRadius) {
-                            this.shockwaves.splice(i, 1);
-                        }
-                    }
-
-                    this.updateParticles(dt);
-                    this.updateHud();
-                }
-
-                updateParticles(dt) {
-                    for (let i = this.particles.length - 1; i >= 0; i--) {
-                        const p = this.particles[i];
-                        p.x += p.vx * dt;
-                        p.y += p.vy * dt;
-                        p.vy += 260 * dt;
-                        p.life -= dt;
-                        if (p.life <= 0) {
-                            this.particles.splice(i, 1);
-                        }
-                    }
-                }
-
-                drawBackground(ctx) {
-                    if (this.assets.bgLoaded && this.assets.bgImage) {
-                        if (this.ui.bgImage && !this.ui.bgImage.classList.contains('opacity-0')) {
-                            this.ui.bgImage.classList.add('opacity-0');
-                        }
-
-                        const img = this.assets.bgImage;
-                        const natW = img.naturalWidth || img.width || 1280;
-                        const natH = img.naturalHeight || img.height || 720;
-                        const scale = Math.max(this.width / natW, this.height / natH);
-                        const tileW = Math.max(1, natW * scale);
-                        const drawH = natH * scale;
-                        const offsetY = (this.height - drawH) * 0.5;
-
-                        const scroll = ((this.bgScrollX % tileW) + tileW) % tileW;
-                        for (let x = -scroll; x < this.width + tileW; x += tileW) {
-                            ctx.drawImage(img, x, offsetY, tileW + 1, drawH);
-                        }
-                    } else {
-                        if (this.ui.bgImage && this.ui.bgImage.classList.contains('opacity-0')) {
-                            this.ui.bgImage.classList.remove('opacity-0');
-                        }
-                        const skyGrad = ctx.createLinearGradient(0, 0, 0, this.roadTop);
-                        skyGrad.addColorStop(0, '#0ea5e9');
-                        skyGrad.addColorStop(1, '#bae6fd');
-                        ctx.fillStyle = skyGrad;
-                        ctx.fillRect(0, 0, this.width, this.roadTop);
-
-                        const roadGrad = ctx.createLinearGradient(0, this.roadTop, 0, this.height);
-                        roadGrad.addColorStop(0, '#e2b478');
-                        roadGrad.addColorStop(0.55, '#d49b5a');
-                        roadGrad.addColorStop(1, '#4ade80');
-                        ctx.fillStyle = roadGrad;
-                        ctx.fillRect(0, this.roadTop, this.width, this.height - this.roadTop);
-                    }
-                }
-
-                drawRoadGuides(ctx) {
-                    ctx.save();
-                    for (let i = 0; i < this.laneCount; i++) {
-                        const y = this.laneY[i];
-                        ctx.strokeStyle = 'rgba(120, 53, 15, 0.16)';
-                        ctx.lineWidth = 1.5;
-                        ctx.setLineDash([16, 18]);
-                        ctx.lineDashOffset = this.bgScrollX * 1.15;
+                    // Collines lointaines en parallaxe lente
+                    ctx.fillStyle = '#4ade80';
+                    const hillSpan = 360;
+                    const hillShift = (this.sceneryOffset * 0.14) % hillSpan;
+                    for (let x = -hillSpan - hillShift; x < this.width + hillSpan; x += hillSpan) {
                         ctx.beginPath();
-                        ctx.moveTo(0, y + 6);
-                        ctx.lineTo(this.width, y + 6);
+                        ctx.moveTo(x, roadTop + 4);
+                        ctx.quadraticCurveTo(x + hillSpan * 0.28, roadTop - 68, x + hillSpan * 0.56, roadTop + 4);
+                        ctx.quadraticCurveTo(x + hillSpan * 0.8, roadTop - 46, x + hillSpan, roadTop + 4);
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+
+                    // Haie de végétation / bambous juste au-dessus du chemin
+                    const bushSpan = 120;
+                    const bushShift = (this.sceneryOffset * 0.38) % bushSpan;
+                    for (let x = -bushSpan - bushShift; x < this.width + bushSpan; x += bushSpan) {
+                        ctx.fillStyle = '#16a34a';
+                        ctx.beginPath();
+                        ctx.arc(x + 28, roadTop - 4, 22, Math.PI, 0);
+                        ctx.arc(x + 64, roadTop - 2, 26, Math.PI, 0);
+                        ctx.arc(x + 98, roadTop - 4, 19, Math.PI, 0);
+                        ctx.fill();
+                    }
+
+                    // Bordure herbeuse supérieure du chemin
+                    ctx.fillStyle = '#22c55e';
+                    ctx.fillRect(0, roadTop - 4, this.width, 8);
+
+                    // Chemin de terre battue (3 voies)
+                    const roadGrad = ctx.createLinearGradient(0, roadTop, 0, roadBottom);
+                    roadGrad.addColorStop(0, '#d99b52');
+                    roadGrad.addColorStop(0.5, '#c8843c');
+                    roadGrad.addColorStop(1, '#b36f2b');
+                    ctx.fillStyle = roadGrad;
+                    ctx.fillRect(0, roadTop, this.width, roadHeight);
+
+                    // Délimitations pointillées entre les 3 voies
+                    ctx.save();
+                    ctx.strokeStyle = 'rgba(255, 251, 235, 0.45)';
+                    ctx.lineWidth = 2.5;
+                    ctx.setLineDash([22, 18]);
+                    ctx.lineDashOffset = -(this.sceneryOffset % 40);
+
+                    for (let l = 1; l < this.laneCount; l++) {
+                        const yLine = roadTop + (roadHeight / this.laneCount) * l;
+                        ctx.beginPath();
+                        ctx.moveTo(0, yLine);
+                        ctx.lineTo(this.width, yLine);
                         ctx.stroke();
                     }
                     ctx.restore();
+
+                    // Petits cailloux / traces défilantes sur la terre
+                    ctx.fillStyle = 'rgba(120, 53, 15, 0.25)';
+                    const pebbleSpan = 160;
+                    const pebbleShift = (this.sceneryOffset % pebbleSpan);
+                    for (let x = -pebbleSpan - pebbleShift; x < this.width + pebbleSpan; x += pebbleSpan) {
+                        ctx.beginPath();
+                        ctx.ellipse(x + 40, laneCenters[0] + 10, 6, 2.5, 0, 0, Math.PI * 2);
+                        ctx.ellipse(x + 115, laneCenters[1] - 8, 5, 2, 0, 0, Math.PI * 2);
+                        ctx.ellipse(x + 80, laneCenters[2] + 9, 7, 2.5, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+
+                    // Bordure basse de la piste
+                    ctx.fillStyle = '#15803d';
+                    ctx.fillRect(0, roadBottom - 2, this.width, Math.max(24, this.height - roadBottom + 4));
                 }
 
-                drawHole(ctx, hole) {
-                    ctx.save();
-                    const depthFactor = 0.84 + (hole.lane / Math.max(1, this.laneCount - 1)) * 0.24;
-                    const scale = (hole.rx > 28 ? 1.18 : 1.0) * depthFactor;
+                drawHole(hole) {
+                    const ctx = this.ctx;
+                    const rx = hole.width * 0.5;
+                    const ry = hole.height * 0.5;
 
-                    ctx.translate(hole.x, hole.y + 6);
-
-                    if (this.assets.holeSprite) {
-                        ctx.save();
-                        ctx.scale(scale, scale);
-                        const targetW = 68;
-                        const natW = this.assets.holeSprite.naturalWidth || this.assets.holeSprite.width || 64;
-                        const natH = this.assets.holeSprite.naturalHeight || this.assets.holeSprite.height || 48;
-                        const targetH = targetW * (natH / natW);
-                        ctx.drawImage(this.assets.holeSprite, -targetW * 0.5, -targetH * 0.5, targetW, targetH);
-                        ctx.restore();
+                    if (this.loader.images.hole) {
+                        const img = this.loader.images.hole;
+                        const w = hole.width * 1.15;
+                        const h = Math.max(36, hole.height * 1.45);
+                        ctx.drawImage(img, hole.x - w * 0.5, hole.y - h * 0.5, w, h);
                     } else {
+                        // Ombre de bordure
+                        ctx.fillStyle = '#78350f';
+                        ctx.beginPath();
+                        ctx.ellipse(hole.x, hole.y + 2, rx + 4, ry + 4, 0, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        // Intérieur sombre du trou
                         ctx.fillStyle = '#1c1917';
                         ctx.beginPath();
-                        ctx.ellipse(0, 0, hole.rx, hole.ry, 0, 0, Math.PI * 2);
+                        ctx.ellipse(hole.x, hole.y, rx, ry, 0, 0, Math.PI * 2);
                         ctx.fill();
-
-                        ctx.fillStyle = '#09090b';
-                        ctx.beginPath();
-                        ctx.ellipse(0, 0.8, hole.rx * 0.78, hole.ry * 0.68, 0, 0, Math.PI * 2);
-                        ctx.fill();
-
-                        ctx.strokeStyle = 'rgba(254, 243, 199, 0.5)';
-                        ctx.lineWidth = 1;
-                        ctx.beginPath();
-                        ctx.ellipse(0, 0, hole.rx, hole.ry, 0, Math.PI, Math.PI * 2);
-                        ctx.stroke();
                     }
 
-                    if (hole.x > this.player.x + 40 && hole.x < this.width - 10) {
+                    // Petit indicateur d'alerte quand le trou approche
+                    if (hole.x > this.player.x && hole.x - this.player.x < 260) {
                         ctx.fillStyle = '#ef4444';
-                        ctx.beginPath();
-                        ctx.roundRect(-8, -28 * depthFactor, 16, 13, 4);
-                        ctx.fill();
-                        ctx.fillStyle = '#ffffff';
-                        ctx.font = '900 10px Nunito, sans-serif';
+                        ctx.font = '900 13px Nunito, sans-serif';
                         ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.fillText('!', 0, -21.5 * depthFactor);
+                        ctx.fillText('!', hole.x, hole.y - ry - 8);
                     }
-
-                    ctx.restore();
                 }
 
-                drawObstacle(ctx, obs) {
-                    ctx.save();
-                    const hop = obs.crushable
-                        ? Math.abs(Math.sin(obs.animPhase * 1.4)) * 3.5
-                        : Math.sin(obs.animPhase) * 1;
+                drawPickup(p) {
+                    const ctx = this.ctx;
+                    const bobY = Math.sin(p.bobPhase) * 4;
+                    const drawY = p.y - p.z + bobY;
 
-                    // Obstacles un peu plus grands sur les voies
-                    const depthFactor = 0.84 + (obs.lane / Math.max(1, this.laneCount - 1)) * 0.24;
-                    const baseScale = (obs.crushable ? 0.90 : 0.86) * depthFactor;
-
-                    ctx.fillStyle = 'rgba(15, 23, 42, 0.26)';
+                    // Ombre au sol
+                    ctx.fillStyle = 'rgba(15, 23, 42, 0.18)';
                     ctx.beginPath();
-                    ctx.ellipse(obs.x, obs.y + 8, obs.width * 0.38 * depthFactor, 4.5 * depthFactor, 0, 0, Math.PI * 2);
+                    ctx.ellipse(p.x, p.y + 12, 16, 5, 0, 0, Math.PI * 2);
                     ctx.fill();
 
-                    ctx.translate(obs.x, obs.y + 8 - hop);
-                    // Miroir horizontal (-baseScale en X) pour orienter les sprites vers la gauche face à Ludo
-                    ctx.scale(-baseScale, baseScale);
+                    // Bonus agrandi de 50% pour mieux le distinguer
+                    const size = 63;
+                    if (p.image) {
+                        ctx.drawImage(p.image, p.x - size * 0.5, drawY - size * 0.5, size, size);
+                    }
+                }
 
-                    if (obs.sprite) {
-                        const targetH = obs.crushable ? 48 : 66;
-                        const natW = obs.sprite.naturalWidth || obs.sprite.width || 64;
-                        const natH = obs.sprite.naturalHeight || obs.sprite.height || 64;
-                        const targetW = targetH * (natW / natH);
-                        ctx.drawImage(obs.sprite, -targetW * 0.5, -targetH + 2, targetW, targetH);
+                drawObstacle(obs) {
+                    const ctx = this.ctx;
+                    const hopY = obs.crushable ? Math.abs(Math.sin(obs.bobPhase)) * -6 : Math.sin(obs.bobPhase * 0.5) * 1.5;
+                    const drawY = obs.y + hopY;
+
+                    ctx.save();
+                    if (obs.crushed) {
+                        ctx.globalAlpha = Math.max(0, obs.crushTimer * 3.5);
+                        ctx.translate(obs.x, drawY + 6);
+                        ctx.scale(1.25, 0.45);
+                    } else {
+                        ctx.translate(obs.x, drawY);
                     }
 
-                    if (obs.alerted || obs.scaredTimer > 0) {
+                    // Ombre au sol
+                    ctx.fillStyle = 'rgba(15, 23, 42, 0.22)';
+                    ctx.beginPath();
+                    ctx.ellipse(0, 18, 28, 7, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    if (obs.image) {
+                        const w = 94;
+                        const h = 84;
+                        // Orientation vers la gauche face à Ludo qui arrive depuis la gauche
                         ctx.save();
                         ctx.scale(-1, 1);
-                        ctx.fillStyle = '#fef08a';
-                        ctx.strokeStyle = '#92400e';
-                        ctx.lineWidth = 2;
-                        ctx.beginPath();
-                        ctx.arc(0, -52, 10, 0, Math.PI * 2);
-                        ctx.fill();
-                        ctx.stroke();
-
-                        ctx.fillStyle = '#92400e';
-                        ctx.font = '900 12px Nunito, sans-serif';
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.fillText('!', 0, -51.5);
+                        ctx.drawImage(obs.image, -w * 0.5, -h * 0.65, w, h);
                         ctx.restore();
                     }
 
-                    ctx.restore();
-                }
+                    // Badge visuel si alerté par la sonnette
+                    if (obs.alertTimer > 0 && !obs.crushed) {
+                        ctx.fillStyle = '#facc15';
+                        ctx.strokeStyle = '#78350f';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.arc(0, -56, 11, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.stroke();
 
-                drawPickup(ctx, pk) {
-                    ctx.save();
-                    const bob = Math.sin(pk.bobPhase) * 4.5;
-                    const depthFactor = 0.78 + (pk.lane / Math.max(1, this.laneCount - 1)) * 0.22;
-                    // Bonus agrandis de 50% pour une meilleure visibilité
-                    const pickupScale = depthFactor * 1.5;
-
-                    ctx.fillStyle = 'rgba(15, 23, 42, 0.22)';
-                    ctx.beginPath();
-                    ctx.ellipse(pk.x, pk.y + 7, 13 * pickupScale, 4 * pickupScale, 0, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    ctx.translate(pk.x, pk.y - 12 + bob);
-                    ctx.scale(pickupScale, pickupScale);
-
-                    ctx.fillStyle = 'rgba(255, 251, 235, 0.92)';
-                    ctx.beginPath();
-                    ctx.arc(0, 0, 17, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.lineWidth = 2.5;
-                    ctx.strokeStyle = '#f59e0b';
-                    ctx.stroke();
-
-                    ctx.font = '20px "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(pk.emoji, 0, 1);
-
-                    ctx.restore();
-                }
-
-                drawPlayer(ctx) {
-                    const p = this.player;
-                    ctx.save();
-
-                    // Cycliste un peu plus grand et lisible sur les 3 voies
-                    const depthFactor = 0.88 + (p.lane / Math.max(1, this.laneCount - 1)) * 0.24;
-
-                    const shadowScale = Math.max(0.35, 1 - p.z / 130) * depthFactor;
-                    ctx.fillStyle = 'rgba(15, 23, 42, 0.34)';
-                    ctx.beginPath();
-                    ctx.ellipse(p.x, p.y + 9, 32 * shadowScale, 7 * shadowScale, 0, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    if (p.invulnTimer > 0 && Math.floor(p.invulnTimer * 16) % 2 === 0) {
-                        ctx.globalAlpha = 0.45;
+                        ctx.fillStyle = '#451a03';
+                        ctx.font = '900 13px Nunito, sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText('!', 0, -55);
                     }
 
-                    const pedalBob = p.z <= 1 && !p.fallingHole
-                        ? Math.sin(p.animFrame * 2) * 2.4
-                        : 0;
+                    ctx.restore();
+                }
 
-                    ctx.translate(p.x, p.y + 9 - p.z + pedalBob);
-                    ctx.rotate(p.tiltAngle);
-                    ctx.scale(depthFactor, depthFactor);
+                drawPlayer() {
+                    const ctx = this.ctx;
+                    const p = this.player;
 
-                    if (p.fallingHole) {
+                    // Clignotement pendant l'invulnérabilité
+                    if (p.invulnTimer > 0 && Math.floor(p.invulnTimer * 16) % 2 === 0) {
+                        ctx.save();
+                        ctx.globalAlpha = 0.45;
+                    } else {
+                        ctx.save();
+                    }
+
+                    // Onde visuelle de la sonnette Dring
+                    if (p.bellWaveTimer > 0) {
+                        ctx.save();
+                        ctx.strokeStyle = `rgba(250, 204, 21, ${p.bellWaveTimer * 1.8})`;
+                        ctx.lineWidth = 4;
                         ctx.beginPath();
-                        ctx.rect(-80, -125, 160, 123);
+                        ctx.arc(p.x + 16, p.y - p.z - 12, p.bellWaveRadius, 0, Math.PI * 2);
+                        ctx.stroke();
+                        ctx.restore();
+                    }
+
+                    // Ombre au sol (rétrécit quand Ludo saute)
+                    const shadowScale = Math.max(0.35, 1 - p.z / 140);
+                    ctx.fillStyle = 'rgba(15, 23, 42, 0.28)';
+                    ctx.beginPath();
+                    ctx.ellipse(p.x, p.y + 18, 36 * shadowScale, 9 * shadowScale, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Découpage progressif si Ludo tombe dans un trou
+                    if (p.fallingHole) {
+                        const sinkDepth = Math.min(80, Math.max(0, -p.z));
+                        ctx.beginPath();
+                        ctx.rect(p.x - 100, p.y - 160, 200, 178 - sinkDepth * 0.45);
                         ctx.clip();
                     }
 
-                    const frameIndex = Math.floor(p.animFrame) % 8;
-                    const frameImg = this.assets.frames[frameIndex];
+                    const frameIndex = Math.floor(p.animFrame) % this.loader.images.cyclistFrames.length;
+                    const frameImg = this.loader.images.cyclistFrames[frameIndex];
 
-                    if (frameImg) {
-                        const targetH = 88;
-                        const natW = frameImg.naturalWidth || frameImg.width || 64;
-                        const natH = frameImg.naturalHeight || frameImg.height || 64;
-                        const targetW = targetH * (natW / natH);
-                        ctx.drawImage(frameImg, -targetW * 0.5, -targetH + 3, targetW, targetH);
-                    } else {
-                        this.drawFallbackCyclist(ctx, frameIndex);
+                    const drawY = p.y - p.z;
+                    const w = 132;
+                    const h = 114;
+
+                    // Légère inclinaison pendant un saut ou une chute
+                    ctx.translate(p.x, drawY);
+                    if (p.fallingHole) {
+                        ctx.rotate(Math.min(0.65, p.fallingHole.timer * 1.1));
+                    } else if (p.isJumping) {
+                        ctx.rotate(p.vz > 0 ? -0.12 : 0.1);
                     }
 
-                    if (p.bellAnimTimer > 0) {
-                        ctx.save();
-                        ctx.translate(18, -64);
-                        ctx.rotate(Math.sin(this.worldTime * 45) * 0.35);
-                        ctx.font = '18px "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.fillText('🔔', 0, 0);
-                        ctx.restore();
+                    if (frameImg) {
+                        ctx.drawImage(frameImg, -w * 0.5, -h + 20, w, h);
                     }
 
                     ctx.restore();
                 }
 
-                drawFallbackCyclist(ctx, frameIndex) {
-                    const wheelSpin = (frameIndex / 8) * Math.PI * 2;
-                    ctx.strokeStyle = '#1e293b';
-                    ctx.lineWidth = 3.5;
+                drawEffects() {
+                    const ctx = this.ctx;
 
-                    [-20, 20].forEach((wx) => {
-                        ctx.beginPath();
-                        ctx.arc(wx, -13, 12, 0, Math.PI * 2);
-                        ctx.stroke();
-
-                        ctx.beginPath();
-                        ctx.moveTo(wx - Math.cos(wheelSpin) * 9, -13 - Math.sin(wheelSpin) * 9);
-                        ctx.lineTo(wx + Math.cos(wheelSpin) * 9, -13 + Math.sin(wheelSpin) * 9);
-                        ctx.stroke();
-                    });
-
-                    ctx.strokeStyle = '#0284c7';
-                    ctx.beginPath();
-                    ctx.moveTo(-20, -13);
-                    ctx.lineTo(-4, -26);
-                    ctx.lineTo(14, -26);
-                    ctx.lineTo(20, -13);
-                    ctx.moveTo(-4, -26);
-                    ctx.lineTo(2, -13);
-                    ctx.stroke();
-
-                    ctx.fillStyle = '#f97316';
-                    ctx.beginPath();
-                    ctx.arc(2, -42, 9, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    ctx.fillStyle = '#eab308';
-                    ctx.beginPath();
-                    ctx.moveTo(-12, -48);
-                    ctx.lineTo(16, -48);
-                    ctx.lineTo(2, -58);
-                    ctx.closePath();
-                    ctx.fill();
-                }
-
-                drawEffects(ctx) {
-                    for (const sw of this.shockwaves) {
+                    for (const pt of this.particles) {
                         ctx.save();
-                        ctx.strokeStyle = `rgba(250, 204, 21, ${Math.max(0, sw.alpha)})`;
-                        ctx.lineWidth = 3.5;
+                        ctx.globalAlpha = pt.alpha;
+                        ctx.fillStyle = pt.color;
                         ctx.beginPath();
-                        ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
-                        ctx.stroke();
+                        ctx.arc(pt.x, pt.y, pt.radius, 0, Math.PI * 2);
+                        ctx.fill();
                         ctx.restore();
                     }
 
-                    for (const p of this.particles) {
+                    for (const ft of this.floatingTexts) {
                         ctx.save();
-                        ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
-                        ctx.fillStyle = p.color;
-                        ctx.beginPath();
-                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                        ctx.fill();
+                        ctx.globalAlpha = ft.alpha;
+                        ctx.font = '900 15px Nunito, sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.lineWidth = 4;
+                        ctx.strokeStyle = 'rgba(15, 23, 42, 0.75)';
+                        ctx.strokeText(ft.text, ft.x, ft.y);
+                        ctx.fillStyle = ft.color;
+                        ctx.fillText(ft.text, ft.x, ft.y);
                         ctx.restore();
                     }
                 }
 
                 render() {
-                    this.ctx.clearRect(0, 0, this.width, this.height);
-                    this.drawBackground(this.ctx);
-                    this.drawRoadGuides(this.ctx);
+                    this.drawBackgroundAndRoad();
 
+                    // Tri en profondeur (axe Y) pour un rendu naturel sur les 3 voies
                     const renderables = [];
 
-                    for (const hole of this.holes) {
-                        renderables.push({
-                            y: hole.y - 2,
-                            draw: () => this.drawHole(this.ctx, hole)
-                        });
+                    for (const h of this.holes) {
+                        renderables.push({ y: h.y - 2, draw: () => this.drawHole(h) });
                     }
-
+                    for (const p of this.pickups) {
+                        renderables.push({ y: p.y, draw: () => this.drawPickup(p) });
+                    }
                     for (const obs of this.obstacles) {
-                        renderables.push({
-                            y: obs.y,
-                            draw: () => this.drawObstacle(this.ctx, obs)
-                        });
+                        renderables.push({ y: obs.y, draw: () => this.drawObstacle(obs) });
                     }
-
-                    for (const pk of this.pickups) {
-                        renderables.push({
-                            y: pk.y,
-                            draw: () => this.drawPickup(this.ctx, pk)
-                        });
+                    if (this.state !== 'MENU') {
+                        renderables.push({ y: this.player.y, draw: () => this.drawPlayer() });
                     }
-
-                    renderables.push({
-                        y: this.player.y + 0.5,
-                        draw: () => this.drawPlayer(this.ctx)
-                    });
 
                     renderables.sort((a, b) => a.y - b.y);
                     for (const item of renderables) {
                         item.draw();
                     }
 
-                    this.drawEffects(this.ctx);
+                    this.drawEffects();
                 }
 
                 loop(timestamp) {
-                    if (!this.lastTimestamp) {
-                        this.lastTimestamp = timestamp;
-                    }
-                    const rawDt = (timestamp - this.lastTimestamp) / 1000;
+                    const rawDt = (timestamp - (this.lastTimestamp || timestamp)) / 1000;
                     this.lastTimestamp = timestamp;
-                    const dt = Math.min(rawDt, 0.05);
+                    const dt = Math.min(0.05, Math.max(0.001, rawDt));
 
                     this.update(dt);
                     this.render();
 
                     requestAnimationFrame((ts) => this.loop(ts));
                 }
-
-                startLoop() {
-                    requestAnimationFrame((ts) => this.loop(ts));
-                }
             }
 
-            window.addEventListener('DOMContentLoaded', async () => {
-                const canvas = document.getElementById('gameCanvas');
-                const sound = new SoundManager();
-                const assets = new AssetLoader();
-
-                const welcomeImg = document.getElementById('welcomeImg');
-                const welcomeFallback = document.getElementById('welcomeFallback');
-                const gameOverImg = document.getElementById('gameOverImg');
-                const gameOverFallback = document.getElementById('gameOverFallback');
-
-                await assets.loadAll();
-
-                const resolvedWelcomeUrl = assets.welcomeUrl || 'assets/backgrounds/accueil.png';
-                welcomeImg.onload = () => {
-                    welcomeFallback.classList.add('hidden');
-                    welcomeImg.classList.remove('hidden');
-                };
-                welcomeImg.onerror = () => {
-                    welcomeImg.classList.add('hidden');
-                    welcomeFallback.classList.remove('hidden');
-                };
-                welcomeImg.src = resolvedWelcomeUrl;
-
-                const resolvedGameOverUrl = assets.gameOverUrl || 'assets/backgrounds/gameover.png';
-                gameOverImg.onload = () => {
-                    gameOverFallback.classList.add('hidden');
-                    gameOverFallback.classList.remove('flex');
-                    gameOverImg.classList.remove('hidden');
-                };
-                gameOverImg.onerror = () => {
-                    gameOverImg.classList.add('hidden');
-                    gameOverFallback.classList.remove('hidden');
-                    gameOverFallback.classList.add('flex');
-                };
-                gameOverImg.src = resolvedGameOverUrl;
-
-                const engine = new GameEngine(canvas, assets, sound);
-                engine.startLoop();
-
-                sound.speakVietnameseGreeting(false);
-                if ('speechSynthesis' in window) {
-                    window.speechSynthesis.onvoiceschanged = () => {
-                        sound.speakVietnameseGreeting(false);
-                    };
-                }
-
-                const unlockGreetingOnGesture = () => {
-                    sound.ensureContext();
-                    sound.speakVietnameseGreeting(false);
-                };
-                window.addEventListener('pointerdown', unlockGreetingOnGesture, { passive: true });
-                window.addEventListener('touchstart', unlockGreetingOnGesture, { passive: true });
+            // Démarrage propre au chargement du DOM
+            window.addEventListener('DOMContentLoaded', () => {
+                const game = new LudoBikeGame();
+                game.init();
             });
         })();
     </script>
