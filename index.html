@@ -21,14 +21,6 @@
             font-family: 'Fredoka', sans-serif;
         }
 
-        @keyframes floatSlow {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-6px); }
-        }
-        .animate-float {
-            animation: floatSlow 2.4s ease-in-out infinite;
-        }
-
         @keyframes pulseRing {
             0% { transform: scale(0.95); opacity: 0.85; }
             100% { transform: scale(1.45); opacity: 0; }
@@ -108,11 +100,11 @@
                     <span>❤️</span><span>❤️</span><span>❤️</span>
                 </div>
 
-                <button id="btn-sound" title="Couper/Activer le son" class="glass-panel hover:bg-white text-slate-800 w-10 h-10 rounded-xl shadow-lg flex items-center justify-center text-lg font-bold transition">
+                <button id="btn-sound" type="button" title="Couper/Activer le son" class="glass-panel hover:bg-white text-slate-800 w-10 h-10 rounded-xl shadow-lg flex items-center justify-center text-lg font-bold transition cursor-pointer">
                     🔊
                 </button>
 
-                <button id="btn-pause" title="Pause (P ou Échap)" class="glass-panel hover:bg-white text-slate-800 w-10 h-10 rounded-xl shadow-lg flex items-center justify-center text-lg font-bold transition">
+                <button id="btn-pause" type="button" title="Pause (P ou Échap)" class="glass-panel hover:bg-white text-slate-800 w-10 h-10 rounded-xl shadow-lg flex items-center justify-center text-lg font-bold transition cursor-pointer">
                     ⏸️
                 </button>
             </div>
@@ -129,109 +121,47 @@
         <div id="touch-controls" class="hidden absolute bottom-3 left-3 right-3 sm:bottom-5 sm:left-6 sm:right-6 flex items-end justify-between pointer-events-none z-20">
             <!-- Changement de voie : Haut / Bas -->
             <div class="flex flex-col gap-2.5 pointer-events-auto">
-                <button id="btn-up" aria-label="Voie du haut" class="touch-btn w-16 h-14 sm:w-20 sm:h-16 rounded-2xl bg-white/95 hover:bg-white text-slate-900 shadow-2xl border-2 border-amber-400 flex flex-col items-center justify-center font-arcade font-bold">
+                <button id="btn-up" type="button" aria-label="Voie du haut" class="touch-btn w-16 h-14 sm:w-20 sm:h-16 rounded-2xl bg-white/95 hover:bg-white text-slate-900 shadow-2xl border-2 border-amber-400 flex flex-col items-center justify-center font-arcade font-bold cursor-pointer">
                     <span class="text-xl leading-none">⬆️</span>
                     <span class="text-[10px] uppercase text-slate-700 font-extrabold mt-0.5">Voie Haut</span>
                 </button>
-                <button id="btn-down" aria-label="Voie du bas" class="touch-btn w-16 h-14 sm:w-20 sm:h-16 rounded-2xl bg-white/95 hover:bg-white text-slate-900 shadow-2xl border-2 border-amber-400 flex flex-col items-center justify-center font-arcade font-bold">
+                <button id="btn-down" type="button" aria-label="Voie du bas" class="touch-btn w-16 h-14 sm:w-20 sm:h-16 rounded-2xl bg-white/95 hover:bg-white text-slate-900 shadow-2xl border-2 border-amber-400 flex flex-col items-center justify-center font-arcade font-bold cursor-pointer">
                     <span class="text-xl leading-none">⬇️</span>
                     <span class="text-[10px] uppercase text-slate-700 font-extrabold mt-0.5">Voie Bas</span>
                 </button>
             </div>
 
-            <!-- Indicateur mobile central -->
-            <div class="hidden sm:flex items-center gap-1.5 bg-slate-900/65 text-white/90 px-3 py-1 rounded-full text-[11px] font-bold backdrop-blur-xs">
-                <span>👆 Glisse ↕️ Voie</span>
-                <span>•</span>
-                <span>Tap 🦘 Saut</span>
-            </div>
-
             <!-- Actions principales : SAUTER & SONNETTE -->
             <div class="flex items-center gap-3 pointer-events-auto">
-                <button id="btn-jump" aria-label="Sauter" class="touch-btn h-16 sm:h-20 px-5 sm:px-7 rounded-2xl bg-gradient-to-b from-sky-400 to-blue-600 hover:from-sky-300 hover:to-blue-500 text-white shadow-2xl border-2 border-sky-200 flex flex-col items-center justify-center font-arcade font-bold">
+                <button id="btn-jump" type="button" aria-label="Sauter" class="touch-btn h-16 sm:h-20 px-5 sm:px-7 rounded-2xl bg-gradient-to-b from-sky-400 to-blue-600 hover:from-sky-300 hover:to-blue-500 text-white shadow-2xl border-2 border-sky-200 flex flex-col items-center justify-center font-arcade font-bold cursor-pointer">
                     <span class="text-2xl sm:text-3xl leading-none">🦘</span>
                     <span class="text-[11px] sm:text-xs uppercase tracking-wider mt-0.5">Sauter</span>
                 </button>
 
-                <button id="btn-bell" aria-label="Sonnette" class="touch-btn relative w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-b from-amber-300 to-amber-500 hover:from-amber-200 hover:to-amber-400 text-slate-950 shadow-2xl border-4 border-yellow-100 flex flex-col items-center justify-center font-arcade font-extrabold">
+                <button id="btn-bell" type="button" aria-label="Sonnette" class="touch-btn relative w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-b from-amber-300 to-amber-500 hover:from-amber-200 hover:to-amber-400 text-slate-950 shadow-2xl border-4 border-yellow-100 flex flex-col items-center justify-center font-arcade font-extrabold cursor-pointer">
                     <span class="text-2xl sm:text-3xl leading-none">🔔</span>
                     <span class="text-[10px] sm:text-xs uppercase tracking-wider mt-0.5">Dring !</span>
                 </button>
             </div>
         </div>
 
-        <!-- ÉCRAN D'ACCUEIL & PERSONNALISATION LUDO -->
-        <div id="start-screen" class="absolute inset-0 z-30 flex items-center justify-center p-3 sm:p-6 bg-gradient-to-b from-sky-900/75 via-emerald-950/70 to-slate-950/85 backdrop-blur-xs overflow-y-auto">
-            <div class="glass-panel w-full max-w-2xl rounded-3xl p-5 sm:p-7 shadow-2xl border-4 border-amber-400 my-auto">
-                <!-- Titre -->
-                <div class="text-center mb-4">
-                    <div class="inline-flex items-center gap-2 bg-red-600 text-yellow-300 border-2 border-yellow-400 px-3.5 py-1 rounded-full text-xs sm:text-sm font-arcade font-bold tracking-wide mb-2 shadow-sm">
-                        <span>🏮</span> Xin chào mọi người ! <span class="font-nunito font-normal text-yellow-100">(Bonjour tout le monde !)</span> <span>🏮</span>
-                    </div>
-                    <h1 class="font-arcade text-3xl sm:text-5xl font-bold text-slate-900 tracking-tight">
-                        LUDO-VÉLO <span class="text-amber-500">VIETNAM</span>
-                    </h1>
-                    <p class="text-slate-600 text-xs sm:text-sm font-semibold mt-1">
-                        Bienvenue au village ! Pédale sur le chemin de terre, saute par-dessus les <b class="text-rose-600">trous profonds</b> et fais tinter ta sonnette !
-                    </p>
+        <!-- ÉCRAN D'ACCUEIL AVEC IMAGE ACCUEIL.PNG ET BOUTON DISCRET -->
+        <div id="start-screen" class="absolute inset-0 z-30 flex flex-col justify-between p-3 sm:p-6 bg-slate-950/30 overflow-hidden">
+            <img id="welcome-bg-img" alt="Accueil Ludo-Vélo Vietnam" class="hidden absolute inset-0 w-full h-full object-cover object-center pointer-events-none select-none z-0">
+
+            <div class="relative z-10 flex items-center justify-between gap-2">
+                <div class="inline-flex items-center gap-1.5 bg-slate-950/70 text-yellow-300 border border-amber-300/65 px-3 py-1 rounded-full text-xs sm:text-sm font-arcade font-bold shadow-md backdrop-blur-xs">
+                    <span>🏮</span> Xin chào mọi người !
                 </div>
 
-                <!-- Carte Ludo + Import photo optionnel -->
-                <div class="bg-gradient-to-r from-amber-50 via-yellow-50 to-orange-50 border-2 border-amber-300/90 rounded-2xl p-3.5 sm:p-4 mb-4">
-                    <div class="flex flex-col sm:flex-row items-center gap-4">
-                        <!-- Aperçu en direct du sprite de Ludo en profil -->
-                        <div class="relative shrink-0">
-                            <div class="w-32 h-24 sm:w-36 sm:h-28 rounded-2xl bg-white border-3 border-amber-400 shadow-md overflow-hidden flex items-center justify-center animate-float">
-                                <canvas id="ludo-preview-canvas" width="180" height="130" class="w-full h-full object-contain"></canvas>
-                            </div>
-                            <span id="cutout-status" class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full shadow whitespace-nowrap">
-                                👒 Prêt à pédaler !
-                            </span>
-                        </div>
+                <button id="btn-voice-welcome" type="button" class="bg-slate-950/70 hover:bg-slate-900/90 active:scale-95 text-amber-200 border border-amber-300/60 text-xs font-extrabold px-3 py-1.5 rounded-full shadow-md backdrop-blur-xs transition inline-flex items-center gap-1.5 cursor-pointer">
+                    <span>🗣️</span> Vocal
+                </button>
+            </div>
 
-                        <!-- Infos & remplacement photo optionnel -->
-                        <div class="flex-1 text-center sm:text-left">
-                            <h3 class="font-arcade font-bold text-slate-800 text-base mb-1">Pilote : Ludo</h3>
-                            <p class="text-xs text-slate-600 mb-3 leading-relaxed">
-                                Attention aux <b class="text-rose-600">trous profonds</b> sur le chemin du village : un saut raté et c’est la chute immédiate ! Ramasse les <b>Bánh mì</b> et <b>Phở</b> en chemin.
-                            </p>
-                            <div class="flex flex-wrap justify-center sm:justify-start gap-2">
-                                <label for="photo-upload" class="cursor-pointer bg-slate-800 hover:bg-slate-700 active:scale-95 text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow transition inline-flex items-center gap-1.5">
-                                    <span>📸</span> Autre photo (profil)
-                                </label>
-                                <input type="file" id="photo-upload" accept="image/*" class="hidden">
-
-                                <button id="btn-restore-ludo" type="button" class="hidden bg-amber-200 hover:bg-amber-300 text-amber-900 text-xs font-bold px-2.5 py-1.5 rounded-xl transition">
-                                    ↩️ Ludo
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Aide rapide des commandes -->
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center mb-5 text-xs">
-                    <div class="bg-slate-100/90 rounded-xl p-2 border border-slate-200">
-                        <div class="font-bold text-slate-800">👆 Glisse ↕️ / ⬆️⬇️</div>
-                        <div class="text-[11px] text-slate-500">Changer de voie</div>
-                    </div>
-                    <div class="bg-slate-100/90 rounded-xl p-2 border border-slate-200">
-                        <div class="font-bold text-rose-700">👆 Tap / 🦘 Sauter</div>
-                        <div class="text-[11px] text-slate-500">Sauter les trous !</div>
-                    </div>
-                    <div class="bg-slate-100/90 rounded-xl p-2 border border-slate-200">
-                        <div class="font-bold text-amber-700">🔔 Dring / Espace</div>
-                        <div class="text-[11px] text-slate-500">Faire réagir</div>
-                    </div>
-                    <div class="bg-slate-100/90 rounded-xl p-2 border border-slate-200">
-                        <div class="font-bold text-emerald-700">🥖 🍜 ☕</div>
-                        <div class="text-[11px] text-slate-500">Spécialités VN</div>
-                    </div>
-                </div>
-
-                <!-- Bouton Jouer -->
-                <button id="btn-start" class="w-full py-3.5 sm:py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 active:scale-[0.99] text-white font-arcade font-bold text-xl sm:text-2xl shadow-xl border-b-4 border-emerald-700 transition cursor-pointer flex items-center justify-center gap-2">
-                    <span>🚴</span> EN ROUTE LUDO !
+            <div class="relative z-10 flex justify-center pb-1 sm:pb-3">
+                <button id="btn-start" type="button" class="px-6 sm:px-8 py-2.5 sm:py-3 rounded-full bg-emerald-600/90 hover:bg-emerald-500 active:scale-95 text-white font-arcade font-bold text-base sm:text-xl shadow-xl border-2 border-amber-200/85 backdrop-blur-xs transition cursor-pointer inline-flex items-center gap-2">
+                    <span>🚴</span> JOUER
                 </button>
             </div>
         </div>
@@ -243,10 +173,10 @@
                 <h2 class="font-arcade text-2xl font-bold text-slate-900 mb-1">Pause Café</h2>
                 <p class="text-xs text-slate-600 mb-5">Ludo reprend son souffle à l'ombre d'un bananier.</p>
                 <div class="flex flex-col gap-2.5">
-                    <button id="btn-resume" class="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-arcade font-bold text-lg shadow-lg transition cursor-pointer">
+                    <button id="btn-resume" type="button" class="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-arcade font-bold text-lg shadow-lg transition cursor-pointer">
                         ▶️ Reprendre
                     </button>
-                    <button id="btn-quit-menu" class="w-full py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-sm transition cursor-pointer">
+                    <button id="btn-quit-menu" type="button" class="w-full py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-sm transition cursor-pointer">
                         🏠 Menu principal
                     </button>
                 </div>
@@ -255,14 +185,15 @@
 
         <!-- ÉCRAN GAME OVER -->
         <div id="gameover-screen" class="hidden absolute inset-0 z-30 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-xs overflow-y-auto">
-            <div class="glass-panel w-full max-w-md rounded-3xl p-4 sm:p-6 text-center shadow-2xl border-4 border-rose-400 my-auto">
+            <div id="gameover-card" class="relative glass-panel w-full max-w-md rounded-3xl p-4 sm:p-6 text-center shadow-2xl border-4 border-rose-400 my-auto overflow-hidden">
+                <img id="gameover-bg-img" alt="Illustration Game Over Ludo" class="hidden w-full h-44 sm:h-52 object-cover rounded-2xl border-2 border-amber-300 shadow-md mb-3 bg-slate-900">
                 <div id="gameover-icon" class="text-4xl sm:text-5xl mb-1.5">🕳️</div>
                 <h2 id="gameover-title" class="font-arcade text-xl sm:text-3xl font-bold text-slate-900 mb-1">Dans le trou !</h2>
                 <p id="gameover-reason" class="text-xs sm:text-sm text-slate-600 font-semibold mb-3 sm:mb-4">
                     Ludo n'a pas sauté assez haut au-dessus du trou de la route !
                 </p>
 
-                <div class="grid grid-cols-3 gap-2 bg-slate-100 rounded-2xl p-2.5 sm:p-3 mb-4 border border-slate-200">
+                <div class="grid grid-cols-3 gap-2 bg-white/95 rounded-2xl p-2.5 sm:p-3 mb-4 border border-slate-200 shadow-xs">
                     <div>
                         <div class="text-[10px] uppercase font-extrabold text-slate-400">Score</div>
                         <div id="final-score" class="font-arcade text-lg sm:text-xl font-bold text-slate-900">0</div>
@@ -278,10 +209,10 @@
                 </div>
 
                 <div class="flex flex-col sm:flex-row gap-2">
-                    <button id="btn-restart" class="flex-1 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-arcade font-bold text-base sm:text-lg shadow-lg border-b-4 border-emerald-700 transition cursor-pointer">
+                    <button id="btn-restart" type="button" class="flex-1 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-arcade font-bold text-base sm:text-lg shadow-lg border-b-4 border-emerald-700 transition cursor-pointer">
                         🔄 Rejouer
                     </button>
-                    <button id="btn-home" class="py-3 px-4 rounded-2xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-arcade font-bold text-sm sm:text-base transition cursor-pointer">
+                    <button id="btn-home" type="button" class="py-3 px-4 rounded-2xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-arcade font-bold text-sm sm:text-base transition cursor-pointer">
                         🏠 Menu
                     </button>
                 </div>
@@ -290,7 +221,7 @@
     </div>
 
     <script>
-    // --- 1. SYNTHÉTISEUR AUDIO WEB AUDIO API (SONNETTE, SAUT, CHUTE TROU, VILLAGE VN) ---
+    // --- 1. SYNTHÉTISEUR AUDIO WEB AUDIO API + VOIX D'ACCUEIL ---
     class SoundEngine {
         constructor() {
             this.ctx = null;
@@ -453,7 +384,6 @@
         startBgm() {
             if (this.muted || this.bgmTimer) return;
             this.init();
-            // Gamme pentatonique joyeuse inspirée des mélodies d'Asie du Sud-Est
             const scale = [293.66, 329.63, 392.00, 440.00, 587.33, 440.00, 392.00, 329.63];
             this.bgmTimer = setInterval(() => {
                 if (this.muted || !this.ctx || this.ctx.state !== 'running') return;
@@ -485,17 +415,49 @@
                 this.bgmTimer = null;
             }
         }
+
+        speakWelcome() {
+            if (this.muted || !('speechSynthesis' in window)) return;
+            try {
+                window.speechSynthesis.cancel();
+                const voices = window.speechSynthesis.getVoices() || [];
+                const femaleKeywords = [
+                    'linh', 'mai', 'huong', 'hương', 'lan', 'thao', 'thảo', 'an',
+                    'google tiếng việt', 'female', 'femme', 'woman'
+                ];
+
+                const viUtterance = new SpeechSynthesisUtterance('Xin chào mọi người !');
+                viUtterance.lang = 'vi-VN';
+                viUtterance.rate = 1.15;
+                viUtterance.pitch = 1.28;
+
+                const viVoices = voices.filter((v) =>
+                    (v.lang || '').toLowerCase().startsWith('vi')
+                );
+                const viFemale =
+                    viVoices.find((v) =>
+                        femaleKeywords.some((kw) => (v.name || '').toLowerCase().includes(kw))
+                    ) ||
+                    viVoices[0] ||
+                    null;
+
+                if (viFemale) {
+                    viUtterance.voice = viFemale;
+                }
+
+                window.speechSynthesis.speak(viUtterance);
+            } catch (_) {
+                // Ignore speech synthesis restrictions
+            }
+        }
     }
 
     // --- 2. GESTIONNAIRE DU SPRITE DE LUDO (8 FRAMES + DÉTOURAGE FLOODFILL) ---
     class LudoSpriteManager {
-        constructor(previewCanvas) {
-            this.previewCanvas = previewCanvas;
-            this.previewCtx = previewCanvas.getContext('2d');
+        constructor() {
             this.spriteCanvas = null;
             this.frames = [];
             this.frameIndex = 0;
-            this.isCustomPhoto = false;
             this.framesDirectory = 'assets/frames';
             this.frameFileNames = [
                 'fram1.jpg',
@@ -509,7 +471,6 @@
             ];
 
             this.buildFallbackLudoSprite();
-            this.drawPreview(0);
             this.loadFramesFromCandidateDirs(this.getAutoFrameDirs(), 0, this.frameFileNames);
         }
 
@@ -590,15 +551,7 @@
                         if (validFrames.length > 0) {
                             this.frames = validFrames;
                             this.spriteCanvas = validFrames[0];
-                            this.isCustomPhoto = false;
                             this.framesDirectory = cleanDir;
-                            const statusEl = document.getElementById('cutout-status');
-                            if (statusEl) {
-                                statusEl.textContent = validFrames.length === fileNames.length
-                                    ? '✨ 8 frames prêtes !'
-                                    : `✨ ${validFrames.length} frames prêtes !`;
-                            }
-                            this.drawPreview(0);
                         } else {
                             this.loadFramesFromCandidateDirs(dirs, dirIdx + 1, fileNames);
                         }
@@ -611,8 +564,6 @@
                         if (validFrames.length > 0) {
                             this.frames = validFrames;
                             this.spriteCanvas = validFrames[0];
-                            this.isCustomPhoto = false;
-                            this.drawPreview(0);
                         } else {
                             this.loadFramesFromCandidateDirs(dirs, dirIdx + 1, fileNames);
                         }
@@ -622,7 +573,7 @@
             });
         }
 
-        loadSpriteSheet(candidates, idx = 0, isCustom = false) {
+        loadSpriteSheet(candidates, idx = 0) {
             if (idx >= candidates.length) return;
             const src = candidates[idx];
             const img = new Image();
@@ -640,21 +591,13 @@
                         this.frames = [sheetCutout];
                         this.spriteCanvas = sheetCutout;
                     }
-                    this.isCustomPhoto = isCustom;
-                    const statusEl = document.getElementById('cutout-status');
-                    if (statusEl) {
-                        statusEl.textContent = isCustom
-                            ? '📸 Photo active !'
-                            : '👒 Prêt à pédaler !';
-                    }
-                    this.drawPreview(0);
                 } catch (err) {
                     console.warn('Détourage impossible, repli sur le sprite intégré :', err);
-                    this.loadSpriteSheet(candidates, idx + 1, isCustom);
+                    this.loadSpriteSheet(candidates, idx + 1);
                 }
             };
             img.onerror = () => {
-                this.loadSpriteSheet(candidates, idx + 1, isCustom);
+                this.loadSpriteSheet(candidates, idx + 1);
             };
             img.src = src;
         }
@@ -725,10 +668,6 @@
             }
 
             return frames;
-        }
-
-        loadAndProcessImage(src, isCustom = false) {
-            this.loadSpriteSheet([src], 0, isCustom);
         }
 
         buildFallbackLudoSprite() {
@@ -964,35 +903,6 @@
             }
             return this.spriteCanvas;
         }
-
-        drawPreview(timeSec = 0) {
-            if (!this.previewCtx || !this.previewCanvas) return;
-            const ctx = this.previewCtx;
-            const cw = this.previewCanvas.width;
-            const ch = this.previewCanvas.height;
-
-            ctx.clearRect(0, 0, cw, ch);
-
-            ctx.fillStyle = '#bae6fd';
-            ctx.fillRect(0, 0, cw, ch * 0.72);
-            ctx.fillStyle = '#86efac';
-            ctx.fillRect(0, ch * 0.62, cw, ch * 0.14);
-            ctx.fillStyle = '#475569';
-            ctx.fillRect(0, ch * 0.74, cw, ch * 0.26);
-
-            const idx = this.frames.length > 0 ? Math.floor(timeSec * 12) % this.frames.length : 0;
-            const activeFrame = this.getFrame(idx);
-            if (!activeFrame) return;
-
-            const bob = Math.sin(timeSec * 12) * 2.5;
-            const scale = Math.min((cw - 16) / activeFrame.width, (ch - 14) / activeFrame.height);
-            const dw = activeFrame.width * scale;
-            const dh = activeFrame.height * scale;
-            const dx = (cw - dw) / 2;
-            const dy = ch - dh - 5 + bob;
-
-            ctx.drawImage(activeFrame, dx, dy, dw, dh);
-        }
     }
 
     // --- 3. JEU EN VUE LATÉRALE (SIDE-SCROLLER 2.5D) : VILLAGE VIETNAMIEN & TROUS FATALS ---
@@ -1001,9 +911,9 @@
             this.canvas = document.getElementById('gameCanvas');
             this.ctx = this.canvas.getContext('2d');
             this.sound = new SoundEngine();
-            this.ludoSprite = new LudoSpriteManager(document.getElementById('ludo-preview-canvas'));
+            this.ludoSprite = new LudoSpriteManager();
 
-            this.state = 'menu'; // 'menu' | 'playing' | 'paused' | 'gameover'
+            this.state = 'menu';
             this.width = 1280;
             this.height = 720;
             this.dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -1027,6 +937,8 @@
             this.bgRevealProgress = 0.2;
             this.bgImage = null;
             this.bgLoaded = false;
+            this.welcomeImageSrc = null;
+            this.gameOverImageSrc = null;
 
             this.player = {
                 x: 230,
@@ -1058,22 +970,36 @@
             this.bannerTimeout = null;
             this.lastTimestamp = 0;
             this.elapsed = 0;
-            this.touchGesture = {
-                active: false,
-                startX: 0,
-                startY: 0,
-                handled: false
-            };
 
             this.roadPatternCanvas = null;
+            this.loadWelcomeImage();
             this.loadBackgroundImage();
+            this.loadGameOverImage();
             this.buildRealisticRoadTexture();
             this.resize();
             this.initScenery();
             this.bindEvents();
             this.updateHud();
+            this.initWelcomeVoice();
 
             requestAnimationFrame((ts) => this.loop(ts));
+        }
+
+        initWelcomeVoice() {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.getVoices();
+                window.speechSynthesis.onvoiceschanged = () => {
+                    window.speechSynthesis.getVoices();
+                };
+            }
+            setTimeout(() => this.sound.speakWelcome(), 350);
+            const triggerOnce = () => {
+                if (this.state === 'menu') {
+                    this.sound.speakWelcome();
+                }
+                window.removeEventListener('pointerdown', triggerOnce);
+            };
+            window.addEventListener('pointerdown', triggerOnce, { once: true });
         }
 
         loadBackgroundImage() {
@@ -1123,6 +1049,100 @@
                 };
                 img.onerror = () => tryLoad(idx + 1);
                 img.src = toSrc(candidates[idx]);
+            };
+            tryLoad(0);
+        }
+
+        loadWelcomeImage() {
+            const candidates = [
+                'assets/backgrounds/accueil.png',
+                'assets/backgrounds/accueil.jpg',
+                'assets/backgrounds/accueil.jpeg',
+                './assets/backgrounds/accueil.png',
+                'C:/Users/fredb/Desktop/Ludovelo/assets/backgrounds/accueil.png',
+                'file:///C:/Users/fredb/Desktop/Ludovelo/assets/backgrounds/accueil.png',
+                'accueil.png',
+                'accueil.jpg',
+                'accueil.jpeg',
+                'assets/accueil.png'
+            ];
+            try {
+                const host = window.location.hostname || '';
+                const pathname = window.location.pathname || '';
+                if (host.endsWith('.github.io')) {
+                    const owner = host.replace('.github.io', '');
+                    const parts = pathname.split('/').filter(Boolean);
+                    const repo = parts.length > 0 ? parts[0] : 'Ludovelo';
+                    candidates.splice(3, 0, `https://raw.githubusercontent.com/${owner}/${repo}/main/assets/backgrounds/accueil.png`);
+                }
+            } catch (_) {
+                // Ignore URL parsing issues
+            }
+
+            const toSrc = (path) => (/^[A-Za-z]:\//.test(path) ? `file:///${path}` : path);
+
+            const tryLoad = (idx) => {
+                if (idx >= candidates.length) return;
+                const resolvedSrc = toSrc(candidates[idx]);
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = () => {
+                    this.welcomeImageSrc = resolvedSrc;
+                    const welcomeImg = document.getElementById('welcome-bg-img');
+                    if (welcomeImg) {
+                        welcomeImg.src = resolvedSrc;
+                        welcomeImg.classList.remove('hidden');
+                    }
+                };
+                img.onerror = () => tryLoad(idx + 1);
+                img.src = resolvedSrc;
+            };
+            tryLoad(0);
+        }
+
+        loadGameOverImage() {
+            const candidates = [
+                'assets/backgrounds/gameover.png',
+                'assets/backgrounds/gameover.jpg',
+                'assets/backgrounds/gameover.jpeg',
+                './assets/backgrounds/gameover.png',
+                'C:/Users/fredb/Desktop/Ludovelo/assets/backgrounds/gameover.png',
+                'file:///C:/Users/fredb/Desktop/Ludovelo/assets/backgrounds/gameover.png',
+                'gameover.png',
+                'gameover.jpg',
+                'gameover.jpeg',
+                'assets/gameover.png'
+            ];
+            try {
+                const host = window.location.hostname || '';
+                const pathname = window.location.pathname || '';
+                if (host.endsWith('.github.io')) {
+                    const owner = host.replace('.github.io', '');
+                    const parts = pathname.split('/').filter(Boolean);
+                    const repo = parts.length > 0 ? parts[0] : 'Ludovelo';
+                    candidates.splice(3, 0, `https://raw.githubusercontent.com/${owner}/${repo}/main/assets/backgrounds/gameover.png`);
+                }
+            } catch (_) {
+                // Ignore URL parsing issues
+            }
+
+            const toSrc = (path) => (/^[A-Za-z]:\//.test(path) ? `file:///${path}` : path);
+
+            const tryLoad = (idx) => {
+                if (idx >= candidates.length) return;
+                const resolvedSrc = toSrc(candidates[idx]);
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = () => {
+                    this.gameOverImageSrc = resolvedSrc;
+                    const goImg = document.getElementById('gameover-bg-img');
+                    if (goImg) {
+                        goImg.src = resolvedSrc;
+                        goImg.classList.remove('hidden');
+                    }
+                };
+                img.onerror = () => tryLoad(idx + 1);
+                img.src = resolvedSrc;
             };
             tryLoad(0);
         }
@@ -1177,15 +1197,13 @@
             this.canvas.height = Math.round(this.height * this.dpr);
             this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
 
-            // Calé directement sur le chemin de terre visible dans fond.png / fond.jpeg (entre ~63% et ~74% de la hauteur)
             this.roadTop = Math.round(this.height * 0.61);
             this.roadBottom = Math.round(this.height * 0.76);
             const roadHeight = this.roadBottom - this.roadTop;
 
-            // 3 voies bien espacées sur la piste en terre pour une meilleure lisibilité sur téléphone
             this.laneY = [
-                this.roadTop + roadHeight * 0.18,
-                this.roadTop + roadHeight * 0.50,
+                this.roadTop + roadHeight * 0.34,
+                this.roadTop + roadHeight * 0.59,
                 this.roadTop + roadHeight * 0.84
             ];
 
@@ -1234,64 +1252,23 @@
                 }
             });
 
-            this.canvas.addEventListener('pointerdown', (e) => {
-                if (this.state !== 'playing') return;
-                this.sound.init();
-                this.touchGesture.active = true;
-                this.touchGesture.startX = e.clientX;
-                this.touchGesture.startY = e.clientY;
-                this.touchGesture.handled = false;
-            });
-
-            this.canvas.addEventListener('pointermove', (e) => {
-                if (!this.touchGesture.active || this.touchGesture.handled || this.state !== 'playing') return;
-                const dx = e.clientX - this.touchGesture.startX;
-                const dy = e.clientY - this.touchGesture.startY;
-                const swipeThreshold = 26;
-
-                if (Math.abs(dy) > swipeThreshold && Math.abs(dy) > Math.abs(dx)) {
-                    this.touchGesture.handled = true;
-                    if (dy < 0) {
-                        this.changeLane(-1);
-                    } else {
-                        this.changeLane(1);
-                    }
-                } else if (dx > swipeThreshold * 1.35 && Math.abs(dx) > Math.abs(dy)) {
-                    this.touchGesture.handled = true;
-                    this.jump();
-                }
-            });
-
-            const finishPointerGesture = (e) => {
-                if (!this.touchGesture.active) return;
-                const wasHandled = this.touchGesture.handled;
-                this.touchGesture.active = false;
-                this.touchGesture.handled = false;
-
-                if (!wasHandled && this.state === 'playing') {
-                    this.jump();
-                }
-            };
-
-            this.canvas.addEventListener('pointerup', finishPointerGesture);
-            this.canvas.addEventListener('pointercancel', () => {
-                this.touchGesture.active = false;
-                this.touchGesture.handled = false;
-            });
-
             document.getElementById('btn-up').addEventListener('pointerdown', (e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 if (this.state === 'playing') this.changeLane(-1);
             });
             document.getElementById('btn-down').addEventListener('pointerdown', (e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 if (this.state === 'playing') this.changeLane(1);
             });
             document.getElementById('btn-jump').addEventListener('pointerdown', (e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 if (this.state === 'playing') this.jump();
             });
             document.getElementById('btn-bell').addEventListener('pointerdown', (e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 if (this.state === 'playing') {
                     this.ringBell();
@@ -1312,31 +1289,14 @@
             document.getElementById('btn-sound').addEventListener('click', () => {
                 const muted = this.sound.toggleMute();
                 document.getElementById('btn-sound').textContent = muted ? '🔇' : '🔊';
-            });
-
-            const uploadInput = document.getElementById('photo-upload');
-            const restoreBtn = document.getElementById('btn-restore-ludo');
-
-            uploadInput.addEventListener('change', (e) => {
-                if (e.target.files && e.target.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        this.ludoSprite.loadAndProcessImage(ev.target.result, true);
-                        restoreBtn.classList.remove('hidden');
-                    };
-                    reader.readAsDataURL(e.target.files[0]);
+                if (muted && 'speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
                 }
             });
 
-            restoreBtn.addEventListener('click', () => {
-                this.ludoSprite.loadFramesFromCandidateDirs(
-                    this.ludoSprite.getAutoFrameDirs(),
-                    0,
-                    this.ludoSprite.frameFileNames
-                );
-                this.loadBackgroundImage();
-                restoreBtn.classList.add('hidden');
-                uploadInput.value = '';
+            document.getElementById('btn-voice-welcome').addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.sound.speakWelcome();
             });
         }
 
@@ -1351,6 +1311,9 @@
         }
 
         startGame() {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
             this.sound.init();
             this.sound.startBgm();
 
@@ -1505,7 +1468,6 @@
             const y = this.laneY[lane];
             const roll = Math.random();
 
-            // Uniquement les rencontres vivantes demandées (poules, chiens, scooters, marchandes)
             let kind = 'chicken';
             let width = 40;
             let height = 30;
@@ -1612,7 +1574,6 @@
             this.elapsed += dt;
 
             if (this.state === 'menu') {
-                this.ludoSprite.drawPreview(this.elapsed);
                 this.bgScrollX = (this.bgScrollX + 45 * dt) % 2000;
                 this.scrollX = (this.scrollX + 110 * dt) % 160;
                 return;
@@ -1887,7 +1848,15 @@
 
             document.getElementById('hud').classList.add('hidden');
             document.getElementById('touch-controls').classList.add('hidden');
-            document.getElementById('gameover-icon').textContent = icon;
+            const goImg = document.getElementById('gameover-bg-img');
+            if (goImg && this.gameOverImageSrc) {
+                goImg.src = this.gameOverImageSrc;
+                goImg.classList.remove('hidden');
+                document.getElementById('gameover-icon').classList.add('hidden');
+            } else {
+                document.getElementById('gameover-icon').classList.remove('hidden');
+                document.getElementById('gameover-icon').textContent = icon;
+            }
             document.getElementById('gameover-title').textContent = title;
             document.getElementById('gameover-reason').textContent = reason;
             document.getElementById('final-score').textContent = Math.floor(this.score).toLocaleString('fr-FR');
@@ -2316,7 +2285,6 @@
 
         drawSubtleDirtLaneGuides(ctx, w) {
             ctx.save();
-            // Repères discrets des 3 voies sur le chemin de terre + halo sur la voie active de Ludo
             for (let l = 0; l < this.laneCount; l++) {
                 const ly = this.laneY[l];
                 const isCurrent = l === this.player.lane;
@@ -2563,7 +2531,7 @@
                 ctx.moveTo(-20, -15);
                 ctx.lineTo(20, -15);
                 ctx.moveTo(0, -28);
-                ctx.lineTo(0, -2);
+                ctx.moveTo(0, -2);
                 ctx.stroke();
             }
 
