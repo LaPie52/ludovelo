@@ -202,11 +202,6 @@
 
         <!-- Écran d'accueil : accueil.png bien visible + bouton discret pour lancer le jeu -->
         <div id="startOverlay" class="fixed inset-0 z-30 flex flex-col items-center justify-between p-3 sm:p-5 bg-slate-950/65 backdrop-blur-[2px]">
-            <!-- Barre supérieure discrète avec salutation vietnamienne et bouton vocal -->
-            <div class="w-full max-w-2xl flex items-center justify-between gap-2 z-10">
-                <div class="px-3.5 py-1.5 rounded-full bg-red-600/95 text-amber-200 border border-amber-300/60 shadow-lg flex items-center gap-2 text-xs sm:text-sm font-extrabold">
-                    <span>🏮</span>
-                    <span>Xin chào mọi người !</span>
             <!-- Barre supérieure discrète avec salutation vietnamienne -->
             <div class="w-full max-w-2xl flex items-center justify-start gap-2 z-10">
                 <div class="px-3.5 py-1.5 rounded-full bg-red-600/95 text-amber-200 border border-amber-300/60 shadow-lg flex items-center gap-2 text-xs sm:text-sm font-extrabold">
@@ -275,21 +270,40 @@
             </div>
         </div>
 
-        <!-- Écran Game Over mettant en valeur gameover.png et les statistiques -->
+        <!-- Écran Game Over mettant en valeur gameover.png avec score et bouton Rejouer superposés -->
         <div id="gameOverOverlay" class="hidden fixed inset-0 z-30 flex items-center justify-center p-2.5 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
             <div class="w-full max-w-md my-auto rounded-3xl bg-gradient-to-b from-amber-50 via-orange-50 to-amber-100 p-3 sm:p-4 text-center shadow-2xl border-4 border-amber-400 animate-pop-in flex flex-col gap-2.5">
-                <div class="flex items-center justify-between gap-2 px-1">
-                    <span class="px-2.5 py-0.5 rounded-full bg-rose-600 text-white text-[11px] font-black uppercase tracking-wider">Game Over</span>
-                    <h2 id="gameOverTitle" class="font-display text-lg sm:text-xl font-bold text-slate-900">Chute sur le chemin !</h2>
-                    <span class="text-lg">💥</span>
-                </div>
-
-                <!-- Cadre de l'illustration gameover.png visible en entier -->
-                <div class="relative w-full aspect-square max-h-[44dvh] sm:max-h-[48dvh] mx-auto rounded-2xl overflow-hidden border-2 border-amber-300 bg-sky-100 shadow-inner flex items-center justify-center">
+                <!-- Cadre de l'illustration gameover.png visible en entier avec score et rejouer superposés -->
+                <div class="relative w-full aspect-square max-h-[54dvh] sm:max-h-[58dvh] mx-auto rounded-2xl overflow-hidden border-2 border-amber-300 bg-sky-100 shadow-inner flex items-center justify-center">
                     <img id="gameOverImg" alt="Fin de partie Ludo" class="w-full h-full object-contain" />
                     <div id="gameOverFallback" class="hidden flex-col items-center justify-center p-4 text-slate-800">
                         <div class="text-4xl mb-1">🚲💫</div>
                         <div class="font-display text-lg font-bold">Ludo a calé en chemin !</div>
+                    </div>
+
+                    <!-- Score superposé en haut de l'image gameover.png -->
+                    <div class="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-2 pointer-events-none">
+                        <div class="px-3 py-1.5 rounded-2xl bg-slate-950/80 backdrop-blur-sm border border-amber-300/80 text-white shadow-lg flex items-center gap-2">
+                            <span class="text-base leading-none">🏆</span>
+                            <div class="text-left">
+                                <div class="text-[9px] font-extrabold uppercase tracking-wider text-amber-300 leading-none">Score</div>
+                                <div id="finalScore" class="font-display text-base sm:text-lg font-bold text-white leading-tight">0</div>
+                            </div>
+                        </div>
+
+                        <div class="px-2.5 py-1.5 rounded-2xl bg-slate-950/75 backdrop-blur-sm border border-amber-200/60 text-white shadow-lg flex items-center gap-2 text-[11px] font-extrabold">
+                            <span>🥇 <span id="finalBest">0</span></span>
+                            <span>•</span>
+                            <span>🛣️ <span id="finalDistance">0 m</span></span>
+                        </div>
+                    </div>
+
+                    <!-- Bouton Rejouer superposé en bas de l'image gameover.png -->
+                    <div class="absolute bottom-3 left-3 right-3 flex items-center justify-center gap-2">
+                        <button id="btnRetry" type="button" class="control-btn py-2.5 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-display text-base sm:text-lg font-bold border-2 border-emerald-200 flex items-center justify-center gap-1.5">
+                            <span>🔄</span>
+                            <span>Rejouer</span>
+                        </button>
                     </div>
                 </div>
 
@@ -297,29 +311,9 @@
                     Un trou sur la piste a surpris le vélo de Ludo.
                 </p>
 
-                <!-- Statistiques de fin de partie -->
-                <div class="grid grid-cols-3 gap-2">
-                    <div class="rounded-2xl bg-white/90 border border-amber-200 p-2 shadow-sm">
-                        <div class="text-[10px] font-extrabold uppercase text-slate-500">Score</div>
-                        <div id="finalScore" class="font-display text-lg sm:text-xl font-bold text-slate-900">0</div>
-                    </div>
-                    <div class="rounded-2xl bg-white/90 border border-amber-200 p-2 shadow-sm">
-                        <div class="text-[10px] font-extrabold uppercase text-amber-700">Record</div>
-                        <div id="finalBest" class="font-display text-lg sm:text-xl font-bold text-amber-600">0</div>
-                    </div>
-                    <div class="rounded-2xl bg-white/90 border border-amber-200 p-2 shadow-sm">
-                        <div class="text-[10px] font-extrabold uppercase text-emerald-700">Distance</div>
-                        <div id="finalDistance" class="font-display text-lg sm:text-xl font-bold text-emerald-700">0 m</div>
-                    </div>
-                </div>
-
-                <!-- Actions de fin de partie -->
-                <div class="grid grid-cols-2 gap-2.5 pt-0.5">
-                    <button id="btnRetry" type="button" class="control-btn py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-display text-base sm:text-lg font-bold border-2 border-emerald-200 flex items-center justify-center gap-1.5">
-                        <span>🔄</span>
-                        <span>Rejouer</span>
-                    </button>
-                    <button id="btnGameOverHome" type="button" class="control-btn py-3 px-4 rounded-2xl bg-white hover:bg-amber-50 text-slate-800 font-display text-base sm:text-lg font-bold border-2 border-amber-300 flex items-center justify-center gap-1.5">
+                <!-- Action secondaire vers l'accueil -->
+                <div class="pt-0.5">
+                    <button id="btnGameOverHome" type="button" class="w-full py-2 px-4 rounded-2xl bg-white hover:bg-amber-50 text-slate-800 font-display text-sm sm:text-base font-bold border-2 border-amber-300 flex items-center justify-center gap-1.5">
                         <span>🏠</span>
                         <span>Accueil</span>
                     </button>
@@ -591,7 +585,6 @@
                         const imageData = octx.getImageData(0, 0, w, h);
                         const data = imageData.data;
 
-                        // Échantillon du coin supérieur gauche pour détecter un fond uni clair ou gris
                         const bgR = data[0];
                         const bgG = data[1];
                         const bgB = data[2];
@@ -713,6 +706,8 @@
                     ]).then((res) => {
                         if (res && res.url) {
                             this.gameOverUrl = res.url;
+                        } else {
+                            this.gameOverUrl = 'assets/backgrounds/gameover.png';
                         }
                     });
 
@@ -738,14 +733,15 @@
 
                     // 3 voies sur le chemin de terre : haut abaissé, milieu centré, bas inchangé
                     this.laneCount = 3;
-                    this.laneRatios = [0.34, 0.59, 0.84];
+                    this.laneRatios = [0.28, 0.56, 0.84];
                     this.roadTop = this.height * 0.58;
-                    this.roadHeight = this.height * 0.36;
+                    this.roadHeight = this.height * 0.22;
                     this.laneY = [0, 0, 0];
 
                     this.state = 'MENU'; // 'MENU' | 'PLAYING' | 'PAUSED' | 'GAMEOVER'
                     this.lastTime = 0;
                     this.elapsed = 0;
+                    this.bgScrollX = 0;
 
                     this.score = 0;
                     this.bestScore = this.loadBestScore();
@@ -829,21 +825,28 @@
 
                     const gameOverImg = document.getElementById('gameOverImg');
                     const gameOverFallback = document.getElementById('gameOverFallback');
-                    if (this.assets.gameOverUrl) {
-                        gameOverImg.src = this.assets.gameOverUrl;
+                    const targetGameOverUrl = this.assets.gameOverUrl || 'assets/backgrounds/gameover.png';
+                    gameOverImg.onerror = () => {
+                        if (gameOverImg.dataset.fallbackTried !== '1') {
+                            gameOverImg.dataset.fallbackTried = '1';
+                            gameOverImg.src = 'gameover.png';
+                        } else {
+                            gameOverImg.classList.add('hidden');
+                            gameOverFallback.classList.remove('hidden');
+                            gameOverFallback.classList.add('flex');
+                        }
+                    };
+                    gameOverImg.onload = () => {
                         gameOverImg.classList.remove('hidden');
                         gameOverFallback.classList.add('hidden');
-                    } else {
-                        gameOverImg.classList.add('hidden');
-                        gameOverFallback.classList.remove('hidden');
+                        gameOverFallback.classList.remove('flex');
+                    };
+                    gameOverImg.src = targetGameOverUrl;
+
+                    if (this.state === 'MENU') {
+                        this.sound.speakVietnameseGreeting(false);
                     }
 
-                    this.computeLanes();
-                    this.player.y = this.laneY[this.player.lane];
-                    this.player.targetY = this.player.y;
-
-                    // Tentative de lancement vocal immédiat + déblocage au premier geste sur le menu
-                    this.sound.speakVietnameseGreeting(false);
                     if ('speechSynthesis' in window) {
                         const prevHandler = window.speechSynthesis.onvoiceschanged;
                         window.speechSynthesis.onvoiceschanged = () => {
@@ -864,13 +867,13 @@
                     this.canvas.height = Math.floor(this.height * this.dpr);
                     this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
 
-                    // Chemin de terre positionné en bas / centre-bas
-                    this.roadTop = this.height * 0.56;
-                    this.roadHeight = this.height * 0.36;
+                    const isWidePanorama = this.width >= this.height * 1.35;
+                    this.roadTop = this.height * (isWidePanorama ? 0.61 : 0.57);
+                    this.roadHeight = this.height * (isWidePanorama ? 0.18 : 0.26);
 
-                    const trackTop = this.roadTop + this.roadHeight * 0.14;
-                    const trackBottom = this.roadTop + this.roadHeight * 0.94;
-                    const trackSpan = Math.max(60, trackBottom - trackTop);
+                    const trackTop = this.roadTop + this.roadHeight * 0.12;
+                    const trackBottom = this.roadTop + this.roadHeight * 0.90;
+                    const trackSpan = Math.max(54, trackBottom - trackTop);
 
                     for (let i = 0; i < this.laneCount; i++) {
                         this.laneY[i] = trackTop + trackSpan * this.laneRatios[i];
@@ -896,7 +899,6 @@
                 bindUI() {
                     const startOverlay = document.getElementById('startOverlay');
 
-                    // Déblocage vocal fiable dès le premier toucher/clic sur l'accueil si nécessaire
                     const unlockGreeting = () => {
                         this.sound.ensureContext();
                         if (this.state === 'MENU' && !this.sound.hasSpokenWelcome) {
@@ -932,7 +934,6 @@
                         btnMute.textContent = this.sound.muted ? '🔇' : '🔊';
                     });
 
-                    // Boutons dédiés : changement de file uniquement via Haut / Bas, saut via Sauter
                     const bindPressButton = (id, action) => {
                         const btn = document.getElementById(id);
                         const trigger = (e) => {
@@ -1031,6 +1032,7 @@
                     this.basket = 0;
                     this.lives = 3;
                     this.speed = this.baseSpeed;
+                    this.bgScrollX = 0;
 
                     this.player.lane = 1;
                     this.player.y = this.laneY[1];
@@ -1078,7 +1080,7 @@
                     this.setOverlayVisibility('pauseOverlay', false);
                 }
 
-                triggerGameOver(title, reason) {
+                triggerGameOver(_title, reason) {
                     if (this.state === 'GAMEOVER') return;
                     this.state = 'GAMEOVER';
                     this.sound.playCrash();
@@ -1088,7 +1090,19 @@
                         this.saveBestScore(this.bestScore);
                     }
 
-                    document.getElementById('gameOverTitle').textContent = title || 'Fin de la balade !';
+                    const gameOverImg = document.getElementById('gameOverImg');
+                    const gameOverFallback = document.getElementById('gameOverFallback');
+                    if (gameOverImg && !gameOverImg.src) {
+                        gameOverImg.src = this.assets.gameOverUrl || 'assets/backgrounds/gameover.png';
+                    }
+                    if (gameOverImg && gameOverImg.complete && gameOverImg.naturalWidth > 0) {
+                        gameOverImg.classList.remove('hidden');
+                        if (gameOverFallback) {
+                            gameOverFallback.classList.add('hidden');
+                            gameOverFallback.classList.remove('flex');
+                        }
+                    }
+
                     document.getElementById('gameOverReason').textContent = reason || 'Ludo a perdu l’équilibre.';
                     document.getElementById('finalScore').textContent = String(Math.floor(this.score));
                     document.getElementById('finalBest').textContent = String(Math.floor(this.bestScore));
@@ -1251,7 +1265,6 @@
                 update(dt) {
                     this.elapsed += dt;
 
-                    // Animation continue de Ludo sur l'accueil
                     if (this.state === 'MENU') {
                         this.player.animAccumulator += dt * 7;
                         this.player.frameIndex = Math.floor(this.player.animAccumulator) % 8;
@@ -1260,8 +1273,8 @@
 
                     if (this.state !== 'PLAYING') return;
 
-                    // Progression douce de la vitesse et du score
                     this.speed = Math.min(480, this.baseSpeed + this.distance * 0.28);
+                    this.bgScrollX += this.speed * dt;
                     const stepDist = (this.speed * dt) * 0.045;
                     this.distance += stepDist;
                     this.score += stepDist * 1.4;
@@ -1273,11 +1286,9 @@
                         this.player.bellWave = Math.max(0, this.player.bellWave - dt * 2.4);
                     }
 
-                    // Interpolation verticale vers la file sélectionnée
                     const laneDiff = this.player.targetY - this.player.y;
                     this.player.y += laneDiff * Math.min(1, dt * 16);
 
-                    // Physique du saut
                     if (this.player.jumping || this.player.z > 0) {
                         this.player.z += this.player.vz * dt;
                         this.player.vz -= 1280 * dt;
@@ -1288,7 +1299,6 @@
                         }
                     }
 
-                    // Chute dans un trou si le saut est raté
                     if (this.player.fallingHole) {
                         this.player.fallProgress += dt * 2.6;
                         if (this.player.fallProgress >= 1) {
@@ -1300,12 +1310,10 @@
                         return;
                     }
 
-                    // Animation des 8 frames synchronisée avec la vitesse
                     const cadence = this.player.jumping ? 3 : 11 * (this.speed / this.baseSpeed);
                     this.player.animAccumulator += dt * cadence;
                     this.player.frameIndex = Math.floor(this.player.animAccumulator) % 8;
 
-                    // Génération des trous, obstacles et spécialités
                     this.holeTimer -= dt;
                     if (this.holeTimer <= 0) {
                         this.spawnHole();
@@ -1324,7 +1332,6 @@
                         this.pickupTimer = 1.9 + Math.random() * 1.4;
                     }
 
-                    // Mise à jour des trous et détection de chute
                     for (let i = this.holes.length - 1; i >= 0; i--) {
                         const h = this.holes[i];
                         h.x -= this.speed * dt;
@@ -1348,7 +1355,6 @@
                         }
                     }
 
-                    // Mise à jour des obstacles
                     for (let i = this.obstacles.length - 1; i >= 0; i--) {
                         const obs = this.obstacles[i];
                         obs.animPhase += dt * 7;
@@ -1379,14 +1385,12 @@
 
                             if (sameLane && overlapX && !clearJump) {
                                 if (isCrushableCritter) {
-                                    // Les petites poules et petits chiens sont écrasés et rapportent des points
                                     this.score += 20;
                                     this.sound.playPickup();
                                     this.spawnBurst(obs.x, obs.y - 4, '#fde047', 12);
                                     this.showToast(obs.kind === 'chicken' ? '💥 Poule écrasée ! +20 pts' : '💥 Chien écrasé ! +20 pts');
                                     this.obstacles.splice(i, 1);
                                 } else {
-                                    // Scooters et marchandes restent dangereux et font perdre un cœur
                                     this.lives -= 1;
                                     this.player.invulnTimer = 1.4;
                                     this.sound.playCrash();
@@ -1408,7 +1412,6 @@
                         }
                     }
 
-                    // Mise à jour des spécialités à collecter
                     for (let i = this.pickups.length - 1; i >= 0; i--) {
                         const pk = this.pickups[i];
                         pk.x -= this.speed * dt;
@@ -1433,7 +1436,6 @@
                         }
                     }
 
-                    // Mise à jour des particules
                     for (let i = this.particles.length - 1; i >= 0; i--) {
                         const pt = this.particles[i];
                         pt.life -= dt;
@@ -1449,24 +1451,33 @@
                 }
 
                 drawGroundTrack(ctx) {
-                    // Lorsque fond.jpeg / fond.png est chargé, l'image affiche le chemin naturel :
-                    // on trace uniquement un repère très discret de la voie active sans bitume gris.
-                    if (this.assets.bgLoaded) {
-                        const activeY = this.laneY[this.player.lane];
+                    if (this.assets.bgLoaded && this.assets.bgImage) {
+                        const img = this.assets.bgImage;
+                        const natW = img.naturalWidth || img.width || 1;
+                        const natH = img.naturalHeight || img.height || 1;
+                        const scale = this.height / natH;
+                        const drawW = natW * scale;
+                        const drawH = this.height;
+                        const offsetX = -(this.bgScrollX % drawW);
+
                         ctx.save();
-                        ctx.strokeStyle = 'rgba(254, 240, 138, 0.24)';
-                        ctx.lineWidth = 2;
-                        ctx.setLineDash([14, 16]);
-                        ctx.lineDashOffset = -(this.distance * 22) % 30;
+                        for (let x = offsetX; x < this.width; x += drawW) {
+                            ctx.drawImage(img, x, 0, drawW + 0.5, drawH);
+                        }
+
+                        const activeY = this.laneY[this.player.lane];
+                        ctx.strokeStyle = 'rgba(254, 240, 138, 0.22)';
+                        ctx.lineWidth = 1.8;
+                        ctx.setLineDash([12, 16]);
+                        ctx.lineDashOffset = -(this.distance * 22) % 28;
                         ctx.beginPath();
-                        ctx.moveTo(24, activeY + 8);
-                        ctx.lineTo(this.width - 24, activeY + 8);
+                        ctx.moveTo(24, activeY + 6);
+                        ctx.lineTo(this.width - 24, activeY + 6);
                         ctx.stroke();
                         ctx.restore();
                         return;
                     }
 
-                    // Secours si aucune image de fond n'est présente
                     ctx.save();
                     const grad = ctx.createLinearGradient(0, this.roadTop, 0, this.roadTop + this.roadHeight);
                     grad.addColorStop(0, '#d6b485');
@@ -1493,7 +1504,6 @@
 
                     ctx.save();
 
-                    // Liseré d'alerte discret aplati sur la terre
                     ctx.strokeStyle = 'rgba(250, 204, 21, 0.45)';
                     ctx.lineWidth = 1.2;
                     ctx.setLineDash([4, 4]);
@@ -1502,13 +1512,11 @@
                     ctx.stroke();
                     ctx.setLineDash([]);
 
-                    // Bord de terre soulevé
                     ctx.fillStyle = 'rgba(87, 83, 78, 0.72)';
                     ctx.beginPath();
                     ctx.ellipse(hole.x, y + 0.4, rx + 1, ry + 0.6, 0, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // Cavité sombre aplatie
                     const abyssGrad = ctx.createRadialGradient(hole.x, y + 0.6, 1, hole.x, y + 0.6, rx);
                     abyssGrad.addColorStop(0, '#090d16');
                     abyssGrad.addColorStop(0.75, '#1e1b18');
@@ -1518,14 +1526,12 @@
                     ctx.ellipse(hole.x, y + 0.6, rx, ry, 0, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // Ombre portée intérieure
                     ctx.strokeStyle = 'rgba(24, 24, 27, 0.75)';
                     ctx.lineWidth = 1.5;
                     ctx.beginPath();
                     ctx.ellipse(hole.x, y + 0.6, rx - 0.5, ry - 0.4, 0, Math.PI * 0.1, Math.PI * 1.15);
                     ctx.stroke();
 
-                    // Petit badge « ! » lorsque le trou approche
                     if (hole.x - rx > this.player.x && hole.x - rx < this.player.x + 240) {
                         ctx.fillStyle = '#e11d48';
                         ctx.beginPath();
@@ -1543,18 +1549,19 @@
                 drawObstacle(ctx, obs) {
                     ctx.save();
                     const hop = (obs.kind === 'chicken' || obs.kind === 'dog')
-                        ? Math.abs(Math.sin(obs.animPhase * 1.4)) * 5
-                        : Math.sin(obs.animPhase) * 1.2;
+                        ? Math.abs(Math.sin(obs.animPhase * 1.4)) * 4.5
+                        : Math.sin(obs.animPhase) * 1;
 
-                    // Ombre au sol
-                    ctx.fillStyle = 'rgba(15, 23, 42, 0.28)';
+                    const depthFactor = 0.72 + (obs.lane / Math.max(1, this.laneCount - 1)) * 0.22;
+                    const baseScale = (obs.kind === 'scooter' || obs.kind === 'vendor' ? 0.72 : 0.76) * depthFactor;
+
+                    ctx.fillStyle = 'rgba(15, 23, 42, 0.26)';
                     ctx.beginPath();
-                    ctx.ellipse(obs.x, obs.y + 12, obs.width * 0.42, 5.5, 0, 0, Math.PI * 2);
+                    ctx.ellipse(obs.x, obs.y + 8, obs.width * 0.36 * depthFactor, 4.2 * depthFactor, 0, 0, Math.PI * 2);
                     ctx.fill();
 
-                    const scale = obs.kind === 'scooter' || obs.kind === 'vendor' ? 0.78 : 0.82;
-                    ctx.translate(obs.x, obs.y + 10 - hop);
-                    ctx.scale(scale, scale);
+                    ctx.translate(obs.x, obs.y + 7 - hop);
+                    ctx.scale(baseScale, baseScale);
 
                     if (obs.kind === 'chicken') {
                         ctx.fillStyle = '#fffbeb';
@@ -1601,7 +1608,6 @@
                         ctx.fill();
                         ctx.fillRect(2, -34, 12, 12);
                     } else {
-                        // Marchande avec chapeau conique nón lá
                         ctx.fillStyle = '#ec4899';
                         ctx.beginPath();
                         ctx.roundRect(-12, -24, 24, 18, 5);
@@ -1623,18 +1629,19 @@
                 }
 
                 drawPickup(ctx, pk) {
-                    const bob = Math.sin(pk.bobPhase) * 4.5;
+                    const bob = Math.sin(pk.bobPhase) * 3.5;
+                    const depthFactor = 0.78 + (pk.lane / Math.max(1, this.laneCount - 1)) * 0.2;
                     ctx.save();
 
                     ctx.fillStyle = 'rgba(250, 204, 21, 0.25)';
                     ctx.beginPath();
-                    ctx.ellipse(pk.x, pk.y + 11, 14, 4.5, 0, 0, Math.PI * 2);
+                    ctx.ellipse(pk.x, pk.y + 8, 12 * depthFactor, 3.8 * depthFactor, 0, 0, Math.PI * 2);
                     ctx.fill();
 
-                    ctx.font = '24px "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
+                    ctx.font = `${Math.round(21 * depthFactor)}px "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.fillText(pk.icon, pk.x, pk.y - 8 + bob);
+                    ctx.fillText(pk.icon, pk.x, pk.y - 6 + bob);
 
                     ctx.restore();
                 }
@@ -1646,28 +1653,28 @@
 
                     const yGround = this.player.y;
                     const z = this.player.z;
-                    const drawY = yGround - z + this.player.fallProgress * 26;
+                    const drawY = yGround - z + this.player.fallProgress * 22;
+                    const depthFactor = 0.8 + (this.player.lane / Math.max(1, this.laneCount - 1)) * 0.2;
 
                     ctx.save();
 
-                    // Ombre au sol qui rétrécit pendant le saut
-                    const shadowScale = Math.max(0.35, 1 - z / 140);
-                    ctx.fillStyle = 'rgba(15, 23, 42, 0.34)';
+                    const shadowScale = Math.max(0.35, 1 - z / 140) * depthFactor;
+                    ctx.fillStyle = 'rgba(15, 23, 42, 0.32)';
                     ctx.beginPath();
-                    ctx.ellipse(this.player.x, yGround + 11, 30 * shadowScale, 7 * shadowScale, 0, 0, Math.PI * 2);
+                    ctx.ellipse(this.player.x, yGround + 8, 26 * shadowScale, 5.5 * shadowScale, 0, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // Onde visuelle de la sonnette
                     if (this.player.bellWave > 0) {
-                        const r = (1 - this.player.bellWave) * 78 + 14;
+                        const r = (1 - this.player.bellWave) * 72 + 12;
                         ctx.strokeStyle = `rgba(250, 204, 21, ${this.player.bellWave * 0.85})`;
                         ctx.lineWidth = 3;
                         ctx.beginPath();
-                        ctx.arc(this.player.x + 22, drawY - 34, r, 0, Math.PI * 2);
+                        ctx.arc(this.player.x + 20, drawY - 30, r, 0, Math.PI * 2);
                         ctx.stroke();
                     }
 
-                    ctx.translate(this.player.x, drawY + 10);
+                    ctx.translate(this.player.x, drawY + 8);
+                    ctx.scale(depthFactor, depthFactor);
 
                     if (this.player.fallingHole) {
                         ctx.rotate(this.player.fallProgress * 0.65);
@@ -1688,7 +1695,6 @@
 
                         ctx.drawImage(frame, -targetW * 0.5, -targetH + 4, targetW, targetH);
                     } else {
-                        // Dessin de secours propre si aucune frame n'est chargée
                         ctx.strokeStyle = '#2563eb';
                         ctx.lineWidth = 3.5;
                         ctx.beginPath();
@@ -1731,9 +1737,12 @@
                     const ctx = this.ctx;
                     ctx.clearRect(0, 0, this.width, this.height);
 
+                    if (this.assets.bgLoaded && !this.bgImgEl.classList.contains('hidden')) {
+                        this.bgImgEl.classList.add('hidden');
+                    }
+
                     this.drawGroundTrack(ctx);
 
-                    // Tri des éléments par profondeur Y pour un rendu naturel sur les 3 voies
                     const renderables = [];
 
                     for (const h of this.holes) {
