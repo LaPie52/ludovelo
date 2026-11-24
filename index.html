@@ -115,13 +115,9 @@
 </head>
 <body>
     <div id="app" class="game-shell">
-        <!-- Image de fond du décor (chemin de terre / village) -->
         <img id="bgImage" class="bg-layer" alt="Décor du village vietnamien" />
-
-        <!-- Canvas principal de rendu du jeu -->
         <canvas id="gameCanvas"></canvas>
 
-        <!-- HUD supérieur en cours de partie -->
         <div id="hudTop" class="hidden fixed top-2.5 left-2.5 right-2.5 z-20 flex items-start justify-between gap-2 pointer-events-none">
             <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 pointer-events-auto">
                 <div class="hud-pill rounded-2xl px-3 py-1.5 flex items-center gap-2">
@@ -164,7 +160,6 @@
             </div>
         </div>
 
-        <!-- Bandeau d'annonce contextuelle -->
         <div id="toastBanner" class="toast-banner opacity-0 -translate-y-2 fixed top-16 left-1/2 -translate-x-1/2 z-20 max-w-[92vw]">
             <div class="px-4 py-1.5 rounded-full bg-slate-900/90 text-amber-300 border-2 border-amber-400/80 shadow-xl flex items-center gap-2 text-xs sm:text-sm font-extrabold whitespace-nowrap">
                 <span class="px-1.5 py-0.5 rounded bg-amber-400 text-slate-950 text-[10px] font-black">VN</span>
@@ -172,9 +167,7 @@
             </div>
         </div>
 
-        <!-- Contrôles tactiles dédiés (uniquement via les boutons) -->
         <div id="touchControls" class="hidden fixed bottom-3 left-3 right-3 z-20 flex items-end justify-between pointer-events-none">
-            <!-- Changement de file Haut / Bas -->
             <div class="flex flex-col gap-2 pointer-events-auto">
                 <button id="btnLaneUp" type="button" aria-label="Voie du haut" class="control-btn w-16 h-14 sm:w-20 sm:h-16 rounded-2xl bg-white/95 hover:bg-white border-2 border-sky-200 flex flex-col items-center justify-center text-slate-800">
                     <span class="text-xl leading-none font-black text-sky-600">⬆️</span>
@@ -186,7 +179,6 @@
                 </button>
             </div>
 
-            <!-- Sauter & Sonnette -->
             <div class="flex items-end gap-2.5 pointer-events-auto">
                 <button id="btnJump" type="button" aria-label="Sauter" class="control-btn px-4 h-16 sm:h-18 rounded-3xl bg-gradient-to-b from-sky-400 to-blue-600 border-2 border-sky-200 flex items-center gap-2 text-white">
                     <span class="text-2xl leading-none">🦘</span>
@@ -200,9 +192,7 @@
             </div>
         </div>
 
-        <!-- Écran d'accueil : accueil.png bien visible + bouton discret pour lancer le jeu -->
         <div id="startOverlay" class="fixed inset-0 z-30 flex flex-col items-center justify-between p-3 sm:p-5 bg-slate-950/65 backdrop-blur-[2px]">
-            <!-- Barre supérieure discrète avec salutation vietnamienne -->
             <div class="w-full max-w-2xl flex items-center justify-start gap-2 z-10">
                 <div class="px-3.5 py-1.5 rounded-full bg-red-600/95 text-amber-200 border border-amber-300/60 shadow-lg flex items-center gap-2 text-xs sm:text-sm font-extrabold">
                     <span>🏮</span>
@@ -210,32 +200,27 @@
                 </div>
             </div>
 
-            <!-- Cadre d'illustration d'accueil adapté au téléphone -->
             <div class="relative w-full max-w-md sm:max-w-lg flex-1 my-2.5 flex items-center justify-center overflow-hidden rounded-3xl border-2 border-amber-300/70 shadow-2xl bg-amber-950/50 animate-pop-in">
                 <img id="welcomeImg" alt="Accueil Ludo-Vélo Vietnam" class="w-full h-full object-contain sm:object-cover transition-opacity duration-300" />
-                <!-- Fallback illustratif si accueil.png est absent -->
                 <div id="welcomeFallback" class="hidden w-full h-full flex flex-col items-center justify-center p-5 text-center bg-gradient-to-b from-amber-100 via-orange-50 to-emerald-100 text-slate-900">
                     <div class="text-5xl mb-2">🏮🚴🏮</div>
                     <div class="font-display text-2xl sm:text-3xl font-bold text-red-700">LUDO-VÉLO VIETNAM</div>
                     <p class="text-xs sm:text-sm font-bold text-slate-700 mt-1">Xin chào mọi người ! Prêt à pédaler dans le village ?</p>
                 </div>
 
-                <!-- Titre compact en haut de l'image -->
                 <div class="absolute top-2.5 left-1/2 -translate-x-1/2 px-3.5 py-1 rounded-full bg-slate-950/75 backdrop-blur-sm border border-amber-300/50 text-amber-200 font-display text-xs sm:text-sm font-bold tracking-wide whitespace-nowrap shadow">
                     🚴 LUDO-VÉLO VIETNAM
                 </div>
             </div>
 
-            <!-- Bouton de lancement discret mais bien visible en bas -->
             <div class="w-full max-w-md flex flex-col items-center gap-2 z-10">
-                <!-- Bandeau défilant des règles simples -->
                 <div class="w-full overflow-hidden rounded-full bg-slate-950/85 border border-amber-300/60 py-1.5 shadow-lg">
                     <div class="marquee-track text-[11px] sm:text-xs font-extrabold text-amber-100 whitespace-nowrap">
-                        <span class="mx-4">🚫 À ÉVITER : Les trous du chemin (saute avec SAUTER !) et les scooters / marchandes !</span>
-                        <span class="mx-4">💥 À ÉCRASER : Les petites poules et petits chiens sur le chemin !</span>
+                        <span class="mx-4">🚫 À ÉVITER : Les trous et les autres obstacles (perte de 1 ❤️ en cas de choc) !</span>
+                        <span class="mx-4">💥 À ÉCRASER : Uniquement canard.jpg et poule.jpg (+20 pts, sans perdre de cœur) !</span>
                         <span class="mx-4">🧺 À RAMASSER : Bánh mì, Phở et fruits !</span>
-                        <span class="mx-4">🚫 À ÉVITER : Les trous du chemin (saute avec SAUTER !) et les scooters / marchandes !</span>
-                        <span class="mx-4">💥 À ÉCRASER : Les petites poules et petits chiens sur le chemin !</span>
+                        <span class="mx-4">🚫 À ÉVITER : Les trous et les autres obstacles (perte de 1 ❤️ en cas de choc) !</span>
+                        <span class="mx-4">💥 À ÉCRASER : Uniquement canard.jpg et poule.jpg (+20 pts, sans perdre de cœur) !</span>
                         <span class="mx-4">🧺 À RAMASSER : Bánh mì, Phở et fruits !</span>
                     </div>
                 </div>
@@ -250,7 +235,6 @@
             </div>
         </div>
 
-        <!-- Écran Pause -->
         <div id="pauseOverlay" class="hidden fixed inset-0 z-30 flex items-center justify-center p-4 bg-slate-950/65 backdrop-blur-sm">
             <div class="w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-2xl border-4 border-amber-300 animate-pop-in">
                 <div class="text-4xl mb-2">⏸️</div>
@@ -270,10 +254,8 @@
             </div>
         </div>
 
-        <!-- Écran Game Over mettant en valeur gameover.png avec score et bouton Rejouer superposés -->
         <div id="gameOverOverlay" class="hidden fixed inset-0 z-30 flex items-center justify-center p-2.5 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
             <div class="w-full max-w-md my-auto rounded-3xl bg-gradient-to-b from-amber-50 via-orange-50 to-amber-100 p-3 sm:p-4 text-center shadow-2xl border-4 border-amber-400 animate-pop-in flex flex-col gap-2.5">
-                <!-- Cadre de l'illustration gameover.png visible en entier avec score et rejouer superposés -->
                 <div class="relative w-full aspect-square max-h-[54dvh] sm:max-h-[58dvh] mx-auto rounded-2xl overflow-hidden border-2 border-amber-300 bg-sky-100 shadow-inner flex items-center justify-center">
                     <img id="gameOverImg" alt="Fin de partie Ludo" class="w-full h-full object-contain" />
                     <div id="gameOverFallback" class="hidden flex-col items-center justify-center p-4 text-slate-800">
@@ -281,7 +263,6 @@
                         <div class="font-display text-lg font-bold">Ludo a calé en chemin !</div>
                     </div>
 
-                    <!-- Score superposé en haut de l'image gameover.png -->
                     <div class="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-2 pointer-events-none">
                         <div class="px-3 py-1.5 rounded-2xl bg-slate-950/80 backdrop-blur-sm border border-amber-300/80 text-white shadow-lg flex items-center gap-2">
                             <span class="text-base leading-none">🏆</span>
@@ -298,7 +279,6 @@
                         </div>
                     </div>
 
-                    <!-- Bouton Rejouer superposé en bas de l'image gameover.png -->
                     <div class="absolute bottom-3 left-3 right-3 flex items-center justify-center gap-2">
                         <button id="btnRetry" type="button" class="control-btn py-2.5 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-display text-base sm:text-lg font-bold border-2 border-emerald-200 flex items-center justify-center gap-1.5">
                             <span>🔄</span>
@@ -311,7 +291,6 @@
                     Un trou sur la piste a surpris le vélo de Ludo.
                 </p>
 
-                <!-- Action secondaire vers l'accueil -->
                 <div class="pt-0.5">
                     <button id="btnGameOverHome" type="button" class="w-full py-2 px-4 rounded-2xl bg-white hover:bg-amber-50 text-slate-800 font-display text-sm sm:text-base font-bold border-2 border-amber-300 flex items-center justify-center gap-1.5">
                         <span>🏠</span>
@@ -326,9 +305,6 @@
         (() => {
             'use strict';
 
-            // =========================================================================
-            // 1. MOTEUR AUDIO (SONNETTE, SAUT, PANIER, CHOC & VOIX DYNAMIQUE)
-            // =========================================================================
             class SoundManager {
                 constructor() {
                     this.ctx = null;
@@ -347,9 +323,7 @@
                         if (this.ctx && this.ctx.state === 'suspended') {
                             this.ctx.resume().catch(() => {});
                         }
-                    } catch (err) {
-                        // Ignore si l'audio est indisponible
-                    }
+                    } catch (err) {}
                 }
 
                 setMuted(mute) {
@@ -528,22 +502,17 @@
                         utter.onend = () => {
                             this.hasSpokenWelcome = true;
                         };
-                        utter.onerror = () => {
-                            // Réessayera au prochain geste si bloqué par l'autoplay
-                        };
 
                         window.speechSynthesis.speak(utter);
                     } catch (err) {}
                 }
             }
 
-            // =========================================================================
-            // 2. CHARGEUR D'ASSETS (8 FRAMES DE LUDO, DÉCOR, ACCUEIL & GAMEOVER)
-            // =========================================================================
             class AssetLoader {
                 constructor() {
                     this.frames = [];
                     this.framesLoadedCount = 0;
+                    this.obstacleSprites = [];
                     this.bgImage = null;
                     this.bgLoaded = false;
                     this.welcomeUrl = null;
@@ -560,7 +529,6 @@
                             }
                             const url = urls[idx++];
                             const img = new Image();
-                            img.crossOrigin = 'anonymous';
                             img.onload = () => resolve({ img, url });
                             img.onerror = tryNext;
                             img.src = url;
@@ -578,12 +546,32 @@
                         const off = document.createElement('canvas');
                         off.width = w;
                         off.height = h;
-                        const octx = off.getContext('2d', { willReadFrequently: true });
-                        if (!octx) return img;
-
+                        const octx = off.getContext('2d');
                         octx.drawImage(img, 0, 0);
-                        const imageData = octx.getImageData(0, 0, w, h);
-                        const data = imageData.data;
+
+                        const imgData = octx.getImageData(0, 0, w, h);
+                        const data = imgData.data;
+
+                        const corners = [
+                            [0, 0],
+                            [w - 1, 0],
+                            [0, h - 1],
+                            [w - 1, h - 1]
+                        ];
+
+                        const isCornerLightOrUniform = corners.every(([cx, cy]) => {
+                            const p = (cy * w + cx) * 4;
+                            const r = data[p];
+                            const g = data[p + 1];
+                            const b = data[p + 2];
+                            const maxC = Math.max(r, g, b);
+                            const minC = Math.min(r, g, b);
+                            return maxC > 205 && (maxC - minC) < 42;
+                        });
+
+                        if (!isCornerLightOrUniform) {
+                            return img;
+                        }
 
                         const bgR = data[0];
                         const bgG = data[1];
@@ -594,57 +582,66 @@
                         let head = 0;
                         let tail = 0;
 
-                        const matchesBg = (idx) => {
-                            const p = idx * 4;
+                        const matchesBg = (pixelIdx) => {
+                            const p = pixelIdx * 4;
                             const r = data[p];
                             const g = data[p + 1];
                             const b = data[p + 2];
-                            const a = data[p + 3];
-                            if (a < 15) return true;
-
-                            const distSeed = Math.hypot(r - bgR, g - bgG, b - bgB);
-                            const isNearWhite = r > 235 && g > 235 && b > 235;
-                            const isNearLightGray =
-                                Math.abs(r - g) < 12 &&
-                                Math.abs(g - b) < 12 &&
-                                r > 190 &&
-                                distSeed < 48;
-
-                            return distSeed < 36 || isNearWhite || isNearLightGray;
+                            const dist = Math.abs(r - bgR) + Math.abs(g - bgG) + Math.abs(b - bgB);
+                            const brightness = (r + g + b) / 3;
+                            return dist < 68 || brightness > 236;
                         };
 
-                        const enqueueIfBg = (x, y) => {
-                            if (x < 0 || y < 0 || x >= w || y >= h) return;
-                            const pos = y * w + x;
-                            if (visited[pos]) return;
-                            if (matchesBg(pos)) {
-                                visited[pos] = 1;
-                                queue[tail++] = pos;
+                        const pushIfBg = (x, y) => {
+                            if (x < 0 || x >= w || y < 0 || y >= h) return;
+                            const idx = y * w + x;
+                            if (visited[idx]) return;
+                            if (matchesBg(idx)) {
+                                visited[idx] = 1;
+                                queue[tail++] = idx;
                             }
                         };
 
                         for (let x = 0; x < w; x++) {
-                            enqueueIfBg(x, 0);
-                            enqueueIfBg(x, h - 1);
+                            pushIfBg(x, 0);
+                            pushIfBg(x, h - 1);
                         }
                         for (let y = 0; y < h; y++) {
-                            enqueueIfBg(0, y);
-                            enqueueIfBg(w - 1, y);
+                            pushIfBg(0, y);
+                            pushIfBg(w - 1, y);
                         }
 
                         while (head < tail) {
-                            const curr = queue[head++];
-                            const cx = curr % w;
-                            const cy = (curr - cx) / w;
-                            data[curr * 4 + 3] = 0;
+                            const idx = queue[head++];
+                            const x = idx % w;
+                            const y = (idx - x) / w;
 
-                            if (cx > 0) enqueueIfBg(cx - 1, cy);
-                            if (cx < w - 1) enqueueIfBg(cx + 1, cy);
-                            if (cy > 0) enqueueIfBg(cx, cy - 1);
-                            if (cy < h - 1) enqueueIfBg(cx, cy + 1);
+                            pushIfBg(x + 1, y);
+                            pushIfBg(x - 1, y);
+                            pushIfBg(x, y + 1);
+                            pushIfBg(x, y - 1);
                         }
 
-                        octx.putImageData(imageData, 0, 0);
+                        for (let i = 0; i < w * h; i++) {
+                            if (visited[i]) {
+                                data[i * 4 + 3] = 0;
+                            } else {
+                                const p = i * 4;
+                                const r = data[p];
+                                const g = data[p + 1];
+                                const b = data[p + 2];
+                                const nearTransparent =
+                                    (i % w > 0 && visited[i - 1]) ||
+                                    (i % w < w - 1 && visited[i + 1]) ||
+                                    (i >= w && visited[i - w]) ||
+                                    (i < w * (h - 1) && visited[i + w]);
+                                if (nearTransparent && (r + g + b) / 3 > 215) {
+                                    data[p + 3] = Math.min(data[p + 3], 70);
+                                }
+                            }
+                        }
+
+                        octx.putImageData(imgData, 0, 0);
                         return off;
                     } catch (err) {
                         return img;
@@ -672,12 +669,59 @@
                         );
                     }
 
+                    // Chargement exclusif des obstacles présents sous assets/obstacles/
+                    const obstacleFiles = [
+                        'canard.jpg',
+                        'poule.jpg',
+                        'canard.png',
+                        'poule.png',
+                        'chien.jpg',
+                        'chien.png',
+                        'scooter.jpg',
+                        'scooter.png',
+                        'marchande.jpg',
+                        'marchande.png',
+                        'charrette.jpg',
+                        'charrette.png',
+                        'obstacle1.jpg',
+                        'obstacle2.jpg',
+                        'obstacle3.jpg',
+                        'obstacle4.jpg',
+                        'obstacle1.png',
+                        'obstacle2.png',
+                        'obstacle3.png',
+                        'obstacle4.png'
+                    ];
+
+                    const obstaclePromises = obstacleFiles.map((fileName) =>
+                        this.loadImageWithFallback([
+                            `assets/obstacles/${fileName}`,
+                            `./assets/obstacles/${fileName}`
+                        ]).then((res) => {
+                            if (res && res.img) {
+                                const lowerName = fileName.toLowerCase();
+                                const isCrushable =
+                                    lowerName === 'canard.jpg' ||
+                                    lowerName === 'poule.jpg' ||
+                                    lowerName === 'canard.png' ||
+                                    lowerName === 'poule.png';
+
+                                this.obstacleSprites.push({
+                                    fileName: lowerName,
+                                    img: this.keyOutBackground(res.img),
+                                    crushable: isCrushable
+                                });
+                            }
+                        })
+                    );
+
                     const bgPromise = this.loadImageWithFallback([
-                        'assets/backgrounds/fond.jpeg',
                         'assets/backgrounds/fond.png',
+                        'assets/backgrounds/fond.jpeg',
                         'assets/backgrounds/fond.jpg',
+                        'fond.png',
                         'fond.jpeg',
-                        'fond.png'
+                        'fond.jpg'
                     ]).then((res) => {
                         if (res && res.img) {
                             this.bgImage = res.img;
@@ -688,7 +732,6 @@
                     const welcomePromise = this.loadImageWithFallback([
                         'assets/backgrounds/accueil.png',
                         'assets/backgrounds/accueil.jpg',
-                        'assets/backgrounds/accueil.jpeg',
                         'accueil.png',
                         'accueil.jpg'
                     ]).then((res) => {
@@ -700,169 +743,106 @@
                     const gameOverPromise = this.loadImageWithFallback([
                         'assets/backgrounds/gameover.png',
                         'assets/backgrounds/gameover.jpg',
-                        'assets/backgrounds/gameover.jpeg',
                         'gameover.png',
                         'gameover.jpg'
                     ]).then((res) => {
                         if (res && res.url) {
                             this.gameOverUrl = res.url;
-                        } else {
-                            this.gameOverUrl = 'assets/backgrounds/gameover.png';
                         }
                     });
 
-                    await Promise.all([...framePromises, bgPromise, welcomePromise, gameOverPromise]);
+                    await Promise.all([
+                        ...framePromises,
+                        ...obstaclePromises,
+                        bgPromise,
+                        welcomePromise,
+                        gameOverPromise
+                    ]);
                 }
             }
 
-            // =========================================================================
-            // 3. JEU PRINCIPAL LUDO-VÉLO VIETNAM
-            // =========================================================================
-            class LudoBikeGame {
-                constructor() {
-                    this.canvas = document.getElementById('gameCanvas');
-                    this.ctx = this.canvas.getContext('2d');
-                    this.bgImgEl = document.getElementById('bgImage');
+            class GameEngine {
+                constructor(canvas, assets, sound) {
+                    this.canvas = canvas;
+                    this.ctx = canvas.getContext('2d');
+                    this.assets = assets;
+                    this.sound = sound;
 
-                    this.sound = new SoundManager();
-                    this.assets = new AssetLoader();
-
+                    this.state = 'MENU';
                     this.width = window.innerWidth;
                     this.height = window.innerHeight;
                     this.dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-                    // 3 voies sur le chemin de terre : haut abaissé, milieu centré, bas remonté dans le chemin
                     this.laneCount = 3;
-                    this.laneRatios = [0.22, 0.50, 0.78];
-                    this.roadTop = this.height * 0.52;
-                    this.roadHeight = this.height * 0.21;
-                    this.laneY = [0, 0, 0];
+                    this.laneY = [];
+                    this.roadTop = 0;
+                    this.roadBottom = 0;
 
-                    this.state = 'MENU'; // 'MENU' | 'PLAYING' | 'PAUSED' | 'GAMEOVER'
-                    this.lastTime = 0;
-                    this.elapsed = 0;
-                    this.bgScrollX = 0;
-
-                    this.score = 0;
-                    this.bestScore = this.loadBestScore();
+                    this.baseSpeed = 235;
+                    this.speed = this.baseSpeed;
+                    this.maxSpeed = 490;
                     this.distance = 0;
-                    this.basket = 0;
+                    this.score = 0;
+                    this.bestScore = Number(localStorage.getItem('ludo_vietnam_best_score') || '0');
+                    this.basketCount = 0;
                     this.lives = 3;
-                    this.speed = 270;
-                    this.baseSpeed = 270;
+                    this.maxLives = 3;
 
                     this.player = {
-                        x: Math.max(92, this.width * 0.18),
-                        y: this.height * 0.72,
-                        targetY: this.height * 0.72,
+                        x: 110,
+                        y: 0,
+                        targetY: 0,
                         lane: 1,
                         z: 0,
                         vz: 0,
-                        jumping: false,
-                        frameIndex: 0,
-                        animAccumulator: 0,
+                        gravity: 1680,
+                        jumpVelocity: 560,
+                        animFrame: 0,
                         invulnTimer: 0,
-                        bellWave: 0,
+                        bellAnimTimer: 0,
                         fallingHole: false,
-                        fallProgress: 0
+                        fallProgress: 0,
+                        tiltAngle: 0
                     };
 
-                    this.holes = [];
                     this.obstacles = [];
+                    this.holes = [];
                     this.pickups = [];
                     this.particles = [];
+                    this.shockwaves = [];
 
-                    this.holeTimer = 1.4;
-                    this.obstacleTimer = 1.1;
-                    this.pickupTimer = 1.8;
+                    this.obstacleSpawnTimer = 1.2;
+                    this.holeSpawnTimer = 2.8;
+                    this.pickupSpawnTimer = 1.5;
+                    this.bgScrollX = 0;
+                    this.worldTime = 0;
                     this.toastTimeout = null;
+                    this.lastTimestamp = 0;
 
-                    this.bindUI();
-                    this.handleResize();
-                    this.initAssetsAndVoice();
-
-                    window.addEventListener('resize', () => this.handleResize());
-                    window.addEventListener('keydown', (e) => this.handleKeyDown(e));
-
-                    requestAnimationFrame((ts) => this.loop(ts));
-                }
-
-                loadBestScore() {
-                    try {
-                        const raw = localStorage.getItem('ludovelo_best_score');
-                        return raw ? Math.max(0, parseInt(raw, 10) || 0) : 0;
-                    } catch (err) {
-                        return 0;
-                    }
-                }
-
-                saveBestScore(val) {
-                    try {
-                        localStorage.setItem('ludovelo_best_score', String(Math.max(0, Math.floor(val))));
-                    } catch (err) {}
-                }
-
-                async initAssetsAndVoice() {
-                    await this.assets.loadAll();
-
-                    if (this.assets.bgLoaded && this.assets.bgImage) {
-                        this.bgImgEl.src = this.assets.bgImage.currentSrc || this.assets.bgImage.src;
-                        this.bgImgEl.classList.remove('hidden');
-                    } else {
-                        this.bgImgEl.classList.add('hidden');
-                    }
-
-                    const welcomeImg = document.getElementById('welcomeImg');
-                    const welcomeFallback = document.getElementById('welcomeFallback');
-                    if (this.assets.welcomeUrl) {
-                        welcomeImg.src = this.assets.welcomeUrl;
-                        welcomeImg.classList.remove('hidden');
-                        welcomeFallback.classList.add('hidden');
-                    } else {
-                        welcomeImg.classList.add('hidden');
-                        welcomeFallback.classList.remove('hidden');
-                    }
-
-                    const gameOverImg = document.getElementById('gameOverImg');
-                    const gameOverFallback = document.getElementById('gameOverFallback');
-                    const targetGameOverUrl = this.assets.gameOverUrl || 'assets/backgrounds/gameover.png';
-                    gameOverImg.dataset.fallbackTried = '0';
-                    gameOverImg.onerror = () => {
-                        if (gameOverImg.dataset.fallbackTried === '0') {
-                            gameOverImg.dataset.fallbackTried = '1';
-                            gameOverImg.src = 'gameover.png';
-                        } else if (gameOverImg.dataset.fallbackTried === '1') {
-                            gameOverImg.dataset.fallbackTried = '2';
-                            gameOverImg.src = './assets/backgrounds/gameover.png';
-                        } else {
-                            gameOverImg.classList.add('hidden');
-                            gameOverFallback.classList.remove('hidden');
-                            gameOverFallback.classList.add('flex');
-                        }
+                    this.ui = {
+                        hudTop: document.getElementById('hudTop'),
+                        hudScore: document.getElementById('hudScore'),
+                        hudDistance: document.getElementById('hudDistance'),
+                        hudBasket: document.getElementById('hudBasket'),
+                        hudLives: document.getElementById('hudLives'),
+                        touchControls: document.getElementById('touchControls'),
+                        startOverlay: document.getElementById('startOverlay'),
+                        pauseOverlay: document.getElementById('pauseOverlay'),
+                        gameOverOverlay: document.getElementById('gameOverOverlay'),
+                        finalScore: document.getElementById('finalScore'),
+                        finalBest: document.getElementById('finalBest'),
+                        finalDistance: document.getElementById('finalDistance'),
+                        gameOverReason: document.getElementById('gameOverReason'),
+                        toastBanner: document.getElementById('toastBanner'),
+                        toastText: document.getElementById('toastText'),
+                        bgImage: document.getElementById('bgImage')
                     };
-                    gameOverImg.onload = () => {
-                        gameOverImg.classList.remove('hidden');
-                        gameOverFallback.classList.add('hidden');
-                        gameOverFallback.classList.remove('flex');
-                    };
-                    gameOverImg.src = targetGameOverUrl;
 
-                    if (this.state === 'MENU') {
-                        this.sound.speakVietnameseGreeting(false);
-                    }
-
-                    if ('speechSynthesis' in window) {
-                        const prevHandler = window.speechSynthesis.onvoiceschanged;
-                        window.speechSynthesis.onvoiceschanged = () => {
-                            if (typeof prevHandler === 'function') prevHandler();
-                            if (this.state === 'MENU' && !this.sound.hasSpokenWelcome) {
-                                this.sound.speakVietnameseGreeting(false);
-                            }
-                        };
-                    }
+                    this.resize();
+                    this.bindEvents();
                 }
 
-                computeLanes() {
+                resize() {
                     this.width = window.innerWidth;
                     this.height = window.innerHeight;
                     this.dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -871,286 +851,271 @@
                     this.canvas.height = Math.floor(this.height * this.dpr);
                     this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
 
-                    const isWidePanorama = this.width >= this.height * 1.35;
-                    // On remonte la zone de piste afin que la voie du bas reste bien sur le chemin de terre
-                    this.roadTop = this.height * (isWidePanorama ? 0.57 : 0.52);
-                    this.roadHeight = this.height * (isWidePanorama ? 0.16 : 0.21);
+                    const isCompact = this.width < 640;
+                    this.roadTop = this.height * (isCompact ? 0.50 : 0.48);
+                    this.roadBottom = this.height * (isCompact ? 0.67 : 0.72);
 
-                    const trackTop = this.roadTop + this.roadHeight * 0.10;
-                    const trackBottom = this.roadTop + this.roadHeight * 0.84;
-                    const trackSpan = Math.max(54, trackBottom - trackTop);
-
+                    const usableRoadH = Math.max(66, this.roadBottom - this.roadTop);
+                    this.laneY = [];
                     for (let i = 0; i < this.laneCount; i++) {
-                        this.laneY[i] = trackTop + trackSpan * this.laneRatios[i];
+                        const ratio = 0.14 + (i / (this.laneCount - 1)) * 0.72;
+                        this.laneY.push(this.roadTop + usableRoadH * ratio);
                     }
 
-                    this.player.x = Math.max(82, Math.min(this.width * 0.22, 190));
-                    this.player.targetY = this.laneY[this.player.lane];
-                    if (!this.player.fallingHole) {
-                        this.player.y = this.player.targetY;
+                    this.player.x = Math.max(76, Math.min(this.width * 0.24, 155));
+                    if (this.laneY.length > 0) {
+                        const clampedLane = Math.max(0, Math.min(this.laneCount - 1, this.player.lane));
+                        this.player.y = this.laneY[clampedLane];
+                        this.player.targetY = this.laneY[clampedLane];
                     }
+
+                    this.obstacles.forEach((obs) => {
+                        obs.y = this.laneY[obs.lane] ?? obs.y;
+                    });
+                    this.holes.forEach((hole) => {
+                        hole.y = this.laneY[hole.lane] ?? hole.y;
+                    });
+                    this.pickups.forEach((pk) => {
+                        pk.y = this.laneY[pk.lane] ?? pk.y;
+                    });
                 }
 
-                handleResize() {
-                    this.computeLanes();
-                    for (const obs of this.obstacles) {
-                        obs.y = this.laneY[obs.lane];
-                    }
-                    for (const pk of this.pickups) {
-                        pk.y = this.laneY[pk.lane];
-                    }
-                }
+                bindEvents() {
+                    window.addEventListener('resize', () => this.resize());
 
-                bindUI() {
-                    const startOverlay = document.getElementById('startOverlay');
-
-                    const unlockGreeting = () => {
+                    window.addEventListener('keydown', (e) => {
+                        if (e.repeat) return;
                         this.sound.ensureContext();
-                        if (this.state === 'MENU' && !this.sound.hasSpokenWelcome) {
-                            this.sound.speakVietnameseGreeting(false);
+                        this.sound.speakVietnameseGreeting(false);
+
+                        if (this.state === 'MENU' && (e.code === 'Space' || e.code === 'Enter')) {
+                            e.preventDefault();
+                            this.startGame();
+                            return;
                         }
+
+                        if (this.state === 'GAMEOVER' && (e.code === 'Space' || e.code === 'Enter')) {
+                            e.preventDefault();
+                            this.startGame();
+                            return;
+                        }
+
+                        if (e.code === 'Escape' || e.code === 'KeyP') {
+                            if (this.state === 'PLAYING') this.pauseGame();
+                            else if (this.state === 'PAUSED') this.resumeGame();
+                            return;
+                        }
+
+                        if (this.state !== 'PLAYING') return;
+
+                        if (e.code === 'ArrowUp' || e.code === 'KeyW') {
+                            e.preventDefault();
+                            this.changeLane(-1);
+                            this.pulseButton('btnLaneUp');
+                        } else if (e.code === 'ArrowDown' || e.code === 'KeyS') {
+                            e.preventDefault();
+                            this.changeLane(1);
+                            this.pulseButton('btnLaneDown');
+                        } else if (e.code === 'Space' || e.code === 'ArrowUpJump') {
+                            e.preventDefault();
+                            this.jump();
+                            this.pulseButton('btnJump');
+                        } else if (e.code === 'KeyB' || e.code === 'KeyH' || e.code === 'Enter') {
+                            e.preventDefault();
+                            this.ringBell();
+                            this.pulseButton('btnBell');
+                        }
+                    });
+
+                    const bindControlButton = (id, action) => {
+                        const btn = document.getElementById(id);
+                        if (!btn) return;
+                        const trigger = (ev) => {
+                            ev.preventDefault();
+                            ev.stopPropagation();
+                            this.sound.ensureContext();
+                            this.sound.speakVietnameseGreeting(false);
+                            btn.classList.add('is-pressed');
+                            setTimeout(() => btn.classList.remove('is-pressed'), 120);
+                            if (this.state === 'PLAYING') {
+                                action();
+                            }
+                        };
+                        btn.addEventListener('pointerdown', trigger, { passive: false });
                     };
-                    startOverlay.addEventListener('pointerdown', unlockGreeting, { passive: true });
-                    startOverlay.addEventListener('touchstart', unlockGreeting, { passive: true });
+
+                    bindControlButton('btnLaneUp', () => this.changeLane(-1));
+                    bindControlButton('btnLaneDown', () => this.changeLane(1));
+                    bindControlButton('btnJump', () => this.jump());
+                    bindControlButton('btnBell', () => this.ringBell());
 
                     document.getElementById('btnStartGame').addEventListener('click', () => {
                         this.sound.ensureContext();
                         this.startGame();
                     });
 
-                    document.getElementById('btnPause').addEventListener('click', () => {
-                        if (this.state === 'PLAYING') {
-                            this.pauseGame();
-                        } else if (this.state === 'PAUSED') {
-                            this.resumeGame();
-                        }
+                    document.getElementById('btnRetry').addEventListener('click', () => {
+                        this.sound.ensureContext();
+                        this.startGame();
                     });
 
-                    document.getElementById('btnResume').addEventListener('click', () => this.resumeGame());
-                    document.getElementById('btnPauseRestart').addEventListener('click', () => this.startGame());
-                    document.getElementById('btnPauseHome').addEventListener('click', () => this.goToMenu());
+                    document.getElementById('btnGameOverHome').addEventListener('click', () => {
+                        this.goToMenu();
+                    });
 
-                    document.getElementById('btnRetry').addEventListener('click', () => this.startGame());
-                    document.getElementById('btnGameOverHome').addEventListener('click', () => this.goToMenu());
+                    document.getElementById('btnPause').addEventListener('click', () => {
+                        if (this.state === 'PLAYING') this.pauseGame();
+                    });
+
+                    document.getElementById('btnResume').addEventListener('click', () => {
+                        if (this.state === 'PAUSED') this.resumeGame();
+                    });
+
+                    document.getElementById('btnPauseRestart').addEventListener('click', () => {
+                        this.startGame();
+                    });
+
+                    document.getElementById('btnPauseHome').addEventListener('click', () => {
+                        this.goToMenu();
+                    });
 
                     const btnMute = document.getElementById('btnMute');
                     btnMute.addEventListener('click', () => {
                         this.sound.setMuted(!this.sound.muted);
                         btnMute.textContent = this.sound.muted ? '🔇' : '🔊';
+                        if (!this.sound.muted) {
+                            this.sound.ensureContext();
+                            this.showToast('Son activé');
+                        }
                     });
-
-                    const bindPressButton = (id, action) => {
-                        const btn = document.getElementById(id);
-                        const trigger = (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            btn.classList.add('is-pressed');
-                            setTimeout(() => btn.classList.remove('is-pressed'), 120);
-                            action();
-                        };
-                        btn.addEventListener('pointerdown', trigger);
-                    };
-
-                    bindPressButton('btnLaneUp', () => this.changeLane(-1));
-                    bindPressButton('btnLaneDown', () => this.changeLane(1));
-                    bindPressButton('btnJump', () => this.jump());
-                    bindPressButton('btnBell', () => this.ringBell());
                 }
 
-                handleKeyDown(e) {
-                    if (this.state === 'MENU' && (e.key === 'Enter' || e.key === ' ')) {
-                        e.preventDefault();
-                        this.startGame();
-                        return;
-                    }
-
-                    if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
-                        if (this.state === 'PLAYING') this.pauseGame();
-                        else if (this.state === 'PAUSED') this.resumeGame();
-                        return;
-                    }
-
-                    if (this.state !== 'PLAYING') return;
-
-                    if (e.key === 'ArrowUp' || e.key === 'z' || e.key === 'Z') {
-                        e.preventDefault();
-                        this.changeLane(-1);
-                    } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
-                        e.preventDefault();
-                        this.changeLane(1);
-                    } else if (e.key === 'ArrowRight' || e.key === 'w' || e.key === 'W') {
-                        e.preventDefault();
-                        this.jump();
-                    } else if (e.key === ' ') {
-                        e.preventDefault();
-                        this.ringBell();
-                    }
+                pulseButton(id) {
+                    const btn = document.getElementById(id);
+                    if (!btn) return;
+                    btn.classList.add('is-pressed');
+                    setTimeout(() => btn.classList.remove('is-pressed'), 120);
                 }
 
-                showToast(msg, duration = 1800) {
-                    const banner = document.getElementById('toastBanner');
-                    const textEl = document.getElementById('toastText');
-                    textEl.textContent = msg;
-                    banner.classList.remove('opacity-0', '-translate-y-2');
-                    banner.classList.add('opacity-100', 'translate-y-0');
+                showToast(message) {
+                    if (!this.ui.toastBanner || !this.ui.toastText) return;
+                    this.ui.toastText.textContent = message;
+                    this.ui.toastBanner.classList.remove('opacity-0', '-translate-y-2');
+                    this.ui.toastBanner.classList.add('opacity-100', 'translate-y-0');
 
-                    if (this.toastTimeout) {
-                        clearTimeout(this.toastTimeout);
-                    }
+                    clearTimeout(this.toastTimeout);
                     this.toastTimeout = setTimeout(() => {
-                        banner.classList.remove('opacity-100', 'translate-y-0');
-                        banner.classList.add('opacity-0', '-translate-y-2');
-                    }, duration);
-                }
-
-                updateHud() {
-                    document.getElementById('hudScore').textContent = String(Math.floor(this.score));
-                    document.getElementById('hudDistance').textContent = `${Math.floor(this.distance)} m`;
-                    document.getElementById('hudBasket').textContent = String(this.basket);
-
-                    const livesEl = document.getElementById('hudLives');
-                    const full = Math.max(0, this.lives);
-                    const empty = Math.max(0, 3 - full);
-                    livesEl.innerHTML = '<span>❤️</span>'.repeat(full) + '<span>🖤</span>'.repeat(empty);
-                }
-
-                setOverlayVisibility(overlayId, visible) {
-                    const el = document.getElementById(overlayId);
-                    if (visible) el.classList.remove('hidden');
-                    else el.classList.add('hidden');
+                        this.ui.toastBanner.classList.remove('opacity-100', 'translate-y-0');
+                        this.ui.toastBanner.classList.add('opacity-0', '-translate-y-2');
+                    }, 1800);
                 }
 
                 goToMenu() {
                     this.state = 'MENU';
-                    this.setOverlayVisibility('startOverlay', true);
-                    this.setOverlayVisibility('pauseOverlay', false);
-                    this.setOverlayVisibility('gameOverOverlay', false);
-                    document.getElementById('hudTop').classList.add('hidden');
-                    document.getElementById('touchControls').classList.add('hidden');
+                    this.ui.hudTop.classList.add('hidden');
+                    this.ui.touchControls.classList.add('hidden');
+                    this.ui.pauseOverlay.classList.add('hidden');
+                    this.ui.gameOverOverlay.classList.add('hidden');
+                    this.ui.startOverlay.classList.remove('hidden');
+                    this.sound.speakVietnameseGreeting(false);
                 }
 
                 startGame() {
-                    this.computeLanes();
-
-                    this.score = 0;
-                    this.distance = 0;
-                    this.basket = 0;
-                    this.lives = 3;
+                    this.state = 'PLAYING';
                     this.speed = this.baseSpeed;
-                    this.bgScrollX = 0;
+                    this.distance = 0;
+                    this.score = 0;
+                    this.basketCount = 0;
+                    this.lives = this.maxLives;
 
                     this.player.lane = 1;
-                    this.player.y = this.laneY[1];
-                    this.player.targetY = this.laneY[1];
+                    this.player.y = this.laneY[1] || this.height * 0.58;
+                    this.player.targetY = this.player.y;
                     this.player.z = 0;
                     this.player.vz = 0;
-                    this.player.jumping = false;
-                    this.player.frameIndex = 0;
-                    this.player.animAccumulator = 0;
-                    this.player.invulnTimer = 1.0;
-                    this.player.bellWave = 0;
+                    this.player.animFrame = 0;
+                    this.player.invulnTimer = 0;
+                    this.player.bellAnimTimer = 0;
                     this.player.fallingHole = false;
                     this.player.fallProgress = 0;
+                    this.player.tiltAngle = 0;
 
-                    this.holes = [];
                     this.obstacles = [];
+                    this.holes = [];
                     this.pickups = [];
                     this.particles = [];
+                    this.shockwaves = [];
 
-                    this.holeTimer = 1.3;
-                    this.obstacleTimer = 0.95;
-                    this.pickupTimer = 1.6;
+                    this.obstacleSpawnTimer = 1.0;
+                    this.holeSpawnTimer = 2.6;
+                    this.pickupSpawnTimer = 1.4;
 
-                    this.state = 'PLAYING';
-                    this.setOverlayVisibility('startOverlay', false);
-                    this.setOverlayVisibility('pauseOverlay', false);
-                    this.setOverlayVisibility('gameOverOverlay', false);
-                    document.getElementById('hudTop').classList.remove('hidden');
-                    document.getElementById('touchControls').classList.remove('hidden');
+                    this.ui.startOverlay.classList.add('hidden');
+                    this.ui.pauseOverlay.classList.add('hidden');
+                    this.ui.gameOverOverlay.classList.add('hidden');
+                    this.ui.hudTop.classList.remove('hidden');
+                    this.ui.touchControls.classList.remove('hidden');
 
                     this.updateHud();
-                    this.showToast('C’est parti ! Saute au-dessus des trous du chemin !');
+                    this.showToast('En route ! Écrase canard.jpg et poule.jpg, évite le reste !');
                 }
 
                 pauseGame() {
                     if (this.state !== 'PLAYING') return;
                     this.state = 'PAUSED';
-                    this.setOverlayVisibility('pauseOverlay', true);
+                    this.ui.pauseOverlay.classList.remove('hidden');
                 }
 
                 resumeGame() {
                     if (this.state !== 'PAUSED') return;
                     this.state = 'PLAYING';
-                    this.lastTime = performance.now();
-                    this.setOverlayVisibility('pauseOverlay', false);
+                    this.lastTimestamp = performance.now();
+                    this.ui.pauseOverlay.classList.add('hidden');
                 }
 
-                triggerGameOver(_title, reason) {
+                triggerGameOver(title, reason) {
                     if (this.state === 'GAMEOVER') return;
                     this.state = 'GAMEOVER';
-                    this.sound.playCrash();
 
-                    if (this.score > this.bestScore) {
-                        this.bestScore = Math.floor(this.score);
-                        this.saveBestScore(this.bestScore);
+                    const finalScoreVal = Math.floor(this.score);
+                    if (finalScoreVal > this.bestScore) {
+                        this.bestScore = finalScoreVal;
+                        try {
+                            localStorage.setItem('ludo_vietnam_best_score', String(this.bestScore));
+                        } catch (err) {}
                     }
 
-                    const gameOverImg = document.getElementById('gameOverImg');
-                    const gameOverFallback = document.getElementById('gameOverFallback');
-                    const primaryGameOverUrl = this.assets.gameOverUrl || 'assets/backgrounds/gameover.png';
-                    if (gameOverImg) {
-                        gameOverImg.classList.remove('hidden');
-                        gameOverImg.style.display = 'block';
-                        if (!gameOverImg.getAttribute('src')) {
-                            gameOverImg.src = primaryGameOverUrl;
-                        }
-                        if (gameOverImg.complete && gameOverImg.naturalWidth === 0) {
-                            gameOverImg.src = `${primaryGameOverUrl}${primaryGameOverUrl.includes('?') ? '&' : '?'}v=${Date.now()}`;
-                        }
-                    }
-                    if (gameOverFallback) {
-                        gameOverFallback.classList.add('hidden');
-                        gameOverFallback.classList.remove('flex');
-                    }
+                    this.ui.finalScore.textContent = String(finalScoreVal);
+                    this.ui.finalBest.textContent = String(this.bestScore);
+                    this.ui.finalDistance.textContent = `${Math.floor(this.distance)} m`;
+                    this.ui.gameOverReason.textContent = reason || title;
 
-                    document.getElementById('gameOverReason').textContent = reason || 'Ludo a perdu l’équilibre.';
-                    document.getElementById('finalScore').textContent = String(Math.floor(this.score));
-                    document.getElementById('finalBest').textContent = String(Math.floor(this.bestScore));
-                    document.getElementById('finalDistance').textContent = `${Math.floor(this.distance)} m`;
-
-                    const hudTop = document.getElementById('hudTop');
-                    const touchControls = document.getElementById('touchControls');
-                    const gameOverOverlay = document.getElementById('gameOverOverlay');
-                    if (hudTop) hudTop.classList.add('hidden');
-                    if (touchControls) touchControls.classList.add('hidden');
-                    this.setOverlayVisibility('startOverlay', false);
-                    this.setOverlayVisibility('pauseOverlay', false);
-                    this.setOverlayVisibility('gameOverOverlay', true);
-                    if (gameOverOverlay) {
-                        gameOverOverlay.style.display = 'flex';
-                        gameOverOverlay.scrollTop = 0;
-                    }
-                    if (gameOverImg && gameOverImg.complete && gameOverImg.naturalWidth > 0) {
-                        gameOverImg.classList.remove('hidden');
-                        if (gameOverFallback) {
-                            gameOverFallback.classList.add('hidden');
-                            gameOverFallback.classList.remove('flex');
-                        }
+                    const goImg = document.getElementById('gameOverImg');
+                    const goFallback = document.getElementById('gameOverFallback');
+                    if (goImg && goFallback) {
+                        const targetSrc = this.assets.gameOverUrl || 'assets/backgrounds/gameover.png';
+                        goImg.onerror = () => {
+                            goImg.classList.add('hidden');
+                            goFallback.classList.remove('hidden');
+                            goFallback.classList.add('flex');
+                        };
+                        goImg.onload = () => {
+                            goFallback.classList.add('hidden');
+                            goFallback.classList.remove('flex');
+                            goImg.classList.remove('hidden');
+                        };
+                        goImg.classList.remove('hidden');
+                        goImg.src = targetSrc;
                     }
 
-                    document.getElementById('gameOverReason').textContent = reason || 'Ludo a perdu l’équilibre.';
-                    document.getElementById('finalScore').textContent = String(Math.floor(this.score));
-                    document.getElementById('finalBest').textContent = String(Math.floor(this.bestScore));
-                    document.getElementById('finalDistance').textContent = `${Math.floor(this.distance)} m`;
-
-                    document.getElementById('hudTop').classList.add('hidden');
-                    document.getElementById('touchControls').classList.add('hidden');
-                    this.setOverlayVisibility('pauseOverlay', false);
-                    this.setOverlayVisibility('gameOverOverlay', true);
+                    this.ui.touchControls.classList.add('hidden');
+                    this.ui.pauseOverlay.classList.add('hidden');
+                    this.ui.gameOverOverlay.classList.remove('hidden');
+                    this.ui.gameOverOverlay.style.display = 'flex';
                 }
 
                 changeLane(delta) {
-                    if (this.state !== 'PLAYING' || this.player.fallingHole) return;
+                    if (this.player.fallingHole) return;
                     const nextLane = Math.max(0, Math.min(this.laneCount - 1, this.player.lane + delta));
                     if (nextLane !== this.player.lane) {
                         this.player.lane = nextLane;
@@ -1160,113 +1125,70 @@
                 }
 
                 jump() {
-                    if (this.state !== 'PLAYING' || this.player.fallingHole) return;
-                    if (!this.player.jumping && this.player.z <= 1) {
-                        this.player.jumping = true;
-                        this.player.vz = 470;
+                    if (this.player.fallingHole) return;
+                    if (this.player.z <= 2) {
+                        this.player.vz = this.player.jumpVelocity;
+                        this.player.z = 3;
                         this.sound.playJump();
-                        this.spawnBurst(this.player.x, this.player.y + 8, '#fde68a', 8);
+                        this.spawnBurst(this.player.x - 10, this.player.y + 6, '#fef08a', 7);
                     }
                 }
 
                 ringBell() {
-                    if (this.state !== 'PLAYING') return;
-                    this.player.bellWave = 1.0;
+                    this.player.bellAnimTimer = 0.45;
                     this.sound.playBell();
-                    this.spawnBurst(this.player.x + 24, this.player.y - this.player.z - 28, '#fef08a', 10);
 
-                    let frightenedCount = 0;
+                    this.shockwaves.push({
+                        x: this.player.x + 18,
+                        y: this.player.y - this.player.z * 0.4,
+                        radius: 14,
+                        maxRadius: 135,
+                        alpha: 0.9
+                    });
+
+                    let alertedCount = 0;
                     for (const obs of this.obstacles) {
                         const dx = obs.x - this.player.x;
-                        if (dx > -40 && dx < 280 && Math.abs(obs.lane - this.player.lane) <= 1) {
+                        const laneDiff = Math.abs(obs.lane - this.player.lane);
+                        if (dx > -20 && dx < 220 && laneDiff <= 1 && !obs.alerted) {
                             obs.alerted = true;
-                            obs.scaredTimer = 1.3;
-                            frightenedCount++;
+                            obs.scaredTimer = 1.4;
+                            alertedCount++;
                         }
                     }
 
-                    if (frightenedCount > 0) {
-                        this.score += 15 * frightenedCount;
-                        this.showToast(`Dring ! +${15 * frightenedCount} pts`);
+                    if (alertedCount > 0) {
+                        this.score += alertedCount * 15;
+                        this.showToast(`Dring ! +${alertedCount * 15} pts`);
+                        this.updateHud();
                     }
-                }
-
-                spawnBurst(x, y, color, count) {
-                    for (let i = 0; i < count; i++) {
-                        const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.4;
-                        const spd = 45 + Math.random() * 95;
-                        this.particles.push({
-                            x,
-                            y,
-                            vx: Math.cos(angle) * spd,
-                            vy: Math.sin(angle) * spd - 30,
-                            life: 0.42 + Math.random() * 0.2,
-                            maxLife: 0.6,
-                            size: 3 + Math.random() * 3.5,
-                            color
-                        });
-                    }
-                }
-
-                spawnHole() {
-                    const isWideTrench = Math.random() < 0.34;
-                    const width = isWideTrench ? 52 : 34;
-                    const lane = Math.floor(Math.random() * this.laneCount);
-
-                    this.holes.push({
-                        x: this.width + 90,
-                        width,
-                        lane,
-                        isWideTrench,
-                        warned: false
-                    });
                 }
 
                 spawnObstacle() {
+                    const sprites = this.assets.obstacleSprites;
+                    if (!sprites || sprites.length === 0) return;
+
                     const lane = Math.floor(Math.random() * this.laneCount);
                     const y = this.laneY[lane];
-                    const roll = Math.random();
-
-                    let kind = 'chicken';
-                    let width = 32;
-                    let height = 24;
-                    let extraSpeed = 30;
-
-                    if (roll < 0.28) {
-                        kind = 'chicken';
-                        width = 32;
-                        height = 24;
-                        extraSpeed = 30;
-                    } else if (roll < 0.55) {
-                        kind = 'scooter';
-                        width = 66;
-                        height = 42;
-                        extraSpeed = 95;
-                    } else if (roll < 0.80) {
-                        kind = 'vendor';
-                        width = 60;
-                        height = 42;
-                        extraSpeed = 20;
-                    } else {
-                        kind = 'dog';
-                        width = 40;
-                        height = 28;
-                        extraSpeed = 50;
-                    }
 
                     const tooCloseToHole = this.holes.some(
                         (h) => h.lane === lane && Math.abs(h.x - (this.width + 80)) < 170
                     );
                     if (tooCloseToHole) return;
 
+                    const chosen = sprites[Math.floor(Math.random() * sprites.length)];
+                    const isCrushable = Boolean(chosen.crushable);
+
                     this.obstacles.push({
                         x: this.width + 80,
                         y,
                         lane,
-                        width,
-                        height,
-                        kind,
-                        vx: extraSpeed,
+                        width: isCrushable ? 38 : 54,
+                        height: isCrushable ? 30 : 42,
+                        sprite: chosen.img,
+                        fileName: chosen.fileName,
+                        crushable: isCrushable,
+                        vx: isCrushable ? 35 : 52,
                         vy: 0,
                         animPhase: Math.random() * Math.PI * 2,
                         alerted: false,
@@ -1275,139 +1197,194 @@
                     });
                 }
 
+                spawnHole() {
+                    const lane = Math.floor(Math.random() * this.laneCount);
+                    const y = this.laneY[lane];
+
+                    const tooCloseToObstacle = this.obstacles.some(
+                        (o) => o.lane === lane && Math.abs(o.x - (this.width + 90)) < 175
+                    );
+                    if (tooCloseToObstacle) return;
+
+                    const isWideTrench = Math.random() < 0.28;
+                    this.holes.push({
+                        x: this.width + 90,
+                        y,
+                        lane,
+                        rx: isWideTrench ? 34 : 24,
+                        ry: isWideTrench ? 4.2 : 3.2,
+                        passed: false
+                    });
+                }
+
                 spawnPickup() {
                     const lane = Math.floor(Math.random() * this.laneCount);
                     const y = this.laneY[lane];
+
                     const items = [
-                        { icon: '🥖', label: 'Bánh mì', pts: 25 },
-                        { icon: '🍜', label: 'Phở', pts: 40 },
-                        { icon: '🥭', label: 'Mangue', pts: 20 },
-                        { icon: '🥥', label: 'Noix de coco', pts: 30 }
+                        { name: 'Phở', emoji: '🍜', points: 40 },
+                        { name: 'Bánh mì', emoji: '🥖', points: 25 },
+                        { name: 'Noix de coco', emoji: '🥥', points: 30 },
+                        { name: 'Mangue', emoji: '🥭', points: 20 }
                     ];
-                    const pick = items[Math.floor(Math.random() * items.length)];
+                    const item = items[Math.floor(Math.random() * items.length)];
 
                     this.pickups.push({
                         x: this.width + 70,
                         y,
                         lane,
-                        icon: pick.icon,
-                        label: pick.label,
-                        pts: pick.pts,
+                        radius: 18,
+                        name: item.name,
+                        emoji: item.emoji,
+                        points: item.points,
                         bobPhase: Math.random() * Math.PI * 2
                     });
                 }
 
-                update(dt) {
-                    this.elapsed += dt;
+                spawnBurst(x, y, color, count = 10) {
+                    for (let i = 0; i < count; i++) {
+                        const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.4;
+                        const spd = 55 + Math.random() * 130;
+                        this.particles.push({
+                            x,
+                            y,
+                            vx: Math.cos(angle) * spd,
+                            vy: Math.sin(angle) * spd - 30,
+                            size: 3 + Math.random() * 4,
+                            color,
+                            life: 0.45 + Math.random() * 0.25,
+                            maxLife: 0.7
+                        });
+                    }
+                }
 
-                    if (this.state === 'MENU') {
-                        this.player.animAccumulator += dt * 7;
-                        this.player.frameIndex = Math.floor(this.player.animAccumulator) % 8;
+                updateHud() {
+                    this.ui.hudScore.textContent = String(Math.floor(this.score));
+                    this.ui.hudDistance.textContent = `${Math.floor(this.distance)} m`;
+                    this.ui.hudBasket.textContent = String(this.basketCount);
+
+                    let heartsHtml = '';
+                    for (let i = 0; i < this.maxLives; i++) {
+                        heartsHtml += i < this.lives ? '<span>❤️</span>' : '<span class="opacity-30 grayscale">🖤</span>';
+                    }
+                    this.ui.hudLives.innerHTML = heartsHtml;
+                }
+
+                update(dt) {
+                    this.worldTime += dt;
+
+                    if (this.state !== 'PLAYING') {
                         return;
                     }
 
-                    if (this.state !== 'PLAYING') return;
-
-                    this.speed = Math.min(480, this.baseSpeed + this.distance * 0.28);
-                    this.bgScrollX += this.speed * dt;
-                    const stepDist = (this.speed * dt) * 0.045;
-                    this.distance += stepDist;
-                    this.score += stepDist * 1.4;
-
-                    if (this.player.invulnTimer > 0) {
-                        this.player.invulnTimer = Math.max(0, this.player.invulnTimer - dt);
-                    }
-                    if (this.player.bellWave > 0) {
-                        this.player.bellWave = Math.max(0, this.player.bellWave - dt * 2.4);
-                    }
-
-                    const laneDiff = this.player.targetY - this.player.y;
-                    this.player.y += laneDiff * Math.min(1, dt * 16);
-
-                    if (this.player.jumping || this.player.z > 0) {
-                        this.player.z += this.player.vz * dt;
-                        this.player.vz -= 1280 * dt;
-                        if (this.player.z <= 0) {
-                            this.player.z = 0;
-                            this.player.vz = 0;
-                            this.player.jumping = false;
-                        }
-                    }
-
                     if (this.player.fallingHole) {
-                        this.player.fallProgress += dt * 2.6;
+                        this.player.fallProgress += dt * 2.1;
+                        this.player.tiltAngle = Math.min(1.15, this.player.fallProgress * 1.3);
+                        this.player.z = Math.max(-26, -this.player.fallProgress * 28);
+                        this.updateParticles(dt);
+
                         if (this.player.fallProgress >= 1) {
                             this.triggerGameOver(
                                 'Dans le trou !',
-                                'Ludo a glissé dans un trou du chemin. Essaie de sauter un peu plus tôt !'
+                                'Ludo a glissé dans un trou sur le chemin. Saute ou change de voie !'
                             );
                         }
                         return;
                     }
 
-                    const cadence = this.player.jumping ? 3 : 11 * (this.speed / this.baseSpeed);
-                    this.player.animAccumulator += dt * cadence;
-                    this.player.frameIndex = Math.floor(this.player.animAccumulator) % 8;
+                    this.speed = Math.min(this.maxSpeed, this.baseSpeed + this.distance * 0.45);
+                    const dx = this.speed * dt;
+                    this.distance += dx * 0.045;
+                    this.score += dt * 8;
+                    this.bgScrollX += dx * 0.55;
 
-                    this.holeTimer -= dt;
-                    if (this.holeTimer <= 0) {
-                        this.spawnHole();
-                        this.holeTimer = 1.65 + Math.random() * 1.35;
+                    const laneDiffY = this.player.targetY - this.player.y;
+                    this.player.y += laneDiffY * Math.min(1, dt * 16);
+
+                    if (this.player.z > 0 || this.player.vz !== 0) {
+                        this.player.z += this.player.vz * dt;
+                        this.player.vz -= this.player.gravity * dt;
+                        if (this.player.z <= 0) {
+                            this.player.z = 0;
+                            this.player.vz = 0;
+                        }
                     }
 
-                    this.obstacleTimer -= dt;
-                    if (this.obstacleTimer <= 0) {
+                    if (this.player.z > 2) {
+                        this.player.tiltAngle = Math.max(-0.24, Math.min(0.24, -this.player.vz / 1800));
+                    } else {
+                        this.player.tiltAngle += (0 - this.player.tiltAngle) * Math.min(1, dt * 14);
+                    }
+
+                    const pedalCadence = 14 * (this.speed / this.baseSpeed);
+                    this.player.animFrame += dt * (this.player.z > 4 ? pedalCadence * 0.45 : pedalCadence);
+
+                    if (this.player.invulnTimer > 0) {
+                        this.player.invulnTimer = Math.max(0, this.player.invulnTimer - dt);
+                    }
+                    if (this.player.bellAnimTimer > 0) {
+                        this.player.bellAnimTimer = Math.max(0, this.player.bellAnimTimer - dt);
+                    }
+
+                    this.obstacleSpawnTimer -= dt;
+                    if (this.obstacleSpawnTimer <= 0) {
                         this.spawnObstacle();
-                        this.obstacleTimer = 1.2 + Math.random() * 1.05;
+                        const minGap = Math.max(0.95, 1.85 - (this.speed - this.baseSpeed) * 0.0025);
+                        this.obstacleSpawnTimer = minGap + Math.random() * 0.85;
                     }
 
-                    this.pickupTimer -= dt;
-                    if (this.pickupTimer <= 0) {
+                    this.holeSpawnTimer -= dt;
+                    if (this.holeSpawnTimer <= 0) {
+                        this.spawnHole();
+                        this.holeSpawnTimer = 2.4 + Math.random() * 1.7;
+                    }
+
+                    this.pickupSpawnTimer -= dt;
+                    if (this.pickupSpawnTimer <= 0) {
                         this.spawnPickup();
-                        this.pickupTimer = 1.9 + Math.random() * 1.4;
+                        this.pickupSpawnTimer = 1.6 + Math.random() * 1.3;
                     }
 
                     for (let i = this.holes.length - 1; i >= 0; i--) {
-                        const h = this.holes[i];
-                        h.x -= this.speed * dt;
+                        const hole = this.holes[i];
+                        hole.x -= dx;
 
-                        if (h.x + h.width < -80) {
-                            this.holes.splice(i, 1);
-                            continue;
+                        if (!hole.passed && hole.x + hole.rx < this.player.x - 20) {
+                            hole.passed = true;
+                            this.score += 12;
                         }
 
-                        const sameLane = h.lane === this.player.lane && Math.abs(this.laneY[h.lane] - this.player.y) < 16;
-                        const halfW = h.width * 0.42;
-                        const insideHoleX = Math.abs(h.x - this.player.x) < halfW;
-                        const isAirborneHighEnough = this.player.z > 20;
+                        const sameLane = Math.abs(hole.y - this.player.y) < 12;
+                        const insideHoleX = Math.abs(hole.x - this.player.x) < hole.rx * 0.72;
+                        const isAirborne = this.player.z > 20;
 
-                        if (sameLane && insideHoleX && !isAirborneHighEnough) {
+                        if (sameLane && insideHoleX && !isAirborne && this.player.invulnTimer <= 0) {
                             this.player.fallingHole = true;
                             this.player.fallProgress = 0;
                             this.sound.playCrash();
-                            this.spawnBurst(this.player.x, this.laneY[h.lane], '#78716c', 14);
+                            this.spawnBurst(this.player.x, hole.y, '#78350f', 14);
+                            this.updateHud();
                             return;
+                        }
+
+                        if (hole.x < -120) {
+                            this.holes.splice(i, 1);
                         }
                     }
 
                     for (let i = this.obstacles.length - 1; i >= 0; i--) {
                         const obs = this.obstacles[i];
-                        obs.animPhase += dt * 7;
+                        obs.animPhase += dt * 9;
 
                         if (obs.scaredTimer > 0) {
                             obs.scaredTimer = Math.max(0, obs.scaredTimer - dt);
-                            obs.x += (this.speed * 0.55) * dt;
-                            obs.y -= 35 * dt;
+                            obs.x += dx * 0.45;
+                            obs.y += (obs.lane === 0 ? -28 : 28) * dt;
                         } else {
-                            obs.x -= (this.speed + obs.vx * 0.35) * dt;
+                            obs.x -= (dx + obs.vx * dt);
                         }
 
-                        if (obs.x < -110 || obs.y < -80) {
-                            this.obstacles.splice(i, 1);
-                            continue;
-                        }
-
-                        if (!obs.passed && obs.x < this.player.x - 20) {
+                        if (!obs.passed && obs.x + obs.width * 0.5 < this.player.x - 24) {
                             obs.passed = true;
                             this.score += 10;
                         }
@@ -1416,14 +1393,13 @@
                             const sameLane = Math.abs(obs.y - this.player.y) < 20;
                             const overlapX = Math.abs(obs.x - this.player.x) < (obs.width * 0.38 + 28);
                             const clearJump = this.player.z > 32;
-                            const isCrushableCritter = obs.kind === 'chicken' || obs.kind === 'dog';
 
                             if (sameLane && overlapX && !clearJump) {
-                                if (isCrushableCritter) {
+                                if (obs.crushable) {
                                     this.score += 20;
                                     this.sound.playPickup();
                                     this.spawnBurst(obs.x, obs.y - 4, '#fde047', 12);
-                                    this.showToast(obs.kind === 'chicken' ? '💥 Poule écrasée ! +20 pts' : '💥 Chien écrasé ! +20 pts');
+                                    this.showToast(`💥 ${obs.fileName} écrasé ! +20 pts`);
                                     this.obstacles.splice(i, 1);
                                 } else {
                                     this.lives -= 1;
@@ -1436,146 +1412,154 @@
                                         this.updateHud();
                                         this.triggerGameOver(
                                             'Plus de cœurs !',
-                                            'Ludo a heurté trop d’obstacles sur le chemin du village.'
+                                            `Ludo a heurté ${obs.fileName} au lieu de l'éviter.`
                                         );
                                         return;
                                     } else {
-                                        this.showToast('Aïe ! Attention sur le chemin !');
+                                        this.showToast(`Aïe ! ${obs.fileName} est à éviter (-1 ❤️)`);
                                     }
                                 }
                             }
+                        }
+
+                        if (obs.x < -140 || obs.y < -80 || obs.y > this.height + 80) {
+                            this.obstacles.splice(i, 1);
                         }
                     }
 
                     for (let i = this.pickups.length - 1; i >= 0; i--) {
                         const pk = this.pickups[i];
-                        pk.x -= this.speed * dt;
+                        pk.x -= dx;
                         pk.bobPhase += dt * 5;
 
-                        if (pk.x < -80) {
+                        const sameLane = Math.abs(pk.y - this.player.y) < 22;
+                        const overlapX = Math.abs(pk.x - this.player.x) < 38;
+                        const reachableZ = Math.abs(this.player.z - 12) < 42;
+
+                        if (sameLane && overlapX && reachableZ) {
+                            this.basketCount += 1;
+                            this.score += pk.points;
+                            this.sound.playPickup();
+                            this.spawnBurst(pk.x, pk.y - this.player.z - 10, '#4ade80', 10);
+                            this.showToast(`${pk.emoji} ${pk.name} +${pk.points} pts`);
                             this.pickups.splice(i, 1);
                             continue;
                         }
 
-                        const sameLane = Math.abs(pk.y - this.player.y) < 22;
-                        const nearX = Math.abs(pk.x - this.player.x) < 38;
-                        const reachableZ = this.player.z < 55;
-
-                        if (sameLane && nearX && reachableZ) {
-                            this.basket += 1;
-                            this.score += pk.pts;
-                            this.sound.playPickup();
-                            this.spawnBurst(pk.x, pk.y - 10, '#fbbf24', 10);
-                            this.showToast(`${pk.icon} ${pk.label} (+${pk.pts} pts)`);
+                        if (pk.x < -100) {
                             this.pickups.splice(i, 1);
                         }
                     }
 
-                    for (let i = this.particles.length - 1; i >= 0; i--) {
-                        const pt = this.particles[i];
-                        pt.life -= dt;
-                        pt.x += pt.vx * dt;
-                        pt.y += pt.vy * dt;
-                        pt.vy += 220 * dt;
-                        if (pt.life <= 0) {
-                            this.particles.splice(i, 1);
+                    for (let i = this.shockwaves.length - 1; i >= 0; i--) {
+                        const sw = this.shockwaves[i];
+                        sw.radius += dt * 340;
+                        sw.alpha -= dt * 2.1;
+                        if (sw.alpha <= 0 || sw.radius >= sw.maxRadius) {
+                            this.shockwaves.splice(i, 1);
                         }
                     }
 
+                    this.updateParticles(dt);
                     this.updateHud();
                 }
 
-                drawGroundTrack(ctx) {
-                    if (this.assets.bgLoaded && this.assets.bgImage) {
-                        const img = this.assets.bgImage;
-                        const natW = img.naturalWidth || img.width || 1;
-                        const natH = img.naturalHeight || img.height || 1;
-                        const scale = this.height / natH;
-                        const drawW = natW * scale;
-                        const drawH = this.height;
-                        const offsetX = -(this.bgScrollX % drawW);
+                updateParticles(dt) {
+                    for (let i = this.particles.length - 1; i >= 0; i--) {
+                        const p = this.particles[i];
+                        p.x += p.vx * dt;
+                        p.y += p.vy * dt;
+                        p.vy += 260 * dt;
+                        p.life -= dt;
+                        if (p.life <= 0) {
+                            this.particles.splice(i, 1);
+                        }
+                    }
+                }
 
-                        ctx.save();
-                        for (let x = offsetX; x < this.width; x += drawW) {
-                            ctx.drawImage(img, x, 0, drawW + 0.5, drawH);
+                drawBackground(ctx) {
+                    if (this.assets.bgLoaded && this.assets.bgImage) {
+                        if (this.ui.bgImage && !this.ui.bgImage.classList.contains('opacity-0')) {
+                            this.ui.bgImage.classList.add('opacity-0');
                         }
 
-                        const activeY = this.laneY[this.player.lane];
-                        ctx.strokeStyle = 'rgba(254, 240, 138, 0.22)';
-                        ctx.lineWidth = 1.8;
-                        ctx.setLineDash([12, 16]);
-                        ctx.lineDashOffset = -(this.distance * 22) % 28;
-                        ctx.beginPath();
-                        ctx.moveTo(24, activeY + 6);
-                        ctx.lineTo(this.width - 24, activeY + 6);
-                        ctx.stroke();
-                        ctx.restore();
-                        return;
+                        const img = this.assets.bgImage;
+                        const natW = img.naturalWidth || img.width || 1280;
+                        const natH = img.naturalHeight || img.height || 720;
+                        const scale = Math.max(this.width / natW, this.height / natH);
+                        const tileW = Math.max(1, natW * scale);
+                        const drawH = natH * scale;
+                        const offsetY = (this.height - drawH) * 0.5;
+
+                        const scroll = ((this.bgScrollX % tileW) + tileW) % tileW;
+                        for (let x = -scroll; x < this.width + tileW; x += tileW) {
+                            ctx.drawImage(img, x, offsetY, tileW + 1, drawH);
+                        }
+                    } else {
+                        if (this.ui.bgImage && this.ui.bgImage.classList.contains('opacity-0')) {
+                            this.ui.bgImage.classList.remove('opacity-0');
+                        }
+                        const skyGrad = ctx.createLinearGradient(0, 0, 0, this.roadTop);
+                        skyGrad.addColorStop(0, '#0ea5e9');
+                        skyGrad.addColorStop(1, '#bae6fd');
+                        ctx.fillStyle = skyGrad;
+                        ctx.fillRect(0, 0, this.width, this.roadTop);
+
+                        const roadGrad = ctx.createLinearGradient(0, this.roadTop, 0, this.height);
+                        roadGrad.addColorStop(0, '#e2b478');
+                        roadGrad.addColorStop(0.55, '#d49b5a');
+                        roadGrad.addColorStop(1, '#4ade80');
+                        ctx.fillStyle = roadGrad;
+                        ctx.fillRect(0, this.roadTop, this.width, this.height - this.roadTop);
                     }
+                }
 
+                drawRoadGuides(ctx) {
                     ctx.save();
-                    const grad = ctx.createLinearGradient(0, this.roadTop, 0, this.roadTop + this.roadHeight);
-                    grad.addColorStop(0, '#d6b485');
-                    grad.addColorStop(1, '#b68d5c');
-                    ctx.fillStyle = grad;
-                    ctx.fillRect(0, this.roadTop, this.width, this.roadHeight);
-
-                    ctx.strokeStyle = 'rgba(255, 251, 235, 0.35)';
-                    ctx.setLineDash([16, 18]);
-                    ctx.lineDashOffset = -(this.distance * 22) % 34;
                     for (let i = 0; i < this.laneCount; i++) {
+                        const y = this.laneY[i];
+                        ctx.strokeStyle = 'rgba(120, 53, 15, 0.16)';
+                        ctx.lineWidth = 1.5;
+                        ctx.setLineDash([16, 18]);
+                        ctx.lineDashOffset = this.bgScrollX * 1.15;
                         ctx.beginPath();
-                        ctx.moveTo(0, this.laneY[i] + 6);
-                        ctx.lineTo(this.width, this.laneY[i] + 6);
+                        ctx.moveTo(0, y + 6);
+                        ctx.lineTo(this.width, y + 6);
                         ctx.stroke();
                     }
                     ctx.restore();
                 }
 
                 drawHole(ctx, hole) {
-                    const y = this.laneY[hole.lane];
-                    const rx = hole.width * 0.5;
-                    const ry = hole.isWideTrench ? 4.2 : 3.2;
-
                     ctx.save();
+                    ctx.translate(hole.x, hole.y + 5);
 
-                    ctx.strokeStyle = 'rgba(250, 204, 21, 0.45)';
-                    ctx.lineWidth = 1.2;
-                    ctx.setLineDash([4, 4]);
+                    ctx.fillStyle = '#1c1917';
                     ctx.beginPath();
-                    ctx.ellipse(hole.x, y, rx + 2, ry + 1.5, 0, 0, Math.PI * 2);
-                    ctx.stroke();
-                    ctx.setLineDash([]);
-
-                    ctx.fillStyle = 'rgba(87, 83, 78, 0.72)';
-                    ctx.beginPath();
-                    ctx.ellipse(hole.x, y + 0.4, rx + 1, ry + 0.6, 0, 0, Math.PI * 2);
+                    ctx.ellipse(0, 0, hole.rx, hole.ry, 0, 0, Math.PI * 2);
                     ctx.fill();
 
-                    const abyssGrad = ctx.createRadialGradient(hole.x, y + 0.6, 1, hole.x, y + 0.6, rx);
-                    abyssGrad.addColorStop(0, '#090d16');
-                    abyssGrad.addColorStop(0.75, '#1e1b18');
-                    abyssGrad.addColorStop(1, '#3f3a34');
-                    ctx.fillStyle = abyssGrad;
+                    ctx.fillStyle = '#09090b';
                     ctx.beginPath();
-                    ctx.ellipse(hole.x, y + 0.6, rx, ry, 0, 0, Math.PI * 2);
+                    ctx.ellipse(0, 0.8, hole.rx * 0.78, hole.ry * 0.68, 0, 0, Math.PI * 2);
                     ctx.fill();
 
-                    ctx.strokeStyle = 'rgba(24, 24, 27, 0.75)';
-                    ctx.lineWidth = 1.5;
+                    ctx.strokeStyle = 'rgba(254, 243, 199, 0.5)';
+                    ctx.lineWidth = 1;
                     ctx.beginPath();
-                    ctx.ellipse(hole.x, y + 0.6, rx - 0.5, ry - 0.4, 0, Math.PI * 0.1, Math.PI * 1.15);
+                    ctx.ellipse(0, 0, hole.rx, hole.ry, 0, Math.PI, Math.PI * 2);
                     ctx.stroke();
 
-                    if (hole.x - rx > this.player.x && hole.x - rx < this.player.x + 240) {
-                        ctx.fillStyle = '#e11d48';
+                    if (hole.x > this.player.x + 40 && hole.x < this.width - 10) {
+                        ctx.fillStyle = '#ef4444';
                         ctx.beginPath();
-                        ctx.roundRect(hole.x - rx - 7, y - ry - 15, 14, 12, 3);
+                        ctx.roundRect(-8, -22, 16, 13, 4);
                         ctx.fill();
                         ctx.fillStyle = '#ffffff';
-                        ctx.font = '900 9.5px Nunito, sans-serif';
+                        ctx.font = '900 10px Nunito, sans-serif';
                         ctx.textAlign = 'center';
-                        ctx.fillText('!', hole.x - rx, y - ry - 6);
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText('!', 0, -15.5);
                     }
 
                     ctx.restore();
@@ -1583,227 +1567,236 @@
 
                 drawObstacle(ctx, obs) {
                     ctx.save();
-                    const hop = (obs.kind === 'chicken' || obs.kind === 'dog')
-                        ? Math.abs(Math.sin(obs.animPhase * 1.4)) * 4.5
+                    const hop = obs.crushable
+                        ? Math.abs(Math.sin(obs.animPhase * 1.4)) * 3.5
                         : Math.sin(obs.animPhase) * 1;
 
-                    const depthFactor = 0.72 + (obs.lane / Math.max(1, this.laneCount - 1)) * 0.22;
-                    const baseScale = (obs.kind === 'scooter' || obs.kind === 'vendor' ? 0.72 : 0.76) * depthFactor;
+                    const depthFactor = 0.74 + (obs.lane / Math.max(1, this.laneCount - 1)) * 0.22;
+                    const baseScale = (obs.crushable ? 0.76 : 0.72) * depthFactor;
 
                     ctx.fillStyle = 'rgba(15, 23, 42, 0.26)';
                     ctx.beginPath();
                     ctx.ellipse(obs.x, obs.y + 8, obs.width * 0.36 * depthFactor, 4.2 * depthFactor, 0, 0, Math.PI * 2);
                     ctx.fill();
 
-                    ctx.translate(obs.x, obs.y + 7 - hop);
-                    ctx.scale(baseScale, baseScale);
+                    ctx.translate(obs.x, obs.y + 8 - hop);
+                    // Miroir horizontal (-baseScale en X) pour orienter les sprites vers la gauche face à Ludo
+                    ctx.scale(-baseScale, baseScale);
 
-                    if (obs.kind === 'chicken') {
-                        ctx.fillStyle = '#fffbeb';
-                        ctx.beginPath();
-                        ctx.ellipse(0, -10, 13, 10, 0, 0, Math.PI * 2);
-                        ctx.fill();
-                        ctx.beginPath();
-                        ctx.arc(10, -18, 7, 0, Math.PI * 2);
-                        ctx.fill();
-                        ctx.fillStyle = '#ef4444';
-                        ctx.beginPath();
-                        ctx.arc(10, -25, 3.5, 0, Math.PI * 2);
-                        ctx.fill();
-                        ctx.fillStyle = '#f59e0b';
-                        ctx.beginPath();
-                        ctx.moveTo(16, -19);
-                        ctx.lineTo(22, -17);
-                        ctx.lineTo(16, -15);
-                        ctx.closePath();
-                        ctx.fill();
-                    } else if (obs.kind === 'dog') {
-                        ctx.fillStyle = '#b45309';
-                        ctx.beginPath();
-                        ctx.roundRect(-16, -18, 30, 13, 6);
-                        ctx.fill();
-                        ctx.beginPath();
-                        ctx.arc(12, -21, 8, 0, Math.PI * 2);
-                        ctx.fill();
-                        ctx.fillStyle = '#78350f';
-                        ctx.fillRect(8, -28, 5, 8);
-                    } else if (obs.kind === 'scooter') {
-                        ctx.fillStyle = '#1e293b';
-                        ctx.beginPath();
-                        ctx.arc(-18, -6, 7, 0, Math.PI * 2);
-                        ctx.arc(18, -6, 7, 0, Math.PI * 2);
-                        ctx.fill();
-                        ctx.fillStyle = '#dc2626';
-                        ctx.beginPath();
-                        ctx.roundRect(-22, -22, 42, 13, 6);
-                        ctx.fill();
-                        ctx.fillStyle = '#fef08a';
-                        ctx.beginPath();
-                        ctx.arc(8, -34, 7, Math.PI, 0);
-                        ctx.fill();
-                        ctx.fillRect(2, -34, 12, 12);
+                    if (obs.sprite) {
+                        const targetH = obs.crushable ? 40 : 56;
+                        const natW = obs.sprite.naturalWidth || obs.sprite.width || 64;
+                        const natH = obs.sprite.naturalHeight || obs.sprite.height || 64;
+                        const targetW = targetH * (natW / natH);
+                        ctx.drawImage(obs.sprite, -targetW * 0.5, -targetH + 2, targetW, targetH);
                     } else {
-                        ctx.fillStyle = '#ec4899';
+                        ctx.fillStyle = obs.crushable ? '#f59e0b' : '#ef4444';
                         ctx.beginPath();
-                        ctx.roundRect(-12, -24, 24, 18, 5);
+                        ctx.arc(0, -14, 14, 0, Math.PI * 2);
                         ctx.fill();
-                        ctx.fillStyle = '#fde68a';
+                    }
+
+                    if (obs.alerted || obs.scaredTimer > 0) {
+                        ctx.save();
+                        // Contre-miroir pour garder l'indicateur '!' et le texte lisibles à l'endroit
+                        ctx.scale(-1, 1);
+                        ctx.fillStyle = '#fef08a';
+                        ctx.strokeStyle = '#92400e';
+                        ctx.lineWidth = 2;
                         ctx.beginPath();
-                        ctx.arc(0, -30, 6.5, 0, Math.PI * 2);
+                        ctx.arc(0, -44, 10, 0, Math.PI * 2);
                         ctx.fill();
-                        ctx.fillStyle = '#eab308';
-                        ctx.beginPath();
-                        ctx.moveTo(-16, -34);
-                        ctx.lineTo(0, -45);
-                        ctx.lineTo(16, -34);
-                        ctx.closePath();
-                        ctx.fill();
+                        ctx.stroke();
+
+                        ctx.fillStyle = '#92400e';
+                        ctx.font = '900 12px Nunito, sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText('!', 0, -43.5);
                     }
 
                     ctx.restore();
                 }
 
                 drawPickup(ctx, pk) {
-                    const bob = Math.sin(pk.bobPhase) * 3.5;
-                    const depthFactor = 0.78 + (pk.lane / Math.max(1, this.laneCount - 1)) * 0.2;
                     ctx.save();
+                    const bob = Math.sin(pk.bobPhase) * 4.5;
+                    const depthFactor = 0.76 + (pk.lane / Math.max(1, this.laneCount - 1)) * 0.22;
 
-                    ctx.fillStyle = 'rgba(250, 204, 21, 0.25)';
+                    ctx.fillStyle = 'rgba(15, 23, 42, 0.22)';
                     ctx.beginPath();
-                    ctx.ellipse(pk.x, pk.y + 8, 12 * depthFactor, 3.8 * depthFactor, 0, 0, Math.PI * 2);
+                    ctx.ellipse(pk.x, pk.y + 7, 13 * depthFactor, 4 * depthFactor, 0, 0, Math.PI * 2);
                     ctx.fill();
 
-                    ctx.font = `${Math.round(21 * depthFactor)}px "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
+                    ctx.translate(pk.x, pk.y - 12 + bob);
+                    ctx.scale(depthFactor, depthFactor);
+
+                    ctx.fillStyle = 'rgba(255, 251, 235, 0.92)';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 17, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.lineWidth = 2.5;
+                    ctx.strokeStyle = '#f59e0b';
+                    ctx.stroke();
+
+                    ctx.font = '20px "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.fillText(pk.icon, pk.x, pk.y - 6 + bob);
+                    ctx.fillText(pk.emoji, 0, 1);
 
                     ctx.restore();
                 }
 
                 drawPlayer(ctx) {
-                    if (this.player.invulnTimer > 0 && Math.floor(this.player.invulnTimer * 16) % 2 === 0) {
-                        return;
-                    }
-
-                    const yGround = this.player.y;
-                    const z = this.player.z;
-                    const drawY = yGround - z + this.player.fallProgress * 22;
-                    const depthFactor = 0.8 + (this.player.lane / Math.max(1, this.laneCount - 1)) * 0.2;
-
+                    const p = this.player;
                     ctx.save();
 
-                    const shadowScale = Math.max(0.35, 1 - z / 140) * depthFactor;
-                    ctx.fillStyle = 'rgba(15, 23, 42, 0.32)';
+                    const depthFactor = 0.76 + (p.lane / Math.max(1, this.laneCount - 1)) * 0.22;
+
+                    const shadowScale = Math.max(0.35, 1 - p.z / 130) * depthFactor;
+                    ctx.fillStyle = 'rgba(15, 23, 42, 0.34)';
                     ctx.beginPath();
-                    ctx.ellipse(this.player.x, yGround + 8, 26 * shadowScale, 5.5 * shadowScale, 0, 0, Math.PI * 2);
+                    ctx.ellipse(p.x, p.y + 9, 28 * shadowScale, 6.5 * shadowScale, 0, 0, Math.PI * 2);
                     ctx.fill();
 
-                    if (this.player.bellWave > 0) {
-                        const r = (1 - this.player.bellWave) * 72 + 12;
-                        ctx.strokeStyle = `rgba(250, 204, 21, ${this.player.bellWave * 0.85})`;
-                        ctx.lineWidth = 3;
-                        ctx.beginPath();
-                        ctx.arc(this.player.x + 20, drawY - 30, r, 0, Math.PI * 2);
-                        ctx.stroke();
+                    if (p.invulnTimer > 0 && Math.floor(p.invulnTimer * 16) % 2 === 0) {
+                        ctx.globalAlpha = 0.45;
                     }
 
-                    ctx.translate(this.player.x, drawY + 8);
+                    const pedalBob = p.z <= 1 && !p.fallingHole
+                        ? Math.sin(p.animFrame * 2) * 2.2
+                        : 0;
+
+                    ctx.translate(p.x, p.y + 9 - p.z + pedalBob);
+                    ctx.rotate(p.tiltAngle);
                     ctx.scale(depthFactor, depthFactor);
 
-                    if (this.player.fallingHole) {
-                        ctx.rotate(this.player.fallProgress * 0.65);
-                    } else if (this.player.jumping) {
-                        const tilt = Math.max(-0.22, Math.min(0.22, -this.player.vz * 0.00042));
-                        ctx.rotate(tilt);
-                    } else {
-                        const pedalBob = Math.sin(this.player.animAccumulator * Math.PI * 0.5) * 2.2;
-                        ctx.translate(0, pedalBob);
+                    if (p.fallingHole) {
+                        ctx.beginPath();
+                        ctx.rect(-70, -110, 140, 108);
+                        ctx.clip();
                     }
 
-                    const frame = this.assets.frames[this.player.frameIndex];
-                    if (frame) {
-                        const targetH = Math.max(76, Math.min(104, this.height * 0.145));
-                        const natW = frame.naturalWidth || frame.width || 120;
-                        const natH = frame.naturalHeight || frame.height || 120;
+                    const frameIndex = Math.floor(p.animFrame) % 8;
+                    const frameImg = this.assets.frames[frameIndex];
+
+                    if (frameImg) {
+                        const targetH = 74;
+                        const natW = frameImg.naturalWidth || frameImg.width || 64;
+                        const natH = frameImg.naturalHeight || frameImg.height || 64;
                         const targetW = targetH * (natW / natH);
-
-                        ctx.drawImage(frame, -targetW * 0.5, -targetH + 4, targetW, targetH);
+                        ctx.drawImage(frameImg, -targetW * 0.5, -targetH + 3, targetW, targetH);
                     } else {
-                        ctx.strokeStyle = '#2563eb';
-                        ctx.lineWidth = 3.5;
-                        ctx.beginPath();
-                        ctx.arc(-18, -12, 11, 0, Math.PI * 2);
-                        ctx.arc(18, -12, 11, 0, Math.PI * 2);
-                        ctx.stroke();
+                        this.drawFallbackCyclist(ctx, frameIndex);
+                    }
 
-                        ctx.beginPath();
-                        ctx.moveTo(-18, -12);
-                        ctx.lineTo(-2, -24);
-                        ctx.lineTo(14, -24);
-                        ctx.lineTo(18, -12);
-                        ctx.moveTo(-2, -24);
-                        ctx.lineTo(2, -12);
-                        ctx.stroke();
-
-                        ctx.fillStyle = '#ffffff';
-                        ctx.beginPath();
-                        ctx.arc(4, -38, 7, 0, Math.PI * 2);
-                        ctx.fill();
+                    if (p.bellAnimTimer > 0) {
+                        ctx.save();
+                        ctx.translate(16, -54);
+                        ctx.rotate(Math.sin(this.worldTime * 45) * 0.35);
+                        ctx.font = '18px "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText('🔔', 0, 0);
+                        ctx.restore();
                     }
 
                     ctx.restore();
                 }
 
-                drawParticles(ctx) {
-                    for (const pt of this.particles) {
-                        const alpha = Math.max(0, pt.life / pt.maxLife);
-                        ctx.save();
-                        ctx.globalAlpha = alpha;
-                        ctx.fillStyle = pt.color;
+                drawFallbackCyclist(ctx, frameIndex) {
+                    const wheelSpin = (frameIndex / 8) * Math.PI * 2;
+                    ctx.strokeStyle = '#1e293b';
+                    ctx.lineWidth = 3;
+
+                    [-18, 18].forEach((wx) => {
                         ctx.beginPath();
-                        ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
+                        ctx.arc(wx, -11, 10, 0, Math.PI * 2);
+                        ctx.stroke();
+
+                        ctx.beginPath();
+                        ctx.moveTo(wx - Math.cos(wheelSpin) * 8, -11 - Math.sin(wheelSpin) * 8);
+                        ctx.lineTo(wx + Math.cos(wheelSpin) * 8, -11 + Math.sin(wheelSpin) * 8);
+                        ctx.stroke();
+                    });
+
+                    ctx.strokeStyle = '#0284c7';
+                    ctx.beginPath();
+                    ctx.moveTo(-18, -11);
+                    ctx.lineTo(-4, -22);
+                    ctx.lineTo(12, -22);
+                    ctx.lineTo(18, -11);
+                    ctx.moveTo(-4, -22);
+                    ctx.lineTo(2, -11);
+                    ctx.stroke();
+
+                    ctx.fillStyle = '#f97316';
+                    ctx.beginPath();
+                    ctx.arc(2, -36, 8, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = '#eab308';
+                    ctx.beginPath();
+                    ctx.moveTo(-10, -41);
+                    ctx.lineTo(14, -41);
+                    ctx.lineTo(2, -50);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+
+                drawEffects(ctx) {
+                    for (const sw of this.shockwaves) {
+                        ctx.save();
+                        ctx.strokeStyle = `rgba(250, 204, 21, ${Math.max(0, sw.alpha)})`;
+                        ctx.lineWidth = 3.5;
+                        ctx.beginPath();
+                        ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
+                        ctx.stroke();
+                        ctx.restore();
+                    }
+
+                    for (const p of this.particles) {
+                        ctx.save();
+                        ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+                        ctx.fillStyle = p.color;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
                         ctx.fill();
                         ctx.restore();
                     }
                 }
 
                 render() {
-                    const ctx = this.ctx;
-                    ctx.clearRect(0, 0, this.width, this.height);
-
-                    if (this.assets.bgLoaded && !this.bgImgEl.classList.contains('hidden')) {
-                        this.bgImgEl.classList.add('hidden');
-                    }
-
-                    this.drawGroundTrack(ctx);
+                    this.ctx.clearRect(0, 0, this.width, this.height);
+                    this.drawBackground(this.ctx);
+                    this.drawRoadGuides(this.ctx);
 
                     const renderables = [];
 
-                    for (const h of this.holes) {
+                    for (const hole of this.holes) {
                         renderables.push({
-                            y: this.laneY[h.lane] - 2,
-                            draw: () => this.drawHole(ctx, h)
-                        });
-                    }
-
-                    for (const pk of this.pickups) {
-                        renderables.push({
-                            y: pk.y,
-                            draw: () => this.drawPickup(ctx, pk)
+                            y: hole.y - 2,
+                            draw: () => this.drawHole(this.ctx, hole)
                         });
                     }
 
                     for (const obs of this.obstacles) {
                         renderables.push({
                             y: obs.y,
-                            draw: () => this.drawObstacle(ctx, obs)
+                            draw: () => this.drawObstacle(this.ctx, obs)
+                        });
+                    }
+
+                    for (const pk of this.pickups) {
+                        renderables.push({
+                            y: pk.y,
+                            draw: () => this.drawPickup(this.ctx, pk)
                         });
                     }
 
                     renderables.push({
-                        y: this.player.y,
-                        draw: () => this.drawPlayer(ctx)
+                        y: this.player.y + 0.5,
+                        draw: () => this.drawPlayer(this.ctx)
                     });
 
                     renderables.sort((a, b) => a.y - b.y);
@@ -1811,25 +1804,80 @@
                         item.draw();
                     }
 
-                    this.drawParticles(ctx);
+                    this.drawEffects(this.ctx);
                 }
 
                 loop(timestamp) {
-                    if (!this.lastTime) {
-                        this.lastTime = timestamp;
+                    if (!this.lastTimestamp) {
+                        this.lastTimestamp = timestamp;
                     }
-                    const dt = Math.min(0.05, Math.max(0.001, (timestamp - this.lastTime) / 1000));
-                    this.lastTime = timestamp;
+                    const rawDt = (timestamp - this.lastTimestamp) / 1000;
+                    this.lastTimestamp = timestamp;
+                    const dt = Math.min(rawDt, 0.05);
 
                     this.update(dt);
                     this.render();
 
                     requestAnimationFrame((ts) => this.loop(ts));
                 }
+
+                startLoop() {
+                    requestAnimationFrame((ts) => this.loop(ts));
+                }
             }
 
-            window.addEventListener('DOMContentLoaded', () => {
-                new LudoBikeGame();
+            window.addEventListener('DOMContentLoaded', async () => {
+                const canvas = document.getElementById('gameCanvas');
+                const sound = new SoundManager();
+                const assets = new AssetLoader();
+
+                const welcomeImg = document.getElementById('welcomeImg');
+                const welcomeFallback = document.getElementById('welcomeFallback');
+                const gameOverImg = document.getElementById('gameOverImg');
+                const gameOverFallback = document.getElementById('gameOverFallback');
+
+                await assets.loadAll();
+
+                const resolvedWelcomeUrl = assets.welcomeUrl || 'assets/backgrounds/accueil.png';
+                welcomeImg.onload = () => {
+                    welcomeFallback.classList.add('hidden');
+                    welcomeImg.classList.remove('hidden');
+                };
+                welcomeImg.onerror = () => {
+                    welcomeImg.classList.add('hidden');
+                    welcomeFallback.classList.remove('hidden');
+                };
+                welcomeImg.src = resolvedWelcomeUrl;
+
+                const resolvedGameOverUrl = assets.gameOverUrl || 'assets/backgrounds/gameover.png';
+                gameOverImg.onload = () => {
+                    gameOverFallback.classList.add('hidden');
+                    gameOverFallback.classList.remove('flex');
+                    gameOverImg.classList.remove('hidden');
+                };
+                gameOverImg.onerror = () => {
+                    gameOverImg.classList.add('hidden');
+                    gameOverFallback.classList.remove('hidden');
+                    gameOverFallback.classList.add('flex');
+                };
+                gameOverImg.src = resolvedGameOverUrl;
+
+                const engine = new GameEngine(canvas, assets, sound);
+                engine.startLoop();
+
+                sound.speakVietnameseGreeting(false);
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.onvoiceschanged = () => {
+                        sound.speakVietnameseGreeting(false);
+                    };
+                }
+
+                const unlockGreetingOnGesture = () => {
+                    sound.ensureContext();
+                    sound.speakVietnameseGreeting(false);
+                };
+                window.addEventListener('pointerdown', unlockGreetingOnGesture, { passive: true });
+                window.addEventListener('touchstart', unlockGreetingOnGesture, { passive: true });
             });
         })();
     </script>
