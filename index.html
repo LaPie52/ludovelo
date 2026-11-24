@@ -731,11 +731,11 @@
                     this.height = window.innerHeight;
                     this.dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-                    // 3 voies sur le chemin de terre : haut abaissé, milieu centré, bas inchangé
+                    // 3 voies sur le chemin de terre : haut abaissé, milieu centré, bas remonté dans le chemin
                     this.laneCount = 3;
-                    this.laneRatios = [0.28, 0.56, 0.84];
-                    this.roadTop = this.height * 0.58;
-                    this.roadHeight = this.height * 0.22;
+                    this.laneRatios = [0.22, 0.50, 0.78];
+                    this.roadTop = this.height * 0.52;
+                    this.roadHeight = this.height * 0.21;
                     this.laneY = [0, 0, 0];
 
                     this.state = 'MENU'; // 'MENU' | 'PLAYING' | 'PAUSED' | 'GAMEOVER'
@@ -826,10 +826,14 @@
                     const gameOverImg = document.getElementById('gameOverImg');
                     const gameOverFallback = document.getElementById('gameOverFallback');
                     const targetGameOverUrl = this.assets.gameOverUrl || 'assets/backgrounds/gameover.png';
+                    gameOverImg.dataset.fallbackTried = '0';
                     gameOverImg.onerror = () => {
-                        if (gameOverImg.dataset.fallbackTried !== '1') {
+                        if (gameOverImg.dataset.fallbackTried === '0') {
                             gameOverImg.dataset.fallbackTried = '1';
                             gameOverImg.src = 'gameover.png';
+                        } else if (gameOverImg.dataset.fallbackTried === '1') {
+                            gameOverImg.dataset.fallbackTried = '2';
+                            gameOverImg.src = './assets/backgrounds/gameover.png';
                         } else {
                             gameOverImg.classList.add('hidden');
                             gameOverFallback.classList.remove('hidden');
@@ -868,11 +872,12 @@
                     this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
 
                     const isWidePanorama = this.width >= this.height * 1.35;
-                    this.roadTop = this.height * (isWidePanorama ? 0.61 : 0.57);
-                    this.roadHeight = this.height * (isWidePanorama ? 0.18 : 0.26);
+                    // On remonte la zone de piste afin que la voie du bas reste bien sur le chemin de terre
+                    this.roadTop = this.height * (isWidePanorama ? 0.57 : 0.52);
+                    this.roadHeight = this.height * (isWidePanorama ? 0.16 : 0.21);
 
-                    const trackTop = this.roadTop + this.roadHeight * 0.12;
-                    const trackBottom = this.roadTop + this.roadHeight * 0.90;
+                    const trackTop = this.roadTop + this.roadHeight * 0.10;
+                    const trackBottom = this.roadTop + this.roadHeight * 0.84;
                     const trackSpan = Math.max(54, trackBottom - trackTop);
 
                     for (let i = 0; i < this.laneCount; i++) {
@@ -1092,8 +1097,38 @@
 
                     const gameOverImg = document.getElementById('gameOverImg');
                     const gameOverFallback = document.getElementById('gameOverFallback');
-                    if (gameOverImg && !gameOverImg.src) {
-                        gameOverImg.src = this.assets.gameOverUrl || 'assets/backgrounds/gameover.png';
+                    const primaryGameOverUrl = this.assets.gameOverUrl || 'assets/backgrounds/gameover.png';
+                    if (gameOverImg) {
+                        gameOverImg.classList.remove('hidden');
+                        gameOverImg.style.display = 'block';
+                        if (!gameOverImg.getAttribute('src')) {
+                            gameOverImg.src = primaryGameOverUrl;
+                        }
+                        if (gameOverImg.complete && gameOverImg.naturalWidth === 0) {
+                            gameOverImg.src = `${primaryGameOverUrl}${primaryGameOverUrl.includes('?') ? '&' : '?'}v=${Date.now()}`;
+                        }
+                    }
+                    if (gameOverFallback) {
+                        gameOverFallback.classList.add('hidden');
+                        gameOverFallback.classList.remove('flex');
+                    }
+
+                    document.getElementById('gameOverReason').textContent = reason || 'Ludo a perdu l’équilibre.';
+                    document.getElementById('finalScore').textContent = String(Math.floor(this.score));
+                    document.getElementById('finalBest').textContent = String(Math.floor(this.bestScore));
+                    document.getElementById('finalDistance').textContent = `${Math.floor(this.distance)} m`;
+
+                    const hudTop = document.getElementById('hudTop');
+                    const touchControls = document.getElementById('touchControls');
+                    const gameOverOverlay = document.getElementById('gameOverOverlay');
+                    if (hudTop) hudTop.classList.add('hidden');
+                    if (touchControls) touchControls.classList.add('hidden');
+                    this.setOverlayVisibility('startOverlay', false);
+                    this.setOverlayVisibility('pauseOverlay', false);
+                    this.setOverlayVisibility('gameOverOverlay', true);
+                    if (gameOverOverlay) {
+                        gameOverOverlay.style.display = 'flex';
+                        gameOverOverlay.scrollTop = 0;
                     }
                     if (gameOverImg && gameOverImg.complete && gameOverImg.naturalWidth > 0) {
                         gameOverImg.classList.remove('hidden');
